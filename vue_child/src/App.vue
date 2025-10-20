@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="d-flex flex-column min-vh-100">
+  <div id="app" class="d-flex flex-column">
     <!-- Header -->
     <header class="navbar navbar-light bg-white shadow-sm fixed-top">
       <div class="container d-flex align-items-center justify-content-between">
@@ -25,9 +25,9 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow-1 mt-5 mb-5 p-3">
+    <div >
       <RouterView />
-    </main>
+    </div>
 
     <!-- Footer (Bootstrap-only, no custom CSS) -->
     <nav class="navbar bg-white border-top fixed-bottom">
@@ -110,5 +110,5 @@ export default {
 <style>
 @import "bootstrap/dist/css/bootstrap.min.css";
 @import "bootstrap-icons/font/bootstrap-icons.css";
-/* 커스텀 CSS 없음 (Bootstrap만 사용) */
+
 </style>

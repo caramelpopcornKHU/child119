@@ -1,11 +1,10 @@
-<!-- src/views/MapWithER.vue (예시 이름) -->
 <template>
-  <div class="d-flex justify-content-center align-items-center position-relative w-100 overflow-hidden" :style="{ height: 'calc(100vh - 120px)' }">
+  <div class="d-flex justify-content-center align-items-center position-relative mt-1" style="height: calc(100vh - 140px); ">
     <!-- 지도 -->
-    <div id="map_div" class="d-flex justify-content-center position-absolute top-0 bottom-0 start-0 end-0 w-100 h-100"></div>
+    <div id="map_div" ></div>
 
-    <!-- 좌상단 오버레이 -->
-    <div class="position-absolute top-0 start-0 m-2 z-3 pe-none">
+    <!-- 증상확인 -->
+    <div class="position-absolute start-0 top-0">
       <div class="pe-auto">
         <button
           type="button"
@@ -43,7 +42,7 @@
 
     <!-- 바텀시트 -->
     <div
-      class="position-fixed start-0 end-0 bg-white rounded-top-4 shadow-lg z-2"
+      class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg "
       :style="sheetStyle"
       ref="bottomSheet"
       @touchstart="onTouchStart"
@@ -56,7 +55,7 @@
       </div>
 
       <!-- 내용 -->
-      <div class="d-flex justify-content-center  container flex-column" style="height: calc(100% - 50px);">
+      <div class="d-flex flex-column" style="height: 100%;">
         <!-- 상단 라인 -->
         <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
           <div class="d-flex align-items-center gap-2 flex-wrap">
