@@ -22,7 +22,7 @@ public class WebActivity extends AppCompatActivity {
         webview.addJavascriptInterface(new WebViewBridge(this), "AndroidBridge");
 
         //webview.loadUrl("http://172.168.10.30:5173/");
-        webview.loadUrl("http://192.168.1.55:5173/");
+        webview.loadUrl("http://172.168.10.38:5174/");
     }
 
     /**
