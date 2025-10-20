@@ -1,7 +1,7 @@
 <!-- src/views/EmergencyDetail.vue -->
 <template>
   <!-- 전폭 컨테이너 -->
-  <main class="container-fluid py-3 py-md-4 emergency-detail">
+  <main class="d-flex justify-content-center container-fluid py-3 py-md-4 emergency-detail">
 
     <!-- 그리드로 중앙 제한 걸지 않고 '전폭' 사용 -->
     <div class="content-wrap">
