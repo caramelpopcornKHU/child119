@@ -64,6 +64,8 @@ const router = createRouter({
       name: 'emergency',
       component: () => import('../views/emergency.vue'),
     },
+
+
   ],
 })
 

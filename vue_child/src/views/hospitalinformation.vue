@@ -1,10 +1,12 @@
 <template>
-  <div class="position-relative min-vh-100 w-100 overflow-hidden">
+ <div class="d-flex justify-content-center align-items-center position-relative mt-1" style="height: calc(100vh - 140px); ">
     <!-- 지도 -->
-    <div id="map_div" class="position-absolute top-0 start-0 w-100 h-100"></div>
+   <div id="map_div" class="position-fixed top-0   start-0 w-100">
+
 
     <!-- 좌상단 오버레이 -->
-    <div class="position-absolute top-0 start-0 m-2 z-3 pe-none">
+    <div class="position-fixed start-0 p-3"
+      style="top: calc(var(--header-h) + 8px); z-index: 2;">
       <button
         type="button"
         class="btn btn-light border rounded-pill px-3 shadow-sm me-0 pe-auto"
@@ -31,7 +33,7 @@
         </span>
       </div>
     </div>
-
+</div>
     <!-- 하단 슬라이딩 시트 -->
     <div
       class="position-fixed start-0 end-0 bg-white rounded-top shadow z-2"
@@ -40,6 +42,7 @@
       @touchstart="onTouchStart"
       @touchmove="onTouchMove"
       @touchend="onTouchEnd"
+      style="z-index: 2;"
     >
       <!-- 핸들 -->
       <div class="py-3 d-flex justify-content-center" @click="toggleSheet">

@@ -1,10 +1,16 @@
 <template>
   <div class="d-flex justify-content-center align-items-center position-relative mt-1" style="height: calc(100vh - 140px); ">
+   
     <!-- 지도 -->
-    <div id="map_div" ></div>
+<div id="map_div"
+     class="position-fixed top-0 start-0 w-100"
+     style="height:100dvh; z-index:0;"></div>
+
+
 
     <!-- 증상확인 -->
-    <div class="position-absolute start-0 top-0">
+    <div class="position-fixed start-0 p-3"
+     style="top: calc(var(--header-h) + 8px); z-index: 2;">
       <div class="pe-auto">
         <button
           type="button"
@@ -39,7 +45,7 @@
         </span>
       </div>
     </div>
-
+</div>
     <!-- 바텀시트 -->
     <div
       class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg "
@@ -48,6 +54,7 @@
       @touchstart="onTouchStart"
       @touchmove="onTouchMove"
       @touchend="onTouchEnd"
+      style="z-index: 2;"
     >
       <!-- 그립 -->
       <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
@@ -200,7 +207,7 @@
         </div>
       </div>
     </div>
-  </div>
+ 
 </template>
 
 <script setup>

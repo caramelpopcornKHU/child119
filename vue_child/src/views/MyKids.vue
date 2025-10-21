@@ -1,7 +1,7 @@
 <!-- src/MyKidsView.vue -->
 <template>
   <div class="bg-body-tertiary">
-    <!-- 고정 헤더 -->
+    
     
 
     <!-- 본문 래퍼: 헤더/푸터 높이만큼 패딩 확보 -->
@@ -71,8 +71,7 @@
       </div>
     </main>
 
-    <!-- 고정 푸터 -->
-    
+   
   </div>
 </template>
 
