@@ -1,4 +1,4 @@
-<!-- src/ForgotPasswordResultView.vue -->
+<!-- src/views/ForgotPasswordResult.vue -->
 <template>
   <div class="min-vh-100 d-flex align-items-start justify-content-center bg-body-tertiary py-4">
     <div class="container" style="max-width: 420px;">
@@ -18,7 +18,7 @@
           <h2 class="h5 text-center fw-bold text-primary mb-3">비밀번호 찾기</h2>
 
           <p class="mb-0 text-center">
-            비밀번호는 <span class="fw-bold">{{ displayPw }}</span>입니다.
+            비밀번호는 <span class="fw-bold text-primary">{{ displayPw }}</span>입니다.
           </p>
         </div>
       </div>
@@ -35,37 +35,36 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed } from "vue"
+import { useRouter, useRoute } from "vue-router"
+
+const router = useRouter()
+const route = useRoute()
 
 /**
  * 우선순위
  * 1) props.password
  * 2) URL 쿼리 ?pw=
- * 3) 기본 예시 "111"
+ * 3) 기본 예시 "비밀번호를 찾을 수 없습니다"
  */
 const props = defineProps({
   password: { type: String, default: "" },
   /** 마스킹 여부 (원하면 **** 형태로 표시) */
   mask: { type: Boolean, default: false },
-});
+})
 
-let queryPw = "";
-try {
-  const url = new URL(window.location.href);
-  queryPw = url.searchParams.get("pw") || "";
-} catch {}
+// 라우터 쿼리에서 비밀번호 가져오기
+const rawPw = computed(() => props.password || route.query.pw || "비밀번호를 찾을 수 없습니다")
 
-const rawPw = computed(() => props.password || queryPw || "111");
 const displayPw = computed(() => {
-  if (!props.mask) return rawPw.value;
+  if (!props.mask) return rawPw.value
   // 간단 마스킹: 앞 1글자 + 나머지 ****
-  const s = rawPw.value.toString();
-  return s.length > 1 ? s[0] + "*".repeat(s.length - 1) : "*";
-});
+  const s = rawPw.value.toString()
+  return s.length > 1 ? s[0] + "*".repeat(s.length - 1) : "*"
+})
 
 function goLogin() {
-  // TODO: 라우터 사용 시 router.push('/login')
-  alert("로그인 페이지로 이동");
+  router.push('/login')
 }
 </script>
 

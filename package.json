@@ -1,5 +1,25 @@
 {
   "dependencies": {
-    "install": "^0.13.0"
-  }
+    "firebase": "^12.4.0",
+    "install": "^0.13.0",
+    "puppeteer": "^24.25.0"
+  },
+  "name": "lx_final_project",
+  "version": "1.0.0",
+  "description": "---",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caramelpopcornKHU/child119.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/caramelpopcornKHU/child119/issues"
+  },
+  "homepage": "https://github.com/caramelpopcornKHU/child119#readme"
 }

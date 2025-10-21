@@ -40,13 +40,14 @@
 
 <script setup>
 import { computed } from "vue";
-
+import { useRouter } from 'vue-router'
 /**
  * foundId는 다음 우선순위로 채웁니다.
  * 1) props로 전달된 foundId
  * 2) 라우터 쿼리값 (?id=)
  * 3) 기본 예시 문자열
  */
+const router = useRouter()    
 const props = defineProps({
   foundId: { type: String, default: "" },
 });
@@ -62,6 +63,7 @@ const foundId = computed(() => props.foundId || queryId || "aaaa@Aaa");
 function goLogin() {
   // TODO: 라우터 사용 시 router.push('/login') 로 교체
   alert("로그인 페이지로 이동");
+  router.push('/login');
 }
 </script>
 

@@ -2,10 +2,8 @@
   <div class="min-vh-100 d-flex align-items-start align-items-lg-center justify-content-center bg-body-tertiary py-4">
     <div class="container">
       <div class="row justify-content-center">
-        <!-- 폭 제어: 12 → 10 → 8 → 5 컬럼으로 점진 축소 (대략 420px 근사) -->
         <div class="col-12 col-sm-10 col-md-8 col-lg-5">
-
-          <!-- Brand (필요 시 이미지/로고 배치) -->
+          <!-- Brand -->
           <div class="text-center mb-3"></div>
 
           <!-- Card -->
@@ -59,6 +57,19 @@
                   <div class="invalid-feedback">아이디(4자 이상)를 입력해주세요.</div>
                 </div>
 
+                <!-- 이메일 (Firebase Auth용) -->
+                <div class="mb-3">
+                  <label class="form-label">이메일</label>
+                  <input
+                    v-model.trim="form.email"
+                    type="email"
+                    class="form-control"
+                    placeholder="이메일을 입력해주세요"
+                    required
+                  />
+                  <div class="invalid-feedback">올바른 이메일을 입력해주세요.</div>
+                </div>
+
                 <!-- 비밀번호 -->
                 <div class="mb-3">
                   <label class="form-label">비밀번호</label>
@@ -103,7 +114,9 @@
                 <!-- 버튼들 -->
                 <div class="d-flex gap-2 mt-4">
                   <button type="button" class="btn btn-outline-secondary flex-fill" @click="onBack">이전</button>
-                  <button type="submit" class="btn btn-primary flex-fill" :disabled="!canSubmit">가입완료</button>
+                  <button type="submit" class="btn btn-primary flex-fill" :disabled="!canSubmit || isLoading">
+                    {{ isLoading ? '처리중...' : '가입완료' }}
+                  </button>
                 </div>
               </form>
 
@@ -115,7 +128,7 @@
             </div>
           </div>
 
-          <!-- 푸터(선택) -->
+          <!-- 푸터 -->
           <div class="text-center mt-3 small text-body-secondary">© 2025 아이119</div>
         </div>
       </div>
@@ -124,39 +137,109 @@
 </template>
 
 <script setup>
-import { reactive, computed, ref } from "vue";
+import { reactive, computed, ref } from 'vue'
+import { auth, db } from '../firebase/index.js'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { doc, setDoc, collection } from 'firebase/firestore'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const form = reactive({
-  name: "",
-  phone: "",
-  username: "",
-  password: "",
-  password2: "",
+  name: '',
+  phone: '',
+  username: '',
+  email: '',
+  password: '',
+  password2: '',
   agreeTerms: false,
   agreeMarketing: false,
-});
+})
 
-const tried = ref(false);
-const passwordsMatch = computed(() => form.password && form.password === form.password2);
+const tried = ref(false)
+const isLoading = ref(false)
+
+// Firestore의 user 컬렉션 참조
+const USER_COLLECTION = collection(db, 'user')
+
+const passwordsMatch = computed(() => form.password && form.password === form.password2)
 
 const canSubmit = computed(() =>
   form.name &&
   form.phone &&
   form.username &&
+  form.email &&
   form.password &&
   form.password2 &&
   passwordsMatch.value &&
   form.agreeTerms
-);
+)
 
-function onSubmit() {
-  tried.value = true;
-  if (!canSubmit.value) return;
-  alert("가입이 완료되었습니다!");
+async function onSubmit() {
+  tried.value = true
+  
+  if (!canSubmit.value) {
+    alert('모든 필수 항목을 올바르게 입력해주세요.')
+    return
+  }
+
+  isLoading.value = true
+
+  try {
+    // 1. Firebase Auth에 사용자 생성
+    const credential = await createUserWithEmailAndPassword(
+      auth,
+      form.email,
+      form.password
+    )
+    const user = credential.user
+
+    // 2. Firestore의 user 컬렉션에 사용자 정보 저장
+    const userDoc = doc(USER_COLLECTION, user.uid)
+    await setDoc(userDoc, {
+      uid: user.uid,
+      username: form.username,
+      name: form.name,
+      phone: form.phone,
+      agreeTerms: form.agreeTerms,
+      agreeMarketing: form.agreeMarketing,
+      createdAt: new Date().toISOString(),
+    })
+
+    // 3. 성공 메시지 표시
+    alert('회원가입에 성공하셨습니다. 로그인 해주세요.')
+    
+    // 4. 로그인 페이지로 이동
+    router.push('/login')
+
+  } catch (err) {
+    console.error('회원가입 오류:', err)
+    
+    // Firebase Auth 에러 처리
+    switch (err.code) {
+      case 'auth/invalid-email':
+        alert('이메일을 바르게 입력해주세요.')
+        break
+      case 'auth/weak-password':
+        alert('비밀번호가 너무 쉬워요. 8자 이상으로 설정해주세요.')
+        break
+      case 'auth/email-already-in-use':
+        alert('이미 등록된 이메일입니다.')
+        break
+      default:
+        alert('회원가입에 실패했습니다. 다시 시도해주세요.')
+        break
+    }
+  } finally {
+    isLoading.value = false
+  }
 }
 
-function onBack() { history.back(); }
-function goLogin() { alert("로그인 페이지로 이동"); }
-</script>
+function onBack() {
+  router.back()
+}
 
-<!-- CSS 없음: Bootstrap만 사용 -->
+function goLogin() {
+  router.push('/login')
+}
+</script>

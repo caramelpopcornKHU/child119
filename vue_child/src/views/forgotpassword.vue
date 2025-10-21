@@ -1,4 +1,4 @@
-<!-- src/ForgotPasswordView.vue -->
+<!-- src/views/forgotpassword.vue -->
 <template>
   <div class="min-vh-100 d-flex align-items-start justify-content-center bg-body-tertiary py-4">
     <div class="container" style="max-width: 420px;">
@@ -44,14 +44,14 @@
               <div class="form-text">예) 010-1234-5678</div>
             </div>
 
-            <!-- 아이디 -->
+            <!-- 아이디 (이메일) -->
             <div class="mb-3">
-              <label class="form-label">아이디</label>
+              <label class="form-label">아이디 (이메일)</label>
               <input
                 v-model.trim="form.username"
                 type="text"
                 class="form-control"
-                placeholder="아이디를 입력해주세요"
+                placeholder="아이디(이메일)를 입력해주세요"
                 required
               />
               <div class="invalid-feedback">아이디를 입력해주세요.</div>
@@ -60,7 +60,10 @@
             <!-- 버튼 -->
             <div class="d-flex gap-2 mt-3">
               <button type="button" class="btn btn-outline-secondary flex-fill" @click="onBack">이전</button>
-              <button type="submit" class="btn btn-primary flex-fill" :disabled="!canSubmit">비밀번호 찾기</button>
+              <button type="submit" class="btn btn-primary flex-fill" :disabled="!canSubmit || isLoading">
+                <span v-if="isLoading" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <span v-else>비밀번호 재설정</span>
+              </button>
             </div>
           </form>
         </div>
@@ -73,31 +76,105 @@
 </template>
 
 <script setup>
-import { reactive, computed, ref } from "vue";
+import { reactive, computed, ref } from "vue"
+import { useRouter } from "vue-router"
+import { db, auth } from "@/firebase"
+import { collection, query, where, getDocs } from "firebase/firestore"
+import { sendPasswordResetEmail } from "firebase/auth"
+
+const router = useRouter()
 
 const form = reactive({
   name: "",
   phone: "",
   username: "",
-});
+})
 
-const tried = ref(false);
+const tried = ref(false)
+const isLoading = ref(false)
 
 const canSubmit = computed(() =>
   form.name && form.phone && form.username
-);
+)
 
-function onSubmit() {
-  tried.value = true;
-  if (!canSubmit.value) return;
+async function onSubmit() {
+  tried.value = true
+  if (!canSubmit.value) {
+    alert('모든 항목을 입력해주세요.')
+    return
+  }
 
-  // TODO: 실제 비밀번호 찾기 API 연동
-  // 예) /auth/forgot-password { name, phone, username }
-  alert(`비밀번호 찾기 요청\n이름: ${form.name}\n연락처: ${form.phone}\n아이디: ${form.username}`);
+  isLoading.value = true
+
+  try {
+    // Firebase Firestore에서 이름, 연락처, 아이디(username)로 사용자 검색
+    const userCollection = collection(db, 'user')
+    
+    // 연락처 정규화 (하이픈 제거)
+    const normalizedPhone = form.phone.replace(/-/g, '')
+    
+    // username으로 쿼리
+    const q = query(
+      userCollection,
+      where('username', '==', form.username)
+    )
+
+    const querySnapshot = await getDocs(q)
+    
+    // 일치하는 사용자 찾기
+    let foundUser = null
+    
+    querySnapshot.forEach((doc) => {
+      const userData = doc.data()
+      // 이름과 연락처가 모두 일치하는지 확인
+      const dbPhone = userData.phone.replace(/-/g, '')
+      if (userData.name === form.name && dbPhone === normalizedPhone) {
+        foundUser = userData
+      }
+    })
+
+    if (foundUser) {
+      // 사용자를 찾았을 때
+      // Firebase Auth로 비밀번호 재설정 이메일 전송
+      // foundUser의 이메일이 Firebase Auth 이메일과 동일하다고 가정
+      const userEmail = foundUser.username // username이 이메일인 경우
+      
+      try {
+        await sendPasswordResetEmail(auth, userEmail)
+        
+        // 성공 메시지와 함께 결과 페이지로 이동
+        router.push({
+          path: '/ForgotPasswordResult',
+          query: { 
+            email: userEmail,
+            success: 'true'
+          }
+        })
+      } catch (emailError) {
+        console.error('이메일 전송 오류:', emailError)
+        
+        if (emailError.code === 'auth/user-not-found') {
+          alert('해당 이메일로 등록된 계정이 없습니다.')
+        } else if (emailError.code === 'auth/invalid-email') {
+          alert('유효하지 않은 이메일 주소입니다.')
+        } else {
+          alert('비밀번호 재설정 이메일 전송에 실패했습니다.\n다시 시도해주세요.')
+        }
+      }
+    } else {
+      alert('일치하는 회원 정보를 찾을 수 없습니다.\n입력한 정보를 다시 확인해주세요.')
+    }
+
+  } catch (error) {
+    console.error('비밀번호 찾기 중 오류 발생:', error)
+    alert('오류가 발생했습니다. 다시 시도해주세요.')
+  } finally {
+    isLoading.value = false
+  }
 }
 
 function onBack() {
-  history.back();
+  router.back()
 }
 </script>
 

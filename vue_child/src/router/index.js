@@ -64,8 +64,16 @@ const router = createRouter({
       name: 'emergency',
       component: () => import('../views/emergency.vue'),
     },
-
-
+      {
+      path: '/FindId',
+      name: 'FindId',
+      component: () => import('../views/FindId.vue'),
+    },
+     {
+      path: '/FindPassword',
+      name: 'FindPassword',
+      component: () => import('../views/FindPassword.vue'),
+    },
   ],
 })
 
