@@ -20,9 +20,9 @@ const router = createRouter({
       component: () => import('../views/login.vue'),
     },
      {
-      path: '/aichact',
-      name: 'aichact',
-      component: () => import('../views/aichact.vue'),
+      path: '/aichat',
+      name: 'aichat',
+      component: () => import('../views/aichat.vue'),
     },
      {
       path: '/emergencyorder',

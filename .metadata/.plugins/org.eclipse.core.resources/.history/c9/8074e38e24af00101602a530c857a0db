@@ -1,0 +1,25 @@
+spring.application.name=final_test
+
+# === Datasource ===
+spring.datasource.url=jdbc:mysql://localhost:3306/newhr
+spring.datasource.username=root
+spring.datasource.password=rootroot
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# === MyBatis ===
+mybatis.mapper-locations=classpath:mapper/mapper-*.xml
+mybatis.configuration.map-underscore-to-camel-case=true
+
+# === Logging ===
+logging.level.org.springframework.web=TRACE
+logging.level.org.springframework.beans=DEBUG
+logging.level.mapper-addrbook=TRACE
+
+# === Server ===
+server.address=0.0.0.0
+server.port=8088
+
+# === Gemini API ===
+gemini.api.key=AIzaSyDC__Of_K62AbbxdZM0Im7j_o-vK9AqjCI
+gemini.api.url=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent
+

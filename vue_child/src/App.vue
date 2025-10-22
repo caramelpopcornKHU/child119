@@ -68,7 +68,7 @@
 
         <li class="nav-item border-start">
           <button
-            @click="aichact"
+            @click="aichat"
             class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
             :class="{ 'bg-light': $route.path === '/aichat' }">
             <i class="bi bi-robot fs-5"></i>
@@ -111,7 +111,7 @@ export default {
     // 라우팅 이동 메서드
     mypage() { this.$router.push('/mypage') },
     hospitalinformation() { this.$router.push('/hospitalinformation') },
-    aichact() { this.$router.push('/aichat') },
+    aichat() { this.$router.push('/aichat') },
     emergency() { this.$router.push('/emergency') },
     MyKids() { this.$router.push('/MyKids') },
     goToHome() { this.$router.push('/') },
