@@ -75,3 +75,15 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Eclipse
+.metadata/
+.recommenders/
+.classpath
+.project
+.settings/
+
+# Build output
+/bin/
+/target/
+/build/
