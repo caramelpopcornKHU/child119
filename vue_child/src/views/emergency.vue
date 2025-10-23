@@ -1,12 +1,12 @@
 <!-- src/views/EmergencyFirstAid.vue -->
 <template>
-  <div class="d-flex justify-content-center align-items-center  flex-column min-vh-100 bg-body-tertiary">
+  <div class="d-flex justify-content-center align-items-center  flex-column ">
 
     <!-- 상단 카테고리 + 칩 (상단 고정) -->
-    <div class="d-flex flex-column align-items-center sticky-top bg-white border-bottom">
+    <div class="d-flex flex-column align-items-center sticky-top bg-white border-bottom w-100">
       <!-- 카테고리 아이콘 라인 -->
-      <div class="container-fluid">
-        <div class="d-flex align-items-center justify-content-between py-2">
+      <div class="container-fluid ">
+        <div class="d-flex align-items-center justify-content-between py-2" >
           <button class="btn btn-link text-body-tertiary px-0"><i class="bi bi-chevron-left"></i></button>
 
           <div class="d-flex gap-3 text-center">
@@ -29,9 +29,10 @@
       </div>
 
       <!-- 증상 칩 -->
-      <div class="border-top">
+      <div class="border-top d-flex align-items-center">
         <div class="container-fluid py-2">
-          <div class="d-flex align-items-center gap-2 overflow-auto">
+          <div class="d-flex align-items-center justify-content-center gap-2 overflow-auto" 
+                 style="white-space: nowrap; flex-wrap: wrap;">
             <button
               v-for="t in tags"
               :key="t"
@@ -58,14 +59,14 @@
           <!-- 썸네일 16:9 (부트스트랩 ratio) -->
           <div class="position-relative ratio ratio-16x9">
             <img :src="v.thumbnail" :alt="v.title" class="w-100 h-100 object-fit-cover">
-            <span class="badge bg-dark opacity-75 position-absolute bottom-0 end-0 m-2">5:14</span>
+           
           </div>
 
           <!-- 메타 -->
           <div class="p-2 d-flex gap-2 align-items-start">
             <div class="rounded-circle bg-secondary-subtle flex-shrink-0" style="width:36px;height:36px;"></div>
-            <div class="flex-grow-1">
-              <h6 class="mb-1 fw-semibold text-body text-truncate">{{ v.title }}</h6>
+            <div class="flex-grow-1" >
+              <h6 class="mb-1 fw-semibold text-body text-wrap" >{{ v.title }}</h6>
               <div class="text-muted small">
                 {{ v.channel }} · {{ v.views }} · {{ v.age }}
               </div>

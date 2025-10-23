@@ -1,6 +1,6 @@
 <template>
-  <div class="d-flex justify-content-center align-items-center vh-100 bg-body-tertiary">
-    <div class="card shadow-sm w-100" style="max-width: 600px; height: 80vh;">
+  <div class="d-flex justify-content-center align-items-start">
+    <div class="card shadow-sm w-100" style="max-width: 100vw; height: 80vh">
       <!-- 메시지 영역 -->
       <div class="card-body overflow-auto border-bottom" ref="messagesContainer">
         <div
@@ -27,7 +27,8 @@
           class="form-control rounded-pill px-3"
           placeholder="메시지를 입력하세요..."
         />
-        <button class="btn btn-primary rounded-pill ms-2 px-4" type="submit">
+        <button class="d-flex btn btn-primary rounded-pill ms-2 px-4" type="submit"
+                style="white-space: nowrap; flex-wrap: wrap;">
           전송
         </button>
       </form>
@@ -87,7 +88,5 @@ const sendMessage = async () => {
 </script>
 
 <style scoped>
-body {
-  background-color: #f0f2f5;
-}
+
 </style>
