@@ -44,7 +44,7 @@
          🦶 Footer (하단 고정 네비게이션)
          =============================== -->
     <nav class="navbar bg-white border-top fixed-bottom">
-      <ul class="nav nav-fill w-100 align-items-stretch m-0">
+      <ul class="nav nav-fill w-100 align-items-stretch m-0 flex-nowrap">
         <!-- 각 버튼은 라우터 경로에 따라 아이콘/페이지 전환 -->
         <li class="nav-item">
           <button
@@ -52,7 +52,7 @@
             class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
             :class="{ 'bg-light': $route.path === '/' }">
             <i class="bi bi-truck-front fs-5"></i>
-            <small class="mt-1">응급실</small>
+            <small class="mt-1 text-nowrap">응급실</small>
           </button>
         </li>
 
@@ -62,7 +62,7 @@
             class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
             :class="{ 'bg-light': $route.path === '/hospitalinformation' }">
             <i class="bi bi-hospital fs-5"></i>
-            <small class="mt-1">병의원</small>
+            <small class="mt-1 text-nowrap">병의원</small>
           </button>
         </li>
 
@@ -72,7 +72,7 @@
             class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
             :class="{ 'bg-light': $route.path === '/aichat' }">
             <i class="bi bi-robot fs-5"></i>
-            <small class="mt-1">AI 챗봇</small>
+            <small class="mt-1 text-nowrap">AI 챗봇</small>
           </button>
         </li>
 
@@ -82,7 +82,7 @@
             class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
             :class="{ 'bg-light': $route.path === '/emergency' }">
             <i class="bi bi-heart-fill fs-5"></i>
-            <small class="mt-1">응급처치</small>
+            <small class="mt-1 text-nowrap">응급처치</small>
           </button>
         </li>
 
@@ -92,7 +92,7 @@
             class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
             :class="{ 'bg-light': $route.path === '/MyKids' }">
             <i class="bi bi-people fs-5"></i>
-            <small class="mt-1">내 아이</small>
+            <small class="mt-1 text-nowrap">내 아이</small>
           </button>
         </li>
       </ul>
@@ -143,7 +143,6 @@ html, body, #app {
 #main {
   min-height: calc(100dvh - var(--header-h) - var(--footer-h)); /* 남는 세로공간 계산 */
   padding-top: var(--header-h);   /* 헤더에 가리지 않게 */
-  padding-bottom: var(--footer-h);/* 푸터에 가리지 않게 */
   overflow: auto;                 /* 내부 스크롤 허용 */
 }
 

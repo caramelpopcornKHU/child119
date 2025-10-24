@@ -4,9 +4,9 @@
    
 
     <!-- 본문 래퍼 -->
-    <main class="mx-auto px-3" style="max-width:420px; padding-top:64px; padding-bottom:84px;">
+    <main class="mx-auto px-3" style="max-width:100vw; padding-top:30px; ">
       <!-- 스크롤 영역 -->
-      <div class="overflow-auto" :style="scrollBoxStyle">
+      <div class="overflow-auto" :style="scrollBoxStyle" style="padding-bottom:84px;">
         <!-- 타이틀 카드 -->
         <div class="card shadow-sm mb-3">
           <div class="card-body p-3 d-flex align-items-center gap-2">

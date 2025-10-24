@@ -1,8 +1,8 @@
 <template>
-  <div class="d-flex justify-content-center align-items-start">
-    <div class="card shadow-sm w-100" style="max-width: 100vw; height: 80vh">
+  <div class="d-flex justify-content-center" >
+    <div class="card shadow-sm w-100" style="max-width: 100vw; ">
       <!-- 메시지 영역 -->
-      <div class="card-body overflow-auto border-bottom" ref="messagesContainer">
+      <div class="card-body overflow-auto border-bottom" ref="messagesContainer" style="height: 70vh;">
         <div
           v-for="(msg, i) in messages"
           :key="i"

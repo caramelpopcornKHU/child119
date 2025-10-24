@@ -5,9 +5,9 @@
     
 
     <!-- 본문 래퍼: 헤더/푸터 높이만큼 패딩 확보 -->
-    <main class="mx-auto px-3" style="max-width:420px; padding-top:64px; padding-bottom:84px;">
+    <main class="mx-auto px-3" style="max-width:100vw; padding-top:30px; ">
       <!-- 스크롤 영역: 헤더/푸터 제외 높이 계산 -->
-      <div class="overflow-auto" :style="scrollBoxStyle">
+      <div class="overflow-auto" :style="scrollBoxStyle" style="padding-bottom:84px;">
         <!-- 타이틀 -->
         <h5 class="fw-bold mb-3">내 아이</h5>
 

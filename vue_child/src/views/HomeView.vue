@@ -1,23 +1,17 @@
 <template>
-  <div class="d-flex justify-content-center align-items-center position-relative mt-1" style="height: calc(100vh - 140px); ">
-   
+  <div class="d-flex justify-content-center align-items-center position-relative mt-1"
+    style="height: calc(100vh - 140px); ">
+
     <!-- 지도 -->
-<div id="map_div"
-     class="position-fixed top-0 start-0 w-100"
-     style="height:100dvh; z-index:0;"></div>
+    <div id="map_div" class="position-fixed top-0 start-0 w-100" style="height:100dvh; z-index:0;"></div>
 
 
 
     <!-- 증상확인 -->
-    <div class="position-fixed start-0 p-3"
-     style="top: calc(var(--header-h) + 8px); z-index: 2;">
+    <div class="position-fixed start-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
       <div class="pe-auto">
-        <button
-          type="button"
-          class="btn btn-light border rounded-pill px-3 shadow-sm"
-          data-bs-toggle="modal"
-          data-bs-target="#symptomModal"
-        >
+        <button type="button" class="btn btn-light border rounded-pill px-3 shadow-sm" data-bs-toggle="modal"
+          data-bs-target="#symptomModal">
           <i class="bi bi-clipboard2-pulse me-1"></i> 증상 확인
         </button>
       </div>
@@ -29,191 +23,186 @@
       </div>
 
       <div v-if="selectedSymptoms.length" class="mt-2 d-flex flex-wrap gap-1 pe-auto">
-        <span
-          v-for="sym in selectedSymptoms"
-          :key="`chip-map-${sym}`"
-          class="badge text-bg-primary rounded-pill d-inline-flex align-items-center"
-        >
+        <span v-for="sym in selectedSymptoms" :key="`chip-map-${sym}`"
+          class="badge text-bg-primary rounded-pill d-inline-flex align-items-center">
           {{ sym }}
-          <button
-            type="button"
-            class="btn-close btn-close-white btn-sm ms-1"
-            aria-label="삭제"
-            @click="removeSymptom(sym)"
-            style="transform: scale(.8);"
-          ></button>
+          <button type="button" class="btn-close btn-close-white btn-sm ms-1" aria-label="삭제"
+            @click="removeSymptom(sym)" style="transform: scale(.8);"></button>
         </span>
       </div>
     </div>
-</div>
-    <!-- 바텀시트 -->
-    <div
-      class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg "
-      :style="sheetStyle"
-      ref="bottomSheet"
-      @touchstart="onTouchStart"
-      @touchmove="onTouchMove"
-      @touchend="onTouchEnd"
-      style="z-index: 2;"
-    >
-      <!-- 그립 -->
-      <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
-        <div class="rounded-pill bg-body-secondary" style="width:40px;height:5px;"></div>
+  </div>
+  <!-- 바텀시트 -->
+  <div class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg " :style="sheetStyle" ref="bottomSheet"
+    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2;">
+    <!-- 그립 -->
+    <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
+      <div class="rounded-pill bg-body-secondary" style="width:40px;height:5px;"></div>
+    </div>
+
+    <!-- 내용 -->
+    <div class="d-flex flex-column" style="height: 100%;">
+      <!-- 상단 라인 -->
+      <div class="d-flex align-items-center justify-content-between gap-2 mb-3 ms-2 me-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button type="button" class="btn btn-light border rounded-pill px-3" data-bs-toggle="modal"
+            data-bs-target="#symptomModal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 48 48">
+              <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
+                d="m24 42l-9-13h18zm0-36l-9 13h18z" />
+            </svg><span class="fw-bold">거리순</span>
+          </button>
+
+          <span class="badge text-bg-info rounded-pill">
+            {{ displayKeyword }}
+          </span>
+
+          <div class="d-flex flex-wrap gap-1" v-if="selectedSymptoms.length">
+            <span v-for="sym in selectedSymptoms" :key="sym"
+              class="badge text-bg-primary rounded-pill d-inline-flex align-items-center">
+              {{ sym }}
+              <button type="button" class="btn-close btn-close-white btn-sm ms-1" aria-label="삭제"
+                @click="removeSymptom(sym)" style="transform: scale(.8);"></button>
+            </span>
+          </div>
+        </div>
+
+
       </div>
 
-      <!-- 내용 -->
-      <div class="d-flex flex-column" style="height: 100%;">
-        <!-- 상단 라인 -->
-        <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              class="btn btn-light border rounded-pill px-3"
-              data-bs-toggle="modal"
-              data-bs-target="#symptomModal"
-            >
-              <i class="bi bi-clipboard2-pulse me-1"></i> 증상 확인
-            </button>
+      <!-- 타이틀 -->
+      <div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2">
+        <h5 class="fw-bold mb-0">응급실 리스트</h5>
+        <span v-if="hospitals.length > 0" class="badge bg-white text-black">{{ hospitals.length }}개</span>
+      </div>
 
-            <span class="badge text-bg-info rounded-pill">
-              {{ displayKeyword }}
-            </span>
-
-            <div class="d-flex flex-wrap gap-1" v-if="selectedSymptoms.length">
-              <span
-                v-for="sym in selectedSymptoms"
-                :key="sym"
-                class="badge text-bg-primary rounded-pill d-inline-flex align-items-center"
-              >
-                {{ sym }}
-                <button
-                  type="button"
-                  class="btn-close btn-close-white btn-sm ms-1"
-                  aria-label="삭제"
-                  @click="removeSymptom(sym)"
-                  style="transform: scale(.8);"
-                ></button>
+      <!-- 리스트 스크롤 영역 -->
+      <div class="overflow-auto">
+        <div class="card shadow-sm mb-3" v-for="h in hospitals" :key="h.id">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h6 class="card-title fw-bold mb-0">{{ h.name }}</h6>
+              <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="15px" viewBox="0 0 24 24">
+                  <path fill="#008A64"
+                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
+                </svg> {{ (h.distance / 1000).toFixed(2) }}km
               </span>
             </div>
+
+            <div class="small text-muted mb-2">
+              <div class="mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                  <path fill="#525252"
+                    d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
+                </svg>{{ h.address || ' 주소 정보 없음' }}
+              </div>
+              <div class="mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24">
+                  <path fill="#525252"
+                    d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25c1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57c.11.35.03.74-.25 1.02z" />
+                </svg>{{ h.tel || ' 전화번호 정보 없음' }}
+              </div>
+              <div class="mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24">
+                  <path fill="#525252"
+                    d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m4.2 14.2L11 13V7h1.5v5.2l4.5 2.7z" />
+                </svg>{{ h.hours || ' 운영시간 정보 없음' }}
+              </div>
+              <div v-if="h.services?.length"><i class="bi bi-ui-checks me-1"></i>{{ h.services.join(', ') }}</div>
+            </div>
+
+            <div class="d-grid gap-2 d-sm-flex">
+              <a class="btn btn-outline-primary w-100" :href="h.tel ? `tel:${h.tel}` : '#'"
+                :class="{ 'disabled': !h.tel }">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                  <path fill="#0D6EFD"
+                    d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25c1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57c.11.35.03.74-.25 1.02z" />
+                </svg> 전화
+              </a>
+              <a class="btn btn-primary w-100" :href="`https://map.naver.com/v5/search/${encodeURIComponent(h.name)}`"
+                target="_blank" rel="noopener noreferrer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                  <path fill="#fff"
+                    d="M18 15a3 3 0 0 1 3 3a3 3 0 0 1-3 3a2.99 2.99 0 0 1-2.83-2H14v-2h1.17c.41-1.17 1.52-2 2.83-2m0 2a1 1 0 0 0-1 1a1 1 0 0 0 1 1a1 1 0 0 0 1-1a1 1 0 0 0-1-1m0-9a1.43 1.43 0 0 0 1.43-1.43a1.43 1.43 0 1 0-2.86 0A1.43 1.43 0 0 0 18 8m0-5.43a4 4 0 0 1 4 4C22 9.56 18 14 18 14s-4-4.44-4-7.43a4 4 0 0 1 4-4M8.83 17H10v2H8.83A2.99 2.99 0 0 1 6 21a3 3 0 0 1-3-3c0-1.31.83-2.42 2-2.83V14h2v1.17c.85.3 1.53.98 1.83 1.83M6 17a1 1 0 0 0-1 1a1 1 0 0 0 1 1a1 1 0 0 0 1-1a1 1 0 0 0-1-1M6 3a3 3 0 0 1 3 3c0 1.31-.83 2.42-2 2.83V10H5V8.83A2.99 2.99 0 0 1 3 6a3 3 0 0 1 3-3m0 2a1 1 0 0 0-1 1a1 1 0 0 0 1 1a1 1 0 0 0 1-1a1 1 0 0 0-1-1m5 14v-2h2v2zm-4-6H5v-2h2z" />
+                </svg> 길찾기
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="loadingHospitals" class="text-center text-muted py-4">
+          <div class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">검색 중...</span>
+          </div>
+          <div class="mt-2">주변 응급실 검색 중...</div>
+        </div>
+
+        <div v-else-if="!loadingHospitals && hospitals.length === 0 && searchAttempted"
+          class="text-center text-muted py-4">
+          <i class="bi bi-search fs-1 d-block mb-2"></i>
+          <p class="mb-1">반경 {{ (lastRadius / 1000).toFixed(0) }}km 내 검색 결과가 없습니다.</p>
+          <small class="text-muted">증상을 변경하거나 다시 시도해주세요.</small>
+        </div>
+
+        <div v-else-if="!searchAttempted" class="text-center text-muted py-4">
+          <i class="bi bi-clipboard2-pulse fs-1 d-block mb-2"></i>
+          <p>증상을 선택하고 검색을 실행해 주세요.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 증상 선택 모달 -->
+  <div class="modal fade" id="symptomModal" tabindex="-1" aria-labelledby="symptomModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header">
+          <h5 class="modal-title" id="symptomModalLabel">
+            <i class="bi bi-clipboard2-pulse me-1"></i> 증상 확인
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="alert alert-light border py-2 px-3 mb-3">
+            <div class="small text-muted mb-1">
+              기본 키워드 <strong>"소아응급실"</strong>에 선택한 증상이 붙어 검색됩니다.
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-search"></i>
+              <span class="badge text-bg-primary rounded-pill">{{ keywordWithSymptoms }}</span>
+            </div>
           </div>
 
-          <button
-            class="btn btn-sm btn-outline-secondary flex-shrink-0"
-            @click="sortByDistance"
-            :disabled="hospitals.length === 0"
-          >
-            <i class="bi bi-filter-left"></i> 거리순
+          <div class="d-flex flex-wrap gap-2">
+            <template v-for="opt in symptomOptions" :key="opt">
+              <input class="btn-check" type="checkbox" :id="`sym-${opt}`" :value="opt" v-model="selectedSymptoms" />
+              <label class="btn btn-outline-secondary rounded-pill py-1 px-3" :for="`sym-${opt}`">{{ opt }}</label>
+            </template>
+          </div>
+
+          <div v-if="selectedSymptoms.length" class="mt-3 text-muted small">
+            <i class="bi bi-check2-circle"></i> {{ selectedSymptoms.length }}개 증상 선택됨
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onConfirmSymptoms">
+            <i class="bi bi-search"></i> 3km 재검색
           </button>
         </div>
-
-        <!-- 타이틀 -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="fw-bold mb-0">응급실 리스트</h5>
-          <span v-if="hospitals.length > 0" class="badge bg-secondary">{{ hospitals.length }}개</span>
-        </div>
-
-        <!-- 리스트 스크롤 영역 -->
-        <div class="overflow-auto">
-          <div class="card shadow-sm mb-3" v-for="h in hospitals" :key="h.id">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <h6 class="card-title fw-bold mb-0">{{ h.name }}</h6>
-                <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
-                  <i class="bi bi-geo-alt"></i> {{ (h.distance/1000).toFixed(2) }}km
-                </span>
-              </div>
-
-              <div class="small text-muted mb-2">
-                <div class="mb-1"><i class="bi bi-pin-map-fill me-1"></i>{{ h.address || '주소 정보 없음' }}</div>
-                <div class="mb-1"><i class="bi bi-telephone me-1"></i>{{ h.tel || '전화번호 정보 없음' }}</div>
-                <div class="mb-1"><i class="bi bi-clock-history me-1"></i>{{ h.hours || '운영시간 정보 없음' }}</div>
-                <div v-if="h.services?.length"><i class="bi bi-ui-checks me-1"></i>{{ h.services.join(', ') }}</div>
-              </div>
-
-              <div class="d-grid gap-2 d-sm-flex">
-                <a class="btn btn-outline-primary w-100" :href="h.tel ? `tel:${h.tel}` : '#'" :class="{'disabled': !h.tel}">
-                  <i class="bi bi-telephone-fill"></i> 전화
-                </a>
-                <a class="btn btn-primary w-100"
-                   :href="`https://map.naver.com/v5/search/${encodeURIComponent(h.name)}`"
-                   target="_blank" rel="noopener noreferrer">
-                  <i class="bi bi-sign-turn-right-fill"></i> 길찾기
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="loadingHospitals" class="text-center text-muted py-4">
-            <div class="spinner-border spinner-border-sm me-2" role="status">
-              <span class="visually-hidden">검색 중...</span>
-            </div>
-            <div class="mt-2">주변 응급실 검색 중...</div>
-          </div>
-
-          <div v-else-if="!loadingHospitals && hospitals.length === 0 && searchAttempted" class="text-center text-muted py-4">
-            <i class="bi bi-search fs-1 d-block mb-2"></i>
-            <p class="mb-1">반경 {{ (lastRadius/1000).toFixed(0) }}km 내 검색 결과가 없습니다.</p>
-            <small class="text-muted">증상을 변경하거나 다시 시도해주세요.</small>
-          </div>
-
-          <div v-else-if="!searchAttempted" class="text-center text-muted py-4">
-            <i class="bi bi-clipboard2-pulse fs-1 d-block mb-2"></i>
-            <p>증상을 선택하고 검색을 실행해 주세요.</p>
-          </div>
-        </div>
       </div>
     </div>
+  </div>
 
-    <!-- 증상 선택 모달 -->
-    <div class="modal fade" id="symptomModal" tabindex="-1" aria-labelledby="symptomModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-          <div class="modal-header">
-            <h5 class="modal-title" id="symptomModalLabel">
-              <i class="bi bi-clipboard2-pulse me-1"></i> 증상 확인
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
-          </div>
-
-          <div class="modal-body">
-            <div class="alert alert-light border py-2 px-3 mb-3">
-              <div class="small text-muted mb-1">
-                기본 키워드 <strong>"소아응급실"</strong>에 선택한 증상이 붙어 검색됩니다.
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-search"></i>
-                <span class="badge text-bg-primary rounded-pill">{{ keywordWithSymptoms }}</span>
-              </div>
-            </div>
-
-            <div class="d-flex flex-wrap gap-2">
-              <template v-for="opt in symptomOptions" :key="opt">
-                <input class="btn-check" type="checkbox" :id="`sym-${opt}`" :value="opt" v-model="selectedSymptoms" />
-                <label class="btn btn-outline-secondary rounded-pill py-1 px-3" :for="`sym-${opt}`">{{ opt }}</label>
-              </template>
-            </div>
-
-            <div v-if="selectedSymptoms.length" class="mt-3 text-muted small">
-              <i class="bi bi-check2-circle"></i> {{ selectedSymptoms.length }}개 증상 선택됨
-            </div>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onConfirmSymptoms">
-              <i class="bi bi-search"></i> 3km 재검색
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
- 
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
-const symptomOptions = ['발열','감기','기침','호흡곤란','구토','설사','복통','발진','화상','경련']
+const symptomOptions = ['발열', '감기', '기침', '호흡곤란', '구토', '설사', '복통', '발진', '화상', '경련']
 const selectedSymptoms = ref([])
 const removeSymptom = (sym) => { selectedSymptoms.value = selectedSymptoms.value.filter(s => s !== sym) }
 
@@ -264,7 +253,7 @@ function haversineMeter(lat1, lon1, lat2, lon2) {
   const R = 6371000
   const dLat = toRad(lat2 - lat1)
   const dLon = toRad(lon2 - lon1)
-  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
   return 2 * R * Math.asin(Math.sqrt(a))
 }
 
@@ -296,7 +285,7 @@ function drawMarkers(items) {
              class="btn btn-primary flex-fill">길찾기</a>
         </div>
       </div>`
-    const info = new window.Tmapv3.InfoWindow({ position: pos, content: html, type: 2, map: null, offset: new window.Tmapv3.Point(0,-10) })
+    const info = new window.Tmapv3.InfoWindow({ position: pos, content: html, type: 2, map: null, offset: new window.Tmapv3.Point(0, -10) })
     window.Tmapv3.event.addListener(marker, 'click', () => {
       markers.forEach(m => m.__info?.setMap(null))
       info.setMap(map.value)
@@ -368,7 +357,7 @@ async function searchER(radiusMeters, useSymptoms) {
 
     hospitals.value = list
       .filter(x => Number.isFinite(x.distance) && x.distance <= sanitizedRadius)
-      .sort((a,b) => a.distance - b.distance)
+      .sort((a, b) => a.distance - b.distance)
 
     drawMarkers(hospitals.value)
     if (hospitals.value.length) sheetHeightRatio.value = 1
@@ -401,8 +390,8 @@ const initTmap = () => {
         new window.Tmapv3.InfoWindow({
           position: currentPos,
           content: "<div class='p-1 bg-white border rounded-2'>현재 위치</div>",
-          offset: new window.Tmapv3.Point(0,-30),
-          type:2, map: map.value
+          offset: new window.Tmapv3.Point(0, -30),
+          type: 2, map: map.value
         })
         map.value.setCenter(currentPos); map.value.setZoom(17)
         searchER(5000, false)
@@ -423,12 +412,12 @@ const initTmap = () => {
 
 /* 바텀시트 제스처 */
 const onTouchStart = e => { isDragging.value = true; dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }; e.preventDefault() }
-const onTouchMove  = e => { if (!isDragging.value) return; const dY = e.touches[0].clientY - dragStart.value.y; const dR = -dY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT); sheetHeightRatio.value = Math.min(1, Math.max(0, dragStart.value.ratio + dR)) }
-const onTouchEnd   = () => { isDragging.value = false; sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0 }
-const toggleSheet  = () => { sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 0 : 1 }
+const onTouchMove = e => { if (!isDragging.value) return; const dY = e.touches[0].clientY - dragStart.value.y; const dR = -dY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT); sheetHeightRatio.value = Math.min(1, Math.max(0, dragStart.value.ratio + dR)) }
+const onTouchEnd = () => { isDragging.value = false; sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0 }
+const toggleSheet = () => { sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 0 : 1 }
 
 /* Tmap 스크립트 로더 */
-function loadTmapScript () {
+function loadTmapScript() {
   return new Promise((resolve, reject) => {
     if (window.Tmapv3) return resolve()
     const exist = document.querySelector('script[data-tmap="v3"]')
@@ -441,7 +430,7 @@ function loadTmapScript () {
     document.head.appendChild(script)
   })
 }
-function waitTmapReady (retry = 10) {
+function waitTmapReady(retry = 10) {
   return new Promise((resolve, reject) => {
     const tick = () => {
       if (window.Tmapv3 && typeof window.Tmapv3.Map === 'function') return resolve()
@@ -452,9 +441,11 @@ function waitTmapReady (retry = 10) {
   })
 }
 
-onMounted(() => { sheetHeightRatio.value = 0; loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
-  console.error('Tmap 로딩 실패:', e)
-  alert('지도를 불러오지 못했습니다. 네트워크/Tmap 콘솔 설정을 확인해주세요.')
-})})
+onMounted(() => {
+  sheetHeightRatio.value = 0; loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
+    console.error('Tmap 로딩 실패:', e)
+    alert('지도를 불러오지 못했습니다. 네트워크/Tmap 콘솔 설정을 확인해주세요.')
+  })
+})
 onBeforeUnmount(() => { clearMarkers(); if (map.value) map.value.destroy() })
 </script>

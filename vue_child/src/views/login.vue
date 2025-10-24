@@ -50,11 +50,11 @@
 
           <!-- 하단 링크: 아이디 찾기 | 비밀번호 찾기 | 회원가입 -->
           <div class="d-flex align-items-center justify-content-center gap-3 mt-4 small">
-            <a href="#" class="link-secondary text-decoration-none" @click.prevent="goFindId">아이디 찾기</a>
+            <a href="#" class="link-secondary text-decoration-none text-nowrap" @click.prevent="goFindId">아이디 찾기</a>
             <span class="text-body-secondary">|</span>
-            <a href="#" class="link-secondary text-decoration-none" @click.prevent="goFindPw">비밀번호 찾기</a>
+            <a href="#" class="link-secondary text-decoration-none text-nowrap" @click.prevent="goFindPw">비밀번호 찾기</a>
             <span class="text-body-secondary">|</span>
-            <a href="#" class="link-secondary text-decoration-none" @click.prevent="goSignup">회원가입</a>
+            <a href="#" class="link-secondary text-decoration-none text-nowrap" @click.prevent="goSignup">회원가입</a>
           </div>
         </div>
       </div>
