@@ -1,6 +1,6 @@
 # --- 1. 빌드 스테이지 (Build Stage) ---
-# 검증된 태그 (Maven 3.9.x + Java 17)
-FROM maven:3-eclipse-temurin-17-slim AS builder
+# [수정됨] Java 17 + Maven 3.9의 가장 구체적이고 안정적인 버전 태그
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 # 작업 디렉터리 설정
 WORKDIR /app
@@ -17,13 +17,14 @@ RUN mvn package
 
 
 # --- 2. 실행 스테이지 (Runtime Stage) ---
-FROM eclipse-temurin:17-jre-slim
+# [수정됨] Java 17 JRE의 구체적인 버전 태그
+FROM eclipse-temurin:17-jre
 
 # 작업 디렉터리 설정
 WORKDIR /app
 
 
-COPY --from=builder /app/target/springboot_child-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=builder /app/target/myspringboot-0.0.1-SNAPSHOT.jar app.jar
 
 # 8080 포트 노출
 EXPOSE 8080
