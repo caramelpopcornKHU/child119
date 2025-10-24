@@ -3,10 +3,6 @@
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-12 col-sm-10 col-md-8 col-lg-5">
-          <!-- Brand -->
-          <div class="text-center mb-3"></div>
-
-          <!-- Card -->
           <div class="card shadow-sm">
             <div class="card-body p-4">
               <h2 class="h5 text-center fw-bold mb-4">회원가입</h2>
@@ -16,7 +12,7 @@
                 <div class="mb-3">
                   <label class="form-label">이름</label>
                   <input
-                    v-model.trim="form.name"
+                    v-model.trim="form.userName"
                     type="text"
                     class="form-control"
                     placeholder="이름을 입력하세요"
@@ -28,18 +24,15 @@
                 <!-- 연락처 -->
                 <div class="mb-3">
                   <label class="form-label">연락처</label>
-                  <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                    <input
-                      v-model.trim="form.phone"
-                      type="tel"
-                      class="form-control"
-                      placeholder="전화번호를 입력하세요"
-                      pattern="^0[0-9]{1,2}-?[0-9]{3,4}-?[0-9]{4}$"
-                      required
-                    />
-                    <div class="invalid-feedback">올바른 연락처 형식으로 입력해주세요.</div>
-                  </div>
+                  <input
+                    v-model.trim="form.userPhoneNum"
+                    type="tel"
+                    class="form-control"
+                    placeholder="전화번호를 입력하세요"
+                    pattern="^0[0-9]{1,2}-?[0-9]{3,4}-?[0-9]{4}$"
+                    required
+                  />
+                  <div class="invalid-feedback">올바른 연락처 형식으로 입력해주세요.</div>
                   <div class="form-text">예) 010-1234-5678</div>
                 </div>
 
@@ -47,7 +40,7 @@
                 <div class="mb-3">
                   <label class="form-label">아이디</label>
                   <input
-                    v-model.trim="form.username"
+                    v-model.trim="form.userId"
                     type="text"
                     class="form-control"
                     placeholder="아이디를 입력해주세요"
@@ -57,11 +50,11 @@
                   <div class="invalid-feedback">아이디(4자 이상)를 입력해주세요.</div>
                 </div>
 
-                <!-- 이메일 (Firebase Auth용) -->
+                <!-- 이메일 -->
                 <div class="mb-3">
                   <label class="form-label">이메일</label>
                   <input
-                    v-model.trim="form.email"
+                    v-model.trim="form.userEmail"
                     type="email"
                     class="form-control"
                     placeholder="이메일을 입력해주세요"
@@ -74,7 +67,7 @@
                 <div class="mb-3">
                   <label class="form-label">비밀번호</label>
                   <input
-                    v-model="form.password"
+                    v-model="form.userPw"
                     type="password"
                     class="form-control"
                     placeholder="비밀번호를 입력해주세요"
@@ -89,7 +82,7 @@
                 <div class="mb-3">
                   <label class="form-label">비밀번호 확인</label>
                   <input
-                    v-model="form.password2"
+                    v-model="form.userPwCheck"
                     type="password"
                     class="form-control"
                     placeholder="비밀번호를 다시 입력해주세요"
@@ -99,7 +92,7 @@
                   <div class="invalid-feedback">비밀번호가 일치하지 않습니다.</div>
                 </div>
 
-                <!-- 체크박스들 -->
+                <!-- 체크박스 -->
                 <div class="form-check mb-2">
                   <input class="form-check-input" type="checkbox" id="terms" v-model="form.agreeTerms" required />
                   <label class="form-check-label" for="terms">이용약관 및 개인정보처리방침에 동의합니다.</label>
@@ -111,7 +104,7 @@
                   <label class="form-check-label" for="marketing">마케팅 정보 수신에 동의합니다. (선택)</label>
                 </div>
 
-                <!-- 버튼들 -->
+                <!-- 버튼 -->
                 <div class="d-flex gap-2 mt-4">
                   <button type="button" class="btn btn-outline-secondary flex-fill" @click="onBack">이전</button>
                   <button type="submit" class="btn btn-primary flex-fill" :disabled="!canSubmit || isLoading">
@@ -120,7 +113,6 @@
                 </div>
               </form>
 
-              <!-- 하단 링크 -->
               <div class="text-center mt-4 small text-body-secondary">
                 이미 계정이 있으신가요?
                 <a href="#" class="link-primary text-decoration-none" @click.prevent="goLogin">로그인</a>
@@ -128,7 +120,6 @@
             </div>
           </div>
 
-          <!-- 푸터 -->
           <div class="text-center mt-3 small text-body-secondary">© 2025 아이119</div>
         </div>
       </div>
@@ -145,77 +136,66 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+// ✅ form 데이터 (camelCase)
 const form = reactive({
-  name: '',
-  phone: '',
-  username: '',
-  email: '',
-  password: '',
-  password2: '',
+  userName: '',
+  userPhoneNum: '',
+  userId: '',
+  userEmail: '',
+  userPw: '',
+  userPwCheck: '',
   agreeTerms: false,
   agreeMarketing: false,
 })
 
 const tried = ref(false)
 const isLoading = ref(false)
-
-// Firestore의 user 컬렉션 참조
 const USER_COLLECTION = collection(db, 'user')
 
-const passwordsMatch = computed(() => form.password && form.password === form.password2)
+const passwordsMatch = computed(() => form.userPw && form.userPw === form.userPwCheck)
 
 const canSubmit = computed(() =>
-  form.name &&
-  form.phone &&
-  form.username &&
-  form.email &&
-  form.password &&
-  form.password2 &&
+  form.userName &&
+  form.userPhoneNum &&
+  form.userId &&
+  form.userEmail &&
+  form.userPw &&
+  form.userPwCheck &&
   passwordsMatch.value &&
   form.agreeTerms
 )
 
 async function onSubmit() {
   tried.value = true
-  
   if (!canSubmit.value) {
     alert('모든 필수 항목을 올바르게 입력해주세요.')
     return
   }
 
   isLoading.value = true
-
   try {
-    // 1. Firebase Auth에 사용자 생성
-    const credential = await createUserWithEmailAndPassword(
-      auth,
-      form.email,
-      form.password
-    )
+    // 1️⃣ Firebase Auth에 사용자 생성
+    const credential = await createUserWithEmailAndPassword(auth, form.userEmail, form.userPw)
     const user = credential.user
 
-    // 2. Firestore의 user 컬렉션에 사용자 정보 저장
+    // 2️⃣ Firestore에 정보 저장 (snake_case로)
     const userDoc = doc(USER_COLLECTION, user.uid)
     await setDoc(userDoc, {
       uid: user.uid,
-      username: form.username,
-      name: form.name,
-      phone: form.phone,
-      agreeTerms: form.agreeTerms,
-      agreeMarketing: form.agreeMarketing,
-      createdAt: new Date().toISOString(),
+      user_id: form.userId,
+      user_name: form.userName,
+      user_phone_num: form.userPhoneNum,
+      user_email: form.userEmail,
+      user_pw: '(Firebase에 저장됨)', // 보안상 실제 비밀번호는 저장 안 함
+      agree_terms: form.agreeTerms,
+      agree_marketing: form.agreeMarketing,
+      created_at: new Date().toISOString(),
     })
 
-    // 3. 성공 메시지 표시
     alert('회원가입에 성공하셨습니다. 로그인 해주세요.')
-    
-    // 4. 로그인 페이지로 이동
     router.push('/login')
-
   } catch (err) {
     console.error('회원가입 오류:', err)
-    
-    // Firebase Auth 에러 처리
     switch (err.code) {
       case 'auth/invalid-email':
         alert('이메일을 바르게 입력해주세요.')
