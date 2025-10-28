@@ -13,7 +13,7 @@
             <!-- 아바타 -->
             <div class="rounded-circle border bg-light" style="width:40px;height:40px;"></div>
             <div class="lh-sm">
-              <div class="fw-semibold">정성범</div>
+              <div class="fw-semibold">{{ user ? (user.name || user.username || '게스트') : '게스트' }}</div>
               <div class="text-secondary small">내 정보 · 주소 관리</div>
             </div>
           </div>
@@ -28,7 +28,8 @@
         <ul class="list-group list-group-flush">
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <span>로그인</span>
-            <span @click="goToLogin" class="text-primary" role="button">로그인하기</span>
+            <span v-if="!user" @click="goToLogin" class="text-primary" role="button">로그인하기</span>
+            <span v-else @click="logout" class="text-danger" role="button">로그아웃</span>
           </li>
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <span>내아이정보</span>
@@ -83,12 +84,50 @@
   </main>
 </template>
 
-<script>
-export default {
-  name: 'SettingsPage',
-  methods: {
-    goToLogin() { this.$router.push('/login'); },
-    goTokid() { this.$router.push('/MyKids'); }
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
+import { getUser, clearUser } from '../utils/userService.js'
+import { auth } from '../firebase/index'
+import { signOut } from 'firebase/auth'
+
+const router = useRouter()
+const user = ref(getUser())
+
+function onUserChanged(e) {
+  user.value = e.detail ?? getUser()
+}
+
+onMounted(() => {
+  window.addEventListener('user-changed', onUserChanged)
+  window.addEventListener('storage', onUserChanged)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('user-changed', onUserChanged)
+  window.removeEventListener('storage', onUserChanged)
+})
+
+function goToLogin() {
+  router.push('/login')
+}
+
+function goTokid() {
+  router.push('/MyKids')
+}
+
+async function logout() {
+  try {
+    // Firebase Auth에서 로그아웃
+    await signOut(auth)
+    // localStorage에서 사용자 정보 삭제
+    clearUser()
+    user.value = null
+    alert('로그아웃되었습니다.')
+    router.push('/')
+  } catch (error) {
+    console.error('로그아웃 오류:', error)
+    alert('로그아웃 중 오류가 발생했습니다.')
   }
 }
 </script>

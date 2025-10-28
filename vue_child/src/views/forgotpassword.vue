@@ -1,7 +1,7 @@
 <!-- src/views/forgotpassword.vue -->
 <template>
   <div class="min-vh-100 d-flex align-items-start justify-content-center bg-body-tertiary py-4">
-    <div class="container" style="max-width: 420px;">
+    <div class="container-fluid px-3" style="max-width: 500px;">
       <!-- Brand: 전체 이미지를 사용 -->
       <div class="text-start mb-3">
       
@@ -78,7 +78,7 @@
 <script setup>
 import { reactive, computed, ref } from "vue"
 import { useRouter } from "vue-router"
-import { db, auth } from "@/firebase"
+import { db, auth } from "@/firebase/index"
 import { collection, query, where, getDocs } from "firebase/firestore"
 import { sendPasswordResetEmail } from "firebase/auth"
 
@@ -108,7 +108,7 @@ async function onSubmit() {
 
   try {
     // Firebase Firestore에서 이름, 연락처, 아이디(username)로 사용자 검색
-    const userCollection = collection(db, 'user')
+    const userCollection = collection(db, 'users')
     
     // 연락처 정규화 (하이픈 제거)
     const normalizedPhone = form.phone.replace(/-/g, '')
@@ -141,18 +141,15 @@ async function onSubmit() {
       
       try {
         await sendPasswordResetEmail(auth, userEmail)
-        
-        // 성공 메시지와 함께 결과 페이지로 이동
-        router.push({
-          path: '/ForgotPasswordResult',
-          query: { 
-            email: userEmail,
-            success: 'true'
-          }
-        })
+
+        // 성공 메시지
+        alert(`비밀번호 재설정 이메일이 ${userEmail}(으)로 전송되었습니다.\n\n이메일을 확인하여 비밀번호를 재설정해주세요.`)
+
+        // 로그인 페이지로 이동
+        router.push('/login')
       } catch (emailError) {
         console.error('이메일 전송 오류:', emailError)
-        
+
         if (emailError.code === 'auth/user-not-found') {
           alert('해당 이메일로 등록된 계정이 없습니다.')
         } else if (emailError.code === 'auth/invalid-email') {

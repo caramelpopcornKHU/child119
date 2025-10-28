@@ -1,3 +1,4 @@
+// ...existing code...
 <template>
   <div class="min-vh-100 d-flex align-items-start align-items-lg-center justify-content-center bg-body-tertiary py-4">
     <div class="container">
@@ -133,6 +134,7 @@ import { auth, db } from '../firebase/index.js'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc, collection } from 'firebase/firestore'
 import { useRouter } from 'vue-router'
+import { setUser } from '../utils/userService.js'
 
 const router = useRouter()
 
@@ -150,7 +152,7 @@ const form = reactive({
 
 const tried = ref(false)
 const isLoading = ref(false)
-const USER_COLLECTION = collection(db, 'user')
+const USER_COLLECTION = collection(db, 'users')
 
 const passwordsMatch = computed(() => form.userPw && form.userPw === form.userPwCheck)
 
@@ -174,26 +176,37 @@ async function onSubmit() {
 
   isLoading.value = true
   try {
-    // 1️⃣ Firebase Auth에 사용자 생성
+    // 1️⃣ Firebase Auth에 사용자 생성 (이때 자동 로그인 상태가 됨)
     const credential = await createUserWithEmailAndPassword(auth, form.userEmail, form.userPw)
     const user = credential.user
 
-    // 2️⃣ Firestore에 정보 저장 (snake_case로)
+    // 2️⃣ Firestore에 정보 저장 (camelCase로 통일)
     const userDoc = doc(USER_COLLECTION, user.uid)
     await setDoc(userDoc, {
       uid: user.uid,
-      user_id: form.userId,
-      user_name: form.userName,
-      user_phone_num: form.userPhoneNum,
-      user_email: form.userEmail,
-      user_pw: '(Firebase에 저장됨)', // 보안상 실제 비밀번호는 저장 안 함
-      agree_terms: form.agreeTerms,
-      agree_marketing: form.agreeMarketing,
-      created_at: new Date().toISOString(),
+      username: form.userId,
+      name: form.userName,
+      phone: form.userPhoneNum,
+      email: form.userEmail,
+      agreeTerms: form.agreeTerms,
+      agreeMarketing: form.agreeMarketing,
+      createdAt: new Date().toISOString(),
     })
 
-    alert('회원가입에 성공하셨습니다. 로그인 해주세요.')
-    router.push('/login')
+    // 3️⃣ 로컬스토리지에 사용자 정보 저장 -> 새로고침해도 유지, 헤더에서 읽도록 사용
+    const localUser = {
+      uid: user.uid,
+      name: form.userName,
+      username: form.userId,
+      email: form.userEmail,
+      phone: form.userPhoneNum
+    }
+    setUser(localUser)
+
+    // 4️⃣ 홈으로 이동 (자동 로그인 상태 유지)
+    alert('회원가입이 완료되었습니다!')
+    router.push('/')
+
   } catch (err) {
     console.error('회원가입 오류:', err)
     switch (err.code) {
@@ -223,3 +236,4 @@ function goLogin() {
   router.push('/login')
 }
 </script>
+// ...existing code...

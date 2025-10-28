@@ -11,12 +11,32 @@
         <!-- 타이틀 -->
         <h5 class="fw-bold mb-3">내 아이</h5>
 
+        <!-- 로딩 중 -->
+        <div v-if="loading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">로딩 중...</span>
+          </div>
+          <p class="mt-3 text-muted">아이 정보를 불러오는 중...</p>
+        </div>
+
+        <!-- 아이 목록이 없을 때 -->
+        <div v-else-if="kids.length === 0" class="text-center py-5">
+          <i class="bi bi-people fs-1 text-muted d-block mb-3"></i>
+          <p class="text-muted">등록된 아이가 없습니다.</p>
+          <p class="text-muted small">아래 버튼을 눌러 아이 정보를 추가해주세요.</p>
+        </div>
+
         <!-- 아이 카드(아코디언 형태) -->
-        <div class="card shadow-sm mb-3" v-for="(kid, i) in kids" :key="kid.id">
+        <div v-else class="card shadow-sm mb-3" v-for="(kid, i) in kids" :key="kid.id">
           <div class="card-body p-3">
             <!-- 상단 요약행 -->
             <div class="d-flex align-items-center">
-              <img src="@/assets/kid1.jpg" alt="avatar" class="rounded-circle me-2" style="width:36px;height:36px;object-fit:cover;" />
+              <img
+                :src="getKidImage(kid.gender)"
+                alt="avatar"
+                class="rounded-circle me-2"
+                style="width:36px;height:36px;object-fit:cover;"
+              />
               <div class="flex-grow-1 fw-semibold">{{ kid.label }}</div>
             
 
@@ -76,70 +96,74 @@
 </template>
 
 <script setup>
-import { reactive, computed } from "vue";
-import {useRouter} from 'vue-router'
+import { ref, computed, onMounted, onBeforeUnmount } from "vue"
+import { useRouter } from 'vue-router'
+import { watchMyKids } from '@/firebase/kid.js'
+import kidboyImg from '@/assets/kidboy.png'
+import kidgirlImg from '@/assets/kidgirl.png'
+import kidDefaultImg from '@/assets/kid1.jpg'
+
 const router = useRouter()
+const kids = ref([])
+const loading = ref(true)
+let unsubscribe = null
 
-const defaultAvatar = "https://via.placeholder.com/72x72.png?text=%F0%9F%A4%B8";
-
-/* 데모 데이터 (실제로는 API 연동) */
-const kids = reactive([
-  {
-    id: 1,
-    label: "아이1",
-    name: "김서",
-    birthYear: 2022,
-    blood: "A형",
-    trait: "어릴 때 아토피",
-    meds: "OOO 알러지약 이따금 복용",
-    height: 95,
-    weight: 14,
-    allergy: "달걀, 귤/감귤 일부",
-    gender: "F",
-    avatar: "",
-    open: true,
-  },
-  {
-    id: 2,
-    label: "아이2",
-    name: "김우",
-    birthYear: 2020,
-    blood: "O형",
-    trait: "",
-    meds: "",
-    height: 110,
-    weight: 18,
-    allergy: "",
-    gender: "M",
-    avatar: "",
-    open: false,
-  },
-]);
+// 성별에 따른 이미지 선택 함수
+const getKidImage = (gender) => {
+  if (gender === 'M') return kidboyImg
+  if (gender === 'F') return kidgirlImg
+  return kidDefaultImg
+}
 
 /* 본문 스크롤 영역 높이 계산: 헤더/푸터 고정값을 제외 */
 const scrollBoxStyle = computed(() => ({
-  height: "calc(100vh - 64px - 84px)", // 헤더64 + 푸터84와 동일한 상·하 padding 포함 값
-}));
+  height: "calc(100vh - 64px - 84px)",
+}))
+
+onMounted(async () => {
+  try {
+    // Firestore에서 실시간으로 내 아이 목록 구독
+    unsubscribe = await watchMyKids((rows) => {
+      kids.value = rows.map(kid => ({
+        id: kid.id,
+        label: kid.kid || "아이",  // kid 필드 사용
+        name: kid.kid || "",  // kid 필드 사용
+        birthYear: kid.birthYear || "",
+        blood: kid.bloodType || "",  // bloodType 필드 사용
+        trait: kid.medicalHistory || "",  // medicalHistory 필드 사용
+        meds: kid.medication || "",  // medication 필드 사용
+        height: kid.heightCm || 0,  // heightCm 필드 사용
+        weight: kid.weightKg || 0,  // weightKg 필드 사용
+        allergy: kid.allergy || "",
+        gender: kid.gender || "",
+        open: false
+      }))
+      loading.value = false
+    })
+  } catch (error) {
+    console.error('아이 목록 불러오기 실패:', error)
+    if (error.message === '로그인이 필요합니다.') {
+      alert('로그인이 필요합니다.')
+      router.push('/login')
+    }
+    loading.value = false
+  }
+})
+
+onBeforeUnmount(() => {
+  if (unsubscribe) unsubscribe()
+})
 
 function toggle(i) {
-  kids[i].open = !kids[i].open;
+  kids.value[i].open = !kids.value[i].open
 }
+
 function editKid(i) {
-  alert(`${kids[i].label} 정보 수정`);
+  const kidId = kids.value[i].id
+  router.push(`/kidinformationedit/${kidId}`)
 }
+
 function addKid() {
-    router.push("/AddKid");
- alert("아이 추가");
+  router.push("/AddKid")
 }
-
-/* 하단 탭 이벤트 (라우터 연동 전 임시) */
-function goEmergency() { alert("응급검색"); }
-function goMap() { alert("병원맵"); }
-function goHome() { alert("홈"); }
-function call119() { alert("응급신고"); }
-function goMy() { alert("내 아이"); }
-
-/* 헤더 아이콘 */
-function onSearch() { alert("검색"); }
-function onMenu() { alert("메뉴"); }
 </script>

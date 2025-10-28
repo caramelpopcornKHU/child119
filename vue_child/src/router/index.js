@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import { auth } from '../firebase/index'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,6 +14,7 @@ const router = createRouter({
       path: '/mypage',
       name: 'mypage',
       component: () => import('../views/mypage.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/login',
@@ -48,11 +50,19 @@ const router = createRouter({
       path: '/MyKids',
       name: 'MyKids',
       component: () => import('../views/MyKids.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/AddKid',
       name: 'AddKid',
       component: () => import('../views/AddKid.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/kidinformationedit/:id',
+      name: 'kidinformationedit',
+      component: () => import('../views/kidinformationedit.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/hospitalinformation',
@@ -75,6 +85,20 @@ const router = createRouter({
       component: () => import('../views/FindPassword.vue'),
     },
   ],
+})
+
+// 로그인이 필요한 페이지 보호
+router.beforeEach((to, from, next) => {
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const currentUser = auth.currentUser
+
+  if (requiresAuth && !currentUser) {
+    // 로그인이 필요한 페이지인데 로그인하지 않은 경우
+    alert('로그인이 필요합니다.')
+    next('/login')
+  } else {
+    next()
+  }
 })
 
 export default router

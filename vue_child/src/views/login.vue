@@ -65,9 +65,10 @@
 <script setup>
 import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { auth, db } from '@/firebase'
+import { auth, db } from '@/firebase/index'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
+import { setUser } from '@/utils/userService.js'
 
 const router = useRouter()
 
@@ -101,17 +102,36 @@ async function onSubmit() {
     
     const user = userCredential.user
 
-    // Firestore에서 사용자 정보 가져오기 (선택사항)
-    const userDocRef = doc(db, 'user', user.uid)
+    // Firestore에서 사용자 정보 가져오기
+    const userDocRef = doc(db, 'users', user.uid)
     const userDoc = await getDoc(userDocRef)
-    
-    if (userDoc.exists()) {
-      console.log('사용자 정보:', userDoc.data())
+
+    let userData = {
+      uid: user.uid,
+      name: user.displayName || '사용자',
+      username: user.email,
+      email: user.email,
+      phone: ''
     }
+
+    if (userDoc.exists()) {
+      const firestoreData = userDoc.data()
+      userData = {
+        uid: firestoreData.uid || user.uid,
+        name: firestoreData.name || user.displayName || '사용자',
+        username: firestoreData.username || user.email,
+        email: user.email,
+        phone: firestoreData.phone || ''
+      }
+      console.log('사용자 정보:', firestoreData)
+    }
+
+    // localStorage에 사용자 정보 저장
+    setUser(userData)
 
     // 로그인 성공
     alert('로그인에 성공했습니다!')
-    
+
     // 메인 페이지 또는 홈으로 이동
     router.push('/')
 

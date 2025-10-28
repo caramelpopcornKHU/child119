@@ -57,6 +57,12 @@
                 <input v-model.number="form.weight" type="number" class="form-control" placeholder="예: 14" min="0" />
               </div>
 
+              <!-- 기저질환 및 병력 -->
+              <div class="mb-3">
+                <label class="form-label">기저질환 및 병력</label>
+                <textarea v-model.trim="form.history" class="form-control" rows="3" placeholder="예: 12개월 때 열성 경련 경험 있음"></textarea>
+              </div>
+
               <!-- 알레르기 -->
               <div class="mb-3">
                 <label class="form-label">알레르기</label>
@@ -78,7 +84,9 @@
               </div>
 
               <!-- 저장 버튼 -->
-              <button type="submit" class="btn btn-primary w-100">저장하기</button>
+              <button type="submit" class="btn btn-primary w-100" :disabled="isLoading">
+                {{ isLoading ? '저장 중...' : '저장하기' }}
+              </button>
             </div>
           </div>
         </form>
@@ -91,10 +99,11 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from "vue";
-import {useRouter} from 'vue-router'
-const router = useRouter
-const avatar = "https://via.placeholder.com/72x72.png?text=%F0%9F%A4%B8";
+import { reactive, ref, computed } from "vue"
+import { useRouter } from 'vue-router'
+import { addKid } from '@/firebase/kid.js'
+
+const router = useRouter()
 
 const form = reactive({
   name: "",
@@ -105,36 +114,50 @@ const form = reactive({
   weight: null,
   allergy: "",
   gender: "",
-});
+  history: ""
+})
 
-const tried = ref(false);
+const tried = ref(false)
+const isLoading = ref(false)
 
 /* 본문 스크롤 영역 높이 계산 (헤더/푸터 고정 고려) */
 const scrollBoxStyle = computed(() => ({
   height: "calc(100vh - 64px - 84px)", // 헤더 64px, 푸터 84px 기준
-}));
+}))
 
 const canSubmit = computed(() =>
   form.name &&
   form.birthYear &&
   form.blood &&
   !!form.gender
-);
+)
 
-function onSubmit() {
-  tried.value = true;
-  if (!canSubmit.value) return;
+async function onSubmit() {
+  tried.value = true
+  if (!canSubmit.value) {
+    alert('모든 필수 항목을 입력해주세요.')
+    return
+  }
 
-  // TODO: 실제 저장 API 연동
-  alert(`아이 추가 완료\n이름: ${form.name}`);
+  isLoading.value = true
+  try {
+    await addKid(form)
+    alert('아이 정보가 추가되었습니다!')
+    router.push('/MyKids')
+  } catch (error) {
+    console.error('아이 추가 실패:', error)
+    if (error.message === '로그인이 필요합니다.') {
+      alert('로그인이 필요합니다.')
+      router.push('/login')
+    } else {
+      alert('아이 정보 추가에 실패했습니다.')
+    }
+  } finally {
+    isLoading.value = false
+  }
 }
 
-function goBack() { history.back(); }
-
-/* 하단 탭 (라우팅 전 임시 동작) */
-function goEmergency() { alert("응급검색"); }
-function goMap() { alert("병원맵"); }
-function goHome() { alert("홈"); }
-function call119() { alert("응급신고"); }
-function goMy() { alert("내 아이"); }
+function goBack() {
+  router.back()
+}
 </script>
