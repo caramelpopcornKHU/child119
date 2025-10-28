@@ -1,49 +1,33 @@
 <template>
- <div class="d-flex justify-content-center align-items-center position-relative mt-1" style="height: calc(100vh - 140px); ">
+  <div class="d-flex justify-content-center align-items-center position-relative mt-1"
+    style="height: calc(100vh - 140px); ">
     <!-- 지도 -->
-   <div id="map_div" class="position-fixed top-0   start-0 w-100">
+    <div id="map_div" class="position-fixed top-0   start-0 w-100">
 
 
-    <!-- 좌상단 오버레이 -->
-    <div class="position-fixed start-0 p-3"
-      style="top: calc(var(--header-h) + 8px); z-index: 2;">
-      <button
-        type="button"
-        class="btn btn-light border rounded-pill px-3 shadow-sm me-0 pe-auto"
-        data-bs-toggle="modal"
-        data-bs-target="#symptomModal"
-      >
-        <i class="bi bi-clipboard2-pulse me-1"></i> 증상 확인
-      </button>
+      <!-- 좌상단 오버레이 -->
+      <div class="position-fixed start-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
+        <button type="button" class="btn btn-light border rounded-pill px-3 shadow-sm me-0 pe-auto text-bold"
+          data-bs-toggle="modal" data-bs-target="#symptomModal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <path fill="currentColor"
+              d="M19 8c.56 0 1 .43 1 1a1 1 0 0 1-1 1c-.57 0-1-.45-1-1c0-.57.43-1 1-1M2 2v9c0 2.96 2.19 5.5 5.14 5.91c.62 3.01 3.28 5.09 6.36 5.09a6.5 6.5 0 0 0 6.5-6.5v-3.69c1.16-.42 2-1.52 2-2.81a3 3 0 0 0-3-3a3 3 0 0 0-3 3c0 1.29.84 2.4 2 2.81v3.6c0 2.5-2 4.5-4.5 4.5c-2 0-3.68-1.21-4.28-3.01C12 16.3 14 13.8 14 11V2h-4v3h2v6a4 4 0 0 1-4 4a4 4 0 0 1-4-4V5h2V2z" />
+          </svg> 증상 확인
+        </button>
 
-      <div v-if="selectedSymptoms.length" class="mt-2 d-flex flex-wrap gap-1 pe-auto">
-        <span
-          v-for="sym in selectedSymptoms"
-          :key="`chip-map-${sym}`"
-          class="badge text-bg-primary rounded-pill d-inline-flex align-items-center"
-        >
-          {{ sym }}
-          <button
-            type="button"
-            class="btn-close btn-close-white btn-sm ms-1"
-            aria-label="삭제"
-            @click="removeSymptom(sym)"
-            style="transform: scale(.8); vertical-align: middle;"
-          ></button>
-        </span>
+        <div v-if="selectedSymptoms.length" class="mt-2 d-flex flex-wrap gap-1 pe-auto">
+          <span v-for="sym in selectedSymptoms" :key="`chip-map-${sym}`"
+            class="badge text-bg-primary rounded-pill d-inline-flex align-items-center">
+            {{ sym }}
+            <button type="button" class="btn-close btn-close-white btn-sm ms-1" aria-label="삭제"
+              @click="removeSymptom(sym)" style="transform: scale(.8); vertical-align: middle;"></button>
+          </span>
+        </div>
       </div>
     </div>
-</div>
     <!-- 하단 슬라이딩 시트 -->
-    <div
-      class="position-fixed start-0 end-0 bg-white rounded-top shadow z-2"
-      ref="bottomSheet"
-      :style="sheetStyle"
-      @touchstart="onTouchStart"
-      @touchmove="onTouchMove"
-      @touchend="onTouchEnd"
-      style="z-index: 2;"
-    >
+    <div class="position-fixed start-0 end-0 bg-white rounded-top shadow z-2" ref="bottomSheet" :style="sheetStyle"
+      @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2;">
       <!-- 핸들 -->
       <div class="py-3 d-flex justify-content-center" @click="toggleSheet">
         <!-- 너비/높이는 유틸로 근사 (w-25, py-1) -->
@@ -54,29 +38,17 @@
         <!-- 상단 라인 -->
         <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              class="btn btn-light border rounded-pill px-3"
-              data-bs-toggle="modal"
-              data-bs-target="#symptomModal"
-            >
+            <button type="button" class="btn btn-light border rounded-pill px-3" data-bs-toggle="modal"
+              data-bs-target="#symptomModal">
               <i class="bi bi-clipboard2-pulse me-1"></i> 증상 확인
             </button>
 
             <div class="d-flex flex-wrap gap-1">
-              <span
-                v-for="sym in selectedSymptoms"
-                :key="sym"
-                class="badge text-bg-primary rounded-pill d-inline-flex align-items-center"
-              >
+              <span v-for="sym in selectedSymptoms" :key="sym"
+                class="badge text-bg-primary rounded-pill d-inline-flex align-items-center">
                 {{ sym }}
-                <button
-                  type="button"
-                  class="btn-close btn-close-white btn-sm ms-1"
-                  aria-label="삭제"
-                  @click="removeSymptom(sym)"
-                  style="transform: scale(.8); vertical-align: middle;"
-                ></button>
+                <button type="button" class="btn-close btn-close-white btn-sm ms-1" aria-label="삭제"
+                  @click="removeSymptom(sym)" style="transform: scale(.8); vertical-align: middle;"></button>
               </span>
             </div>
           </div>
@@ -137,13 +109,7 @@
           <div class="modal-body">
             <div class="d-flex flex-wrap gap-2">
               <template v-for="opt in symptomOptions" :key="opt">
-                <input
-                  class="btn-check"
-                  type="checkbox"
-                  :id="`sym-${opt}`"
-                  :value="opt"
-                  v-model="selectedSymptoms"
-                />
+                <input class="btn-check" type="checkbox" :id="`sym-${opt}`" :value="opt" v-model="selectedSymptoms" />
                 <label class="btn btn-outline-secondary rounded-pill py-1 px-3" :for="`sym-${opt}`">
                   {{ opt }}
                 </label>
@@ -166,9 +132,9 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 /* 증상 선택 상태 */
-const symptomOptions = ['발열','감기','기침','호흡곤란','구토','설사','복통','발진','화상','경련']
+const symptomOptions = ['발열', '감기', '기침', '호흡곤란', '구토', '설사', '복통', '발진', '화상', '경련']
 const selectedSymptoms = ref([])
-function removeSymptom(sym){ selectedSymptoms.value = selectedSymptoms.value.filter(s => s !== sym) }
+function removeSymptom(sym) { selectedSymptoms.value = selectedSymptoms.value.filter(s => s !== sym) }
 
 /* 지도 상태 */
 const map = ref(null)
@@ -180,7 +146,7 @@ const sheetHeightRatio = ref(0)
 const dragStart = ref({ y: 0, ratio: 0 })
 
 const MAX_SHEET_HEIGHT = window.innerHeight * 0.8
-const MIN_SHEET_HEIGHT = 100
+const MIN_SHEET_HEIGHT = 210
 
 const sheetY = computed(() =>
   (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT) * (1 - sheetHeightRatio.value)
@@ -245,7 +211,7 @@ const onTouchEnd = () => {
 const toggleSheet = () => { sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 0 : 1 }
 
 /* 외부 스크립트 로더 */
-function loadTmapScript () {
+function loadTmapScript() {
   return new Promise((resolve, reject) => {
     if (window.Tmapv3) return resolve()
     const exist = document.querySelector('script[data-tmap="v3"]')
@@ -258,7 +224,7 @@ function loadTmapScript () {
     document.head.appendChild(script)
   })
 }
-function waitTmapReady (retry = 10) {
+function waitTmapReady(retry = 10) {
   return new Promise((resolve, reject) => {
     const tick = () => {
       if (window.Tmapv3 && typeof window.Tmapv3.Map === 'function') return resolve()

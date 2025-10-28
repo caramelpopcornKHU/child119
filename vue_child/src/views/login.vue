@@ -13,17 +13,17 @@
           <h2 class="h5 text-center fw-bold mb-4" style="color: var(--bs-primary);">로그인</h2>
 
           <form class="needs-validation" novalidate @submit.prevent="onSubmit" :class="{'was-validated': tried}">
-            <!-- 이메일 -->
+            <!-- 아이디 -->
             <div class="mb-3">
-              <label class="form-label">이메일</label>
+              <label class="form-label">아이디</label>
               <input
-                v-model.trim="form.email"
-                type="email"
+                v-model.trim="form.username"
+                type="text"
                 class="form-control"
-                placeholder="이메일을 입력해주세요"
+                placeholder="아이디를 입력해주세요"
                 required
               />
-              <div class="invalid-feedback">이메일을 입력해주세요.</div>
+              <div class="invalid-feedback">아이디를 입력해주세요.</div>
             </div>
 
             <!-- 비밀번호 -->
@@ -50,11 +50,11 @@
 
           <!-- 하단 링크: 아이디 찾기 | 비밀번호 찾기 | 회원가입 -->
           <div class="d-flex align-items-center justify-content-center gap-3 mt-4 small">
-            <a href="#" class="link-secondary text-decoration-none text-nowrap" @click.prevent="goFindId">아이디 찾기</a>
+            <a href="#" class="link-secondary text-decoration-none text-nowrap text-bold" @click.prevent="goFindId">아이디 찾기</a>
             <span class="text-body-secondary">|</span>
-            <a href="#" class="link-secondary text-decoration-none text-nowrap" @click.prevent="goFindPw">비밀번호 찾기</a>
+            <a href="#" class="link-secondary text-decoration-none text-nowrap text-bold" @click.prevent="goFindPw">비밀번호 찾기</a>
             <span class="text-body-secondary">|</span>
-            <a href="#" class="link-secondary text-decoration-none text-nowrap" @click.prevent="goSignup">회원가입</a>
+            <a href="#" class="link-secondary text-decoration-none text-nowrap text-bold" @click.prevent="goSignup">회원가입</a>
           </div>
         </div>
       </div>
@@ -67,50 +67,72 @@ import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { auth, db } from '@/firebase/index'
 import { signInWithEmailAndPassword } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
 import { setUser } from '@/utils/userService.js'
 
 const router = useRouter()
 
 const form = reactive({
-  email: '',
+  username: '',
   password: '',
 })
 
 const tried = ref(false)
 const isLoading = ref(false)
 
-const canSubmit = computed(() => form.email && form.password)
+const canSubmit = computed(() => form.username && form.password)
 
 async function onSubmit() {
   tried.value = true
-  
+
   // 아이디와 비밀번호 입력하지 않으면 alert창 띄우기
-  if (!form.email || !form.password) {
-    alert('이메일과 비밀번호를 입력해주세요.')
+  if (!form.username || !form.password) {
+    alert('아이디와 비밀번호를 입력해주세요.')
     return
   }
 
   try {
-    // 로그인하기
     isLoading.value = true
+
+    // 1단계: Firestore에서 username으로 이메일 찾기
+    const usersCollection = collection(db, 'users')
+    const q = query(usersCollection, where('username', '==', form.username))
+    const querySnapshot = await getDocs(q)
+
+    if (querySnapshot.empty) {
+      alert('등록되지 않은 아이디입니다.')
+      isLoading.value = false
+      return
+    }
+
+    // 첫 번째 일치하는 사용자의 이메일 가져오기
+    const userDocData = querySnapshot.docs[0].data()
+    const userEmail = userDocData.email
+
+    if (!userEmail) {
+      alert('사용자 정보를 찾을 수 없습니다.')
+      isLoading.value = false
+      return
+    }
+
+    // 2단계: 찾은 이메일로 Firebase Auth 로그인
     const userCredential = await signInWithEmailAndPassword(
       auth,
-      form.email,
+      userEmail,
       form.password
     )
-    
+
     const user = userCredential.user
 
-    // Firestore에서 사용자 정보 가져오기
+    // 3단계: Firestore에서 사용자 정보 가져오기
     const userDocRef = doc(db, 'users', user.uid)
     const userDoc = await getDoc(userDocRef)
 
     let userData = {
       uid: user.uid,
       name: user.displayName || '사용자',
-      username: user.email,
-      email: user.email,
+      username: form.username,
+      email: userEmail,
       phone: ''
     }
 
@@ -119,14 +141,14 @@ async function onSubmit() {
       userData = {
         uid: firestoreData.uid || user.uid,
         name: firestoreData.name || user.displayName || '사용자',
-        username: firestoreData.username || user.email,
-        email: user.email,
+        username: firestoreData.username || form.username,
+        email: userEmail,
         phone: firestoreData.phone || ''
       }
       console.log('사용자 정보:', firestoreData)
     }
 
-    // localStorage에 사용자 정보 저장
+    // 4단계: localStorage에 사용자 정보 저장
     setUser(userData)
 
     // 로그인 성공
@@ -137,26 +159,26 @@ async function onSubmit() {
 
   } catch (error) {
     console.error('로그인 오류:', error)
-    
+
     // Firebase Auth 에러 처리
     switch (error.code) {
       case 'auth/invalid-email':
         alert('올바른 이메일 형식을 입력해주세요.')
         break
       case 'auth/user-not-found':
-        alert('등록되지 않은 이메일입니다.')
+        alert('등록되지 않은 아이디입니다.')
         break
       case 'auth/wrong-password':
         alert('비밀번호가 일치하지 않습니다.')
         break
       case 'auth/invalid-credential':
-        alert('이메일 또는 비밀번호를 다시 확인해주세요.')
+        alert('아이디 또는 비밀번호를 다시 확인해주세요.')
         break
       case 'auth/too-many-requests':
         alert('로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.')
         break
       default:
-        alert('이메일, 비밀번호를 다시 확인해주세요.')
+        alert('아이디, 비밀번호를 다시 확인해주세요.')
         break
     }
   } finally {
