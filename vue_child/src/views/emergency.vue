@@ -15,12 +15,14 @@
               :key="c.label"
               class="d-flex flex-column align-items-center"
               style="min-width:48px;"
+
+               @click="selectTag(c.label)"
             >
               <div class="d-flex align-items-center justify-content-center rounded-circle border"
-                   style="width:40px;height:40px;">
+                   style="width:40px;height:40px;transition: all .2s; cursor: pointer;">
                 <i :class="c.icon"></i>
               </div>
-              <small class="text-muted mt-1">{{ c.label }}</small>
+              <small class="text-muted mt-1 text-bold">{{ c.label }}</small>
             </div>
           </div>
 
@@ -28,23 +30,7 @@
         </div>
       </div>
 
-      <!-- 증상 칩 -->
-      <div class="border-top d-flex align-items-center">
-        <div class="container-fluid py-2">
-          <div class="d-flex align-items-center justify-content-center gap-2 overflow-auto" 
-                 style="white-space: nowrap; flex-wrap: wrap;">
-            <button
-              v-for="t in tags"
-              :key="t"
-              class="btn btn-light border rounded-pill px-3 py-1"
-              :class="{'active': selectedTag === t}"
-              @click="selectTag(t)"
-            >
-              {{ t }}
-            </button>
-          </div>
-        </div>
-      </div>
+     
     </div>
 
     <!-- 리스트 (남은 높이 채우고 스크롤) -->
@@ -66,8 +52,8 @@
           <div class="p-2 d-flex gap-2 align-items-start">
             <div class="rounded-circle bg-secondary-subtle flex-shrink-0" style="width:36px;height:36px;"></div>
             <div class="flex-grow-1" >
-              <h6 class="mb-1 fw-semibold text-body text-wrap" >{{ v.title }}</h6>
-              <div class="text-muted small">
+              <h6 class="mb-1 fw-semibold text-body text-wrap text-bold" >{{ v.title }}</h6>
+              <div class="text-muted small text-light">
                 {{ v.channel }} · {{ v.views }} · {{ v.age }}
               </div>
             </div>
@@ -194,3 +180,14 @@ onMounted(() => {
   mountObserver()
 })
 </script>
+
+<style>
+.rounded-circle:hover {
+  background-color: #e9ecef; /* 연한 회색 */
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+
+
+
+</style>
