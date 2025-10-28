@@ -52,7 +52,7 @@
             class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
             :class="{ 'bg-light': $route.path === '/' }">
             <i class="bi bi-truck-front fs-5"></i>
-            <small class="mt-1 text-nowrap">응급실</small>
+            <small class="mt-1 text-nowrap text-bold">응급실</small>
           </button>
         </li>
 
@@ -125,11 +125,43 @@ export default {
 @import "bootstrap-icons/font/bootstrap-icons.css";
 
 
-/* Pretendard 폰트 CDN */
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Light.woff2') format('woff2');
+    font-weight: 300;
+    font-display: swap;
+}
 
-body, #app{
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-display: swap;
+}
+
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
+}
+
+
+.text-light{
+  font-family: 'Pretendard';
+  font-weight: 300;
+}
+
+.text-medium{
+  font-family: 'Pretendard';
+  font-weight: 500;
+}
+
+.text-bold{
+  font-family: 'Pretendard';
+  font-weight: 700;
 }
 
 /* ✅ 헤더/푸터 높이 지정 (화면 계산용) */
