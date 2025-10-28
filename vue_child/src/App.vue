@@ -8,23 +8,16 @@
         <!-- 좌측: 로고 + 홈 버튼 -->
         <div class="d-flex align-items-center">
           <button @click="goToHome" class="btn btn-link p-0 border-0">
-            <img src="@/assets/kid_logo.png" alt="logo"
-                 class="me-2"
-                 style="width:50px;height:50px;vertical-align:middle;" />
+            <img src="@/assets/kid_logo.png" alt="logo" class="me-2"
+              style="width:50px;height:50px;vertical-align:middle;" />
           </button>
           <span class="fw-bold fs-5 text-dark">아이119</span>
         </div>
 
         <!-- 우측: 마이페이지 버튼 (햄버거 메뉴 아이콘) -->
-        <button
-          @click="mypage"
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarToggleExternalContent"
-          aria-controls="navbarToggleExternalContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation">
+        <button @click="mypage" class="navbar-toggler" type="button" data-bs-toggle="collapse"
+          data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent"
+          aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
       </div>
@@ -44,55 +37,65 @@
          🦶 Footer (하단 고정 네비게이션)
          =============================== -->
     <nav class="navbar bg-white border-top fixed-bottom">
-      <ul class="nav nav-fill w-100 align-items-stretch m-0 flex-nowrap">
+      <ul class="nav nav-fill w-100 align-items-stretch  m-0 flex-nowrap">
         <!-- 각 버튼은 라우터 경로에 따라 아이콘/페이지 전환 -->
         <li class="nav-item">
-          <button
-            @click="goToHome"
-            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
+          <button @click="goToHome"
+            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-gray" 
             :class="{ 'bg-light': $route.path === '/' }">
-            <i class="bi bi-truck-front fs-5"></i>
-            <small class="mt-1 text-nowrap text-bold">응급실</small>
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
+              <path fill="currentColor"
+                d="M11 0v3h2V0zM7.88 1.46L6.46 2.87L8.59 5L10 3.58zm8.24 0L14 3.58L15.41 5l2.13-2.12zM12 5a2 2 0 0 0-2 2v1H6.5c-.66 0-1.22.42-1.42 1L3 15v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-6c-.2-.58-.76-1-1.42-1H14V7a2 2 0 0 0-2-2M6.5 9.5h11L19 14H5zm0 6.5A1.5 1.5 0 0 1 8 17.5A1.5 1.5 0 0 1 6.5 19A1.5 1.5 0 0 1 5 17.5A1.5 1.5 0 0 1 6.5 16m11 0a1.5 1.5 0 0 1 1.5 1.5a1.5 1.5 0 0 1-1.5 1.5a1.5 1.5 0 0 1-1.5-1.5a1.5 1.5 0 0 1 1.5-1.5" />
+            </svg>
+            <small class="mt-1 text-nowrap text-medium">응급실</small>
           </button>
         </li>
 
         <li class="nav-item border-start">
-          <button
-            @click="hospitalinformation"
-            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
+          <button @click="hospitalinformation"
+            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-gray"
             :class="{ 'bg-light': $route.path === '/hospitalinformation' }">
-            <i class="bi bi-hospital fs-5"></i>
-            <small class="mt-1 text-nowrap">병의원</small>
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
+              <path fill="currentColor"
+                d="M2 22V7a1 1 0 0 1 1-1h4V2h10v4h4a1 1 0 0 1 1 1v15h-8v-5h-4v5zM9 4v6h2V8h2v2h2V4h-2v2h-2V4zM4 20h4v-3H4zm0-5h4v-3H4zm12 5h4v-3h-4zm0-5h4v-3h-4zm-6 0h4v-3h-4z" />
+            </svg>
+            <small class="mt-1 text-nowrap text-medium">병의원</small>
           </button>
         </li>
 
         <li class="nav-item border-start">
-          <button
-            @click="aichat"
-            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
+          <button @click="aichat"
+            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-gray"
             :class="{ 'bg-light': $route.path === '/aichat' }">
-            <i class="bi bi-robot fs-5"></i>
-            <small class="mt-1 text-nowrap">AI 챗봇</small>
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
+              <path fill="currentColor"
+                d="M19 8h1v1h-1zm1-3h-1v2h1V6h.5c.28 0 .5-.22.5-.5v-2c0-.28-.22-.5-.5-.5H18v1h2zm-3-2h-1v4h1zm-3.5 12.5a2 2 0 1 0 4 0c0-1.11-.89-2-2-2s-2 .9-2 2M17 8h-1v1h1zm5 6h-1c0-1.5-.47-2.87-1.26-4h-2.77c1.22.91 2.03 2.36 2.03 4v2h2v1h-2v3H5v-3H3v-1h2v-2c0-2.76 2.24-5 5-5h4c.34 0 .68.04 1 .1V7.08c-.33-.05-.66-.08-1-.08h-1V5.73A2 2 0 1 0 10 4c0 .74.4 1.39 1 1.73V7h-1c-3.87 0-7 3.13-7 7H2c-.55 0-1 .45-1 1v3c0 .55.45 1 1 1h1v1a2 2 0 0 0 2 2h14c1.11 0 2-.89 2-2v-1h1c.55 0 1-.45 1-1v-3c0-.55-.45-1-1-1m-13.5-.5c-1.1 0-2 .9-2 2s.9 2 2 2s2-.89 2-2s-.89-2-2-2" />
+            </svg>
+            <small class="mt-1 text-nowrap text-medium">AI 챗봇</small>
           </button>
         </li>
 
         <li class="nav-item border-start">
-          <button
-            @click="emergency"
-            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
+          <button @click="emergency"
+            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-gray"
             :class="{ 'bg-light': $route.path === '/emergency' }">
-            <i class="bi bi-heart-fill fs-5"></i>
-            <small class="mt-1 text-nowrap">응급처치</small>
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
+              <path fill="currentColor"
+                d="M16.5 2.83c-1.74 0-3.41.81-4.5 2.07c-1.09-1.26-2.76-2.07-4.5-2.07c-3.08 0-5.5 2.41-5.5 5.5c0 3.77 3.4 6.86 8.55 11.53L12 21.17l1.45-1.31C18.6 15.19 22 12.1 22 8.33c0-3.09-2.42-5.5-5.5-5.5m-4.5 15v-4H9l3-7v4h3" />
+            </svg>
+            <small class="mt-1 text-nowrap text-medium">응급처치</small>
           </button>
         </li>
 
         <li class="nav-item border-start">
-          <button
-            @click="MyKids"
-            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-dark"
+          <button @click="MyKids"
+            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-gray"
             :class="{ 'bg-light': $route.path === '/MyKids' }">
-            <i class="bi bi-people fs-5"></i>
-            <small class="mt-1 text-nowrap">내 아이</small>
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
+              <path fill="currentColor"
+                d="M13.07 10.41a5 5 0 0 0 0-5.82A3.4 3.4 0 0 1 15 4a3.5 3.5 0 0 1 0 7a3.4 3.4 0 0 1-1.93-.59M5.5 7.5A3.5 3.5 0 1 1 9 11a3.5 3.5 0 0 1-3.5-3.5m2 0A1.5 1.5 0 1 0 9 6a1.5 1.5 0 0 0-1.5 1.5M16 17v2H2v-2s0-4 7-4s7 4 7 4m-2 0c-.14-.78-1.33-2-5-2s-4.93 1.31-5 2m11.95-4A5.32 5.32 0 0 1 18 17v2h4v-2s0-3.63-6.06-4Z" />
+            </svg>
+            <small class="mt-1 text-nowrap text-medium">내 아이</small>
           </button>
         </li>
       </ul>
@@ -126,43 +129,52 @@ export default {
 
 
 @font-face {
-    font-family: 'Pretendard';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Light.woff2') format('woff2');
-    font-weight: 300;
-    font-display: swap;
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
 }
 
 
 @font-face {
-    font-family: 'Pretendard';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Medium.woff2') format('woff2');
-    font-weight: 500;
-    font-display: swap;
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
 }
 
 
 @font-face {
-    font-family: 'Pretendard';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Bold.woff2') format('woff2');
-    font-weight: 700;
-    font-display: swap;
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
 }
 
 
-.text-light{
+.text-light {
   font-family: 'Pretendard';
   font-weight: 300;
 }
 
-.text-medium{
+.text-medium {
   font-family: 'Pretendard';
   font-weight: 500;
 }
 
-.text-bold{
+.text-bold {
   font-family: 'Pretendard';
   font-weight: 700;
 }
+
+.text-gray {
+  color: #00000090;
+}
+
+.nav-link.bg-light{
+  color: #000000 !important;
+}
+
 
 /* ✅ 헤더/푸터 높이 지정 (화면 계산용) */
 :root {
@@ -171,7 +183,9 @@ export default {
 }
 
 /* ✅ 전체 화면 높이 확보 (모바일 대응 포함) */
-html, body, #app {
+html,
+body,
+#app {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -181,9 +195,12 @@ html, body, #app {
    - 헤더/푸터 높이만큼 패딩을 주어 겹침 방지
    - 남은 높이를 계산하여 스크롤 영역 확보 */
 #main {
-  min-height: calc(100dvh - var(--header-h) - var(--footer-h)); /* 남는 세로공간 계산 */
-  padding-top: var(--header-h);   /* 헤더에 가리지 않게 */
-  overflow: auto;                 /* 내부 스크롤 허용 */
+  min-height: calc(100dvh - var(--header-h) - var(--footer-h));
+  /* 남는 세로공간 계산 */
+  padding-top: var(--header-h);
+  /* 헤더에 가리지 않게 */
+  overflow: auto;
+  /* 내부 스크롤 허용 */
 }
 
 /* ✅ 헤더가 항상 다른 요소보다 위에 표시되도록 z-index 지정 */
