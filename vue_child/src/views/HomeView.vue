@@ -10,17 +10,13 @@
     <!-- 증상확인 -->
     <div class="position-fixed start-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
       <div class="pe-auto">
-        <button type="button" class="btn btn-light border rounded-pill px-3 shadow-sm" data-bs-toggle="modal"
+        <button type="button" class="btn btn-light border rounded-pill px-3 shadow-sm text-bold" data-bs-toggle="modal"
           data-bs-target="#symptomModal">
-          <i class="bi bi-clipboard2-pulse me-1"></i> 증상 확인
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19 8c.56 0 1 .43 1 1a1 1 0 0 1-1 1c-.57 0-1-.45-1-1c0-.57.43-1 1-1M2 2v9c0 2.96 2.19 5.5 5.14 5.91c.62 3.01 3.28 5.09 6.36 5.09a6.5 6.5 0 0 0 6.5-6.5v-3.69c1.16-.42 2-1.52 2-2.81a3 3 0 0 0-3-3a3 3 0 0 0-3 3c0 1.29.84 2.4 2 2.81v3.6c0 2.5-2 4.5-4.5 4.5c-2 0-3.68-1.21-4.28-3.01C12 16.3 14 13.8 14 11V2h-4v3h2v6a4 4 0 0 1-4 4a4 4 0 0 1-4-4V5h2V2z"/></svg> 증상 확인
         </button>
       </div>
 
-      <div class="mt-2 d-flex flex-wrap gap-1 pe-auto">
-        <span class="badge text-bg-info rounded-pill">
-          <i class="bi bi-search"></i> {{ displayKeyword }}
-        </span>
-      </div>
+     
 
       <div v-if="selectedSymptoms.length" class="mt-2 d-flex flex-wrap gap-1 pe-auto">
         <span v-for="sym in selectedSymptoms" :key="`chip-map-${sym}`"
@@ -225,7 +221,7 @@ const sheetHeightRatio = ref(0)
 const dragStart = ref({ y: 0, ratio: 0 })
 
 const MAX_SHEET_HEIGHT = window.innerHeight * 0.8
-const MIN_SHEET_HEIGHT = 100
+const MIN_SHEET_HEIGHT = 210
 
 const sheetY = computed(() => (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT) * (1 - sheetHeightRatio.value))
 const sheetStyle = computed(() => ({
