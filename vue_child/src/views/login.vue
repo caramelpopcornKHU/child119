@@ -12,49 +12,46 @@
         <div class="card-body p-4">
           <h2 class="h5 text-center fw-bold mb-4" style="color: var(--bs-primary);">로그인</h2>
 
-          <form class="needs-validation" novalidate @submit.prevent="onSubmit" :class="{'was-validated': tried}">
+          <form class="needs-validation" novalidate @submit.prevent="onSubmit" :class="{ 'was-validated': tried }">
             <!-- 아이디 -->
             <div class="mb-3">
-              <label class="form-label">아이디</label>
-              <input
-                v-model.trim="form.username"
-                type="text"
-                class="form-control"
-                placeholder="아이디를 입력해주세요"
-                required
-              />
-              <div class="invalid-feedback">아이디를 입력해주세요.</div>
+              <label class="text-bold form-label">아이디</label>
+              <input v-model.trim="form.username" type="text" class="form-control" placeholder="아이디를 입력해주세요" required />
+              <div class="invalid-feedback ">아이디를 입력해주세요.</div>
             </div>
 
             <!-- 비밀번호 -->
             <div class="mb-3">
-              <label class="form-label">비밀번호</label>
+              <label class="text-bold form-label">비밀번호</label>
               <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <input
-                  v-model="form.password"
-                  type="password"
-                  class="form-control"
-                  placeholder="비밀번호를 입력해주세요"
-                  required
-                />
+                <span class="input-group-text">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                      d="M12 17a2 2 0 0 1-2-2c0-1.11.89-2 2-2a2 2 0 0 1 2 2a2 2 0 0 1-2 2m6 3V10H6v10zm0-12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10c0-1.11.89-2 2-2h1V6a5 5 0 0 1 5-5a5 5 0 0 1 5 5v2zm-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3" />
+                  </svg>
+                </span>
+                <input v-model="form.password" type="password" class="form-control" placeholder="비밀번호를 입력해주세요"
+                  required />
                 <div class="invalid-feedback">비밀번호를 입력해주세요.</div>
               </div>
             </div>
 
             <!-- 로그인 버튼 -->
-            <button type="submit" class="btn btn-primary w-100" :disabled="!canSubmit || isLoading">
+            <button type="submit" class="btn btn-primary w-100 text-bold" :disabled="!canSubmit || isLoading">
               {{ isLoading ? '로그인 중...' : '로그인' }}
             </button>
           </form>
 
           <!-- 하단 링크: 아이디 찾기 | 비밀번호 찾기 | 회원가입 -->
           <div class="d-flex align-items-center justify-content-center gap-3 mt-4 small">
-            <a href="#" class="link-secondary text-decoration-none text-nowrap text-bold" @click.prevent="goFindId">아이디 찾기</a>
+            <a href="#" class="link-secondary text-decoration-none text-nowrap text-bold" @click.prevent="goFindId">아이디
+              찾기</a>
             <span class="text-body-secondary">|</span>
-            <a href="#" class="link-secondary text-decoration-none text-nowrap text-bold" @click.prevent="goFindPw">비밀번호 찾기</a>
+            <a href="#" class="link-secondary text-decoration-none text-nowrap text-bold" @click.prevent="goFindPw">비밀번호
+              찾기</a>
             <span class="text-body-secondary">|</span>
-            <a href="#" class="link-secondary text-decoration-none text-nowrap text-bold" @click.prevent="goSignup">회원가입</a>
+            <a href="#" class="link-secondary text-decoration-none text-nowrap text-bold"
+              @click.prevent="goSignup">회원가입</a>
           </div>
         </div>
       </div>
