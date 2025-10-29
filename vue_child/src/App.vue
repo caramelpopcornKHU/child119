@@ -15,10 +15,9 @@
         </div>
 
         <!-- 우측: 마이페이지 버튼 (햄버거 메뉴 아이콘) -->
-        <button @click="mypage" class="navbar-toggler" type="button" data-bs-toggle="collapse"
-          data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent"
-          aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
+        <button  @click="logAction"  class="btn text-bold"
+                :class="{ 'btn-light' : status === '로그아웃', 'btn-primary' : status === '로그인'}">
+          <span>{{ status }}</span>
         </button>
       </div>
     </header>
@@ -41,7 +40,7 @@
         <!-- 각 버튼은 라우터 경로에 따라 아이콘/페이지 전환 -->
         <li class="nav-item">
           <button @click="goToHome"
-            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-gray" 
+            class="nav-link d-flex flex-column align-items-center justify-content-center py-2 text-gray"
             :class="{ 'bg-light': $route.path === '/' }">
             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
               <path fill="currentColor"
@@ -104,7 +103,11 @@
 </template>
 
 <script>
+import { onMounted, ref } from 'vue';
 import { RouterView } from 'vue-router'
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase/index';
+import { signOut } from 'firebase/auth'
 
 export default {
   name: 'App',
@@ -118,8 +121,42 @@ export default {
     emergency() { this.$router.push('/emergency') },
     MyKids() { this.$router.push('/MyKids') },
     goToHome() { this.$router.push('/') },
+    goToLogin() { this.$router.push('/login')},
+
+    // 로그인/로그아웃 버튼 이동 메서드
+    async logout() {
+      try{
+        await signOut(auth);
+        alert('로그아웃 되었습니다.')
+      } catch(err) {
+        console.error(`로그아웃 중 오류 발생`)
+      }
+    },
+    logAction() {
+      if(this.status === '로그인'){ this.goToLogin()} 
+      else{ this.logout() }
+    }
+  },
+  setup() {
+    const status = ref();
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        status.value = '로그아웃';
+      } else {
+        status.value = '로그인';
+      }
+    });
+    return{
+      status
+    }
   }
+  
 }
+
+
+
+
 </script>
 
 <style>
@@ -171,8 +208,18 @@ export default {
   color: #00000090;
 }
 
-.nav-link.bg-light{
+.nav-link.bg-light {
   color: #000000 !important;
+}
+
+.btn-primary {
+  background-color: #0D6EFD;
+  color: #ffff;
+}
+
+.btn-gray {
+  background-color: #00000090;
+  color: #ffff;
 }
 
 
