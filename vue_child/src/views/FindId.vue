@@ -15,7 +15,7 @@
       <!-- 결과 카드 -->
       <div class="card shadow-sm mb-4">
         <div class="card-body p-4">
-          <h2 class="h5 text-center fw-bold text-primary mb-3">아이디 찾기</h2>
+          <h2 class="h5 text-center fw-bold text-primary mb-3 ">아이디 찾기</h2>
 
           <p class="mb-0 text-center">
             아이디는

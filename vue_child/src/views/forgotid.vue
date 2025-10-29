@@ -9,7 +9,7 @@
           <form class="needs-validation" novalidate @submit.prevent="onSubmit" :class="{'was-validated': tried}">
             <!-- 이름 -->
             <div class="mb-3">
-              <label class="form-label">이름</label>
+              <label class="form-label text-bold">이름</label>
               <input
                 v-model.trim="form.name"
                 type="text"
@@ -22,7 +22,7 @@
 
             <!-- 연락번호 -->
             <div class="mb-3">
-              <label class="form-label">연락번호</label>
+              <label class="form-label text-bold">연락번호</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                 <input
@@ -40,9 +40,9 @@
 
             <!-- 버튼 -->
             <div class="d-flex gap-2 mt-3">
-              <button type="button" class="btn btn-outline-secondary flex-fill" @click="onBack">이전</button>
-              <button type="submit" class="btn btn-primary flex-fill" :disabled="loading">
-                <span v-if="loading" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+              <button type="button" class="btn btn-outline-secondary flex-fill text-bold" @click="onBack">이전</button>
+              <button type="submit" class="btn btn-primary flex-fill text-bold" :disabled="loading">
+                <span v-if="loading" class="spinner-border spinner-border-sm " aria-hidden="true"></span>
                 <span v-else>아이디 찾기</span>
               </button>
             </div>
