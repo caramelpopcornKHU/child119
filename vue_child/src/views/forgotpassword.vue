@@ -1,7 +1,7 @@
 <!-- src/views/forgotpassword.vue -->
 <template>
   <div class="min-vh-100 d-flex align-items-start justify-content-center bg-body-tertiary py-4">
-    <div class="container-fluid px-3" style="max-width: 500px;">
+    <div class="container-fluid px-3" style="max-width: 420px;">
       <!-- Brand: 전체 이미지를 사용 -->
       <div class="text-start mb-3">
 
@@ -10,19 +10,19 @@
       <!-- Card -->
       <div class="card shadow-sm">
         <div class="card-body p-4">
-          <h2 class="h5 text-center fw-bold text-primary mb-4">비밀번호 찾기</h2>
+          <h2 class="h5 text-center text-black fw-bold mb-4" style="color: #0D6EFD;">비밀번호 찾기</h2>
 
           <form class="needs-validation" novalidate @submit.prevent="onSubmit" :class="{ 'was-validated': tried }">
             <!-- 이름 -->
             <div class="mb-3">
-              <label class="form-label text-bold">이름</label>
+              <label class="form-label text-medium">이름</label>
               <input v-model.trim="form.name" type="text" class="form-control" placeholder="이름을 입력해주세요" required />
               <div class="invalid-feedback">이름을 입력해주세요.</div>
             </div>
 
             <!-- 연락처 -->
             <div class="mb-3">
-              <label class="form-label text-bold">연락처</label>
+              <label class="form-label text-medium">연락처</label>
               <div class="input-group">
                 <span class="input-group-text">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -39,7 +39,7 @@
 
             <!-- 아이디 (이메일) -->
             <div class="mb-3">
-              <label class="form-label text-bold">아이디 (이메일)</label>
+              <label class="form-label text-medium">아이디 (이메일)</label>
               <input v-model.trim="form.username" type="text" class="form-control" placeholder="아이디(이메일)를 입력해주세요"
                 required />
               <div class="invalid-feedback">아이디를 입력해주세요.</div>
@@ -48,7 +48,7 @@
             <!-- 버튼 -->
             <div class="d-flex gap-2 mt-3">
               <button type="button" class="btn btn-outline-secondary flex-fill text-bold" @click="onBack">이전</button>
-              <button type="submit" class="btn btn-primary flex-fill text-bold" :disabled="!canSubmit || isLoading">
+              <button type="submit" class="btn btn-primary flex-fill text-bold" :disabled="!canSubmit || isLoading" style="background-color: #0D6EFD; border-color: #0D6EFD;">
                 <span v-if="isLoading" class="spinner-border spinner-border-sm " aria-hidden="true"></span>
                 <span v-else>비밀번호 재설정</span>
               </button>

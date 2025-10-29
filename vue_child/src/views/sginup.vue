@@ -1,17 +1,19 @@
-// ...existing code...
 <template>
   <div class="min-vh-100 d-flex align-items-start align-items-lg-center justify-content-center bg-body-tertiary py-4">
-    <div class="container">
+    <div class="container" style="max-width: 420px;">
       <div class="row justify-content-center">
         <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+          <div class="text-center mb-3">
+            </div>
           <div class="card shadow-sm">
+
             <div class="card-body p-4">
               <h2 class="h5 text-center fw-bold mb-4">회원가입</h2>
 
               <form class="needs-validation" novalidate @submit.prevent="onSubmit" :class="{'was-validated': tried}">
                 <!-- 이름 -->
                 <div class="mb-3">
-                  <label class="form-label text-bold">이름</label>
+                  <label class="form-label text-medium">이름</label>
                   <input
                     v-model.trim="form.userName"
                     type="text"
@@ -24,7 +26,7 @@
 
                 <!-- 연락처 -->
                 <div class="mb-3">
-                  <label class="form-label text-bold">연락처</label>
+                  <label class="form-label text-medium">연락처</label>
                   <input
                     v-model.trim="form.userPhoneNum"
                     type="tel"
@@ -39,7 +41,7 @@
 
                 <!-- 아이디 -->
                 <div class="mb-3">
-                  <label class="form-label text-bold">아이디</label>
+                  <label class="form-label text-medium">아이디</label>
                   <input
                     v-model.trim="form.userId"
                     type="text"
@@ -53,7 +55,7 @@
 
                 <!-- 이메일 -->
                 <div class="mb-3">
-                  <label class="form-label text-bold">이메일</label>
+                  <label class="form-label text-medium">이메일</label>
                   <input
                     v-model.trim="form.userEmail"
                     type="email"
@@ -66,7 +68,7 @@
 
                 <!-- 비밀번호 -->
                 <div class="mb-3">
-                  <label class="form-labe text-bold">비밀번호</label>
+                  <label class="form-labe text-medium">비밀번호</label>
                   <input
                     v-model="form.userPw"
                     type="password"
@@ -81,7 +83,7 @@
 
                 <!-- 비밀번호 확인 -->
                 <div class="mb-3">
-                  <label class="form-label text-bold">비밀번호 확인</label>
+                  <label class="form-label text-medium">비밀번호 확인</label>
                   <input
                     v-model="form.userPwCheck"
                     type="password"
@@ -96,19 +98,19 @@
                 <!-- 체크박스 -->
                 <div class="form-check mb-2">
                   <input class="form-check-input" type="checkbox" id="terms" v-model="form.agreeTerms" required />
-                  <label class="form-check-label text-bold" for="terms">이용약관 및 개인정보처리방침에 동의합니다.</label>
+                  <label class="form-check-label text-medium" for="terms">이용약관 및 개인정보처리방침에 동의합니다.</label>
                   <div class="invalid-feedback text-bold">약관 동의가 필요합니다.</div>
                 </div>
 
                 <div class="form-check mb-3">
                   <input class="form-check-input" type="checkbox" id="marketing" v-model="form.agreeMarketing" />
-                  <label class="form-check-label text-bold" for="marketing">마케팅 정보 수신에 동의합니다. (선택)</label>
+                  <label class="form-check-label text-medium" for="marketing">마케팅 정보 수신에 동의합니다. (선택)</label>
                 </div>
 
                 <!-- 버튼 -->
                 <div class="d-flex gap-2 mt-4">
-                  <button type="button" class="btn btn-outline-secondary flex-fill text-bold" @click="onBack">이전</button>
-                  <button type="submit" class="btn btn-primary flex-fill text-bold" :disabled="!canSubmit || isLoading">
+                  <button type="button" class="btn btn-outline-secondary flex-fill text-medium" @click="onBack">이전</button>
+                  <button type="submit" class="btn btn-primary flex-fill text-bold" :disabled="!canSubmit || isLoading" style="background-color: #0D6EFD; border-color: #0D6EFD;">
                     {{ isLoading ? '처리중...' : '가입완료' }}
                   </button>
                 </div>

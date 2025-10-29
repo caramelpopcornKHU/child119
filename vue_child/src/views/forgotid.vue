@@ -1,15 +1,17 @@
 <template>
-  <div class="min-vh-100 d-flex align-items-start justify-content-center bg-body-tertiary py-4">
+  <div class="min-vh-100 d-flex align-items-start justify-content-center bg-body-tertiary py-4 ">
     <div class="container" style="max-width: 420px;">
       <!-- Card -->
+        <div class="text-center mb-3">
+            </div>
       <div class="card shadow-sm">
-        <div class="card-body p-4">
-          <h2 class="h5 text-center fw-bold text-primary mb-4">아이디 찾기</h2>
+        <div class="card-body p-4 ">
+          <h2 class="h5 text-center text-black fw-bold mb-4">아이디 찾기</h2>
 
           <form class="needs-validation" novalidate @submit.prevent="onSubmit" :class="{'was-validated': tried}">
             <!-- 이름 -->
             <div class="mb-3">
-              <label class="form-label text-bold">이름</label>
+              <label class="form-label text-medium">이름</label>
               <input
                 v-model.trim="form.name"
                 type="text"
@@ -22,7 +24,7 @@
 
             <!-- 연락번호 -->
             <div class="mb-3">
-              <label class="form-label text-bold">연락번호</label>
+              <label class="form-label text-medium">연락번호</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                 <input
@@ -41,7 +43,7 @@
             <!-- 버튼 -->
             <div class="d-flex gap-2 mt-3">
               <button type="button" class="btn btn-outline-secondary flex-fill text-bold" @click="onBack">이전</button>
-              <button type="submit" class="btn btn-primary flex-fill text-bold" :disabled="loading">
+              <button type="submit" class="btn btn-primary flex-fill text-bold" :disabled="loading" style="background-color: #0D6EFD; border-color: #0D6EFD; color: white;">
                 <span v-if="loading" class="spinner-border spinner-border-sm " aria-hidden="true"></span>
                 <span v-else>아이디 찾기</span>
               </button>

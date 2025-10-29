@@ -9,26 +9,25 @@
       </div>
 
       <div class="card shadow-sm">
-        <div class="card-body p-4">
-          <h2 class="h5 text-center fw-bold mb-4" style="color: var(--bs-primary);">로그인</h2>
+        <div class="card-body p-4 ">
+          <h2 class="h5 text-center text-dark fw-bold mb-4" style="color:#0D6EFD;">로그인</h2>
 
           <form class="needs-validation" novalidate @submit.prevent="onSubmit" :class="{ 'was-validated': tried }">
             <!-- 아이디 -->
             <div class="mb-3">
-              <label class="text-bold form-label">아이디</label>
+              <label class="text-medium form-label">아이디</label>
               <input v-model.trim="form.username" type="text" class="form-control" placeholder="아이디를 입력해주세요" required />
               <div class="invalid-feedback ">아이디를 입력해주세요.</div>
             </div>
 
             <!-- 비밀번호 -->
             <div class="mb-3">
-              <label class="text-bold form-label">비밀번호</label>
+              <label class="text-medium form-label">비밀번호</label>
               <div class="input-group">
                 <span class="input-group-text">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                    <path fill="currentColor"
-                      d="M12 17a2 2 0 0 1-2-2c0-1.11.89-2 2-2a2 2 0 0 1 2 2a2 2 0 0 1-2 2m6 3V10H6v10zm0-12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10c0-1.11.89-2 2-2h1V6a5 5 0 0 1 5-5a5 5 0 0 1 5 5v2zm-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3" />
-                  </svg>
+		              <path fill="#AAAABC" d="M12 17a2 2 0 0 0 2-2a2 2 0 0 0-2-2a2 2 0 0 0-2 2a2 2 0 0 0 2 2m6-9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h1V6a5 5 0 0 1 5-5a5 5 0 0 1 5 5v2zm-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3" />
+	                </svg>
                 </span>
                 <input v-model="form.password" type="password" class="form-control" placeholder="비밀번호를 입력해주세요"
                   required />
@@ -37,7 +36,7 @@
             </div>
 
             <!-- 로그인 버튼 -->
-            <button type="submit" class="btn btn-primary w-100 text-bold" :disabled="!canSubmit || isLoading">
+            <button type="submit" class="btn btn-primary w-100 text-bold" :disabled="!canSubmit || isLoading" style="background-color: #0D6EFD; border-color: #0D6EFD;">
               {{ isLoading ? '로그인 중...' : '로그인' }}
             </button>
           </form>

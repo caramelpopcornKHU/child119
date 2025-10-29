@@ -13,16 +13,19 @@
             <div
               v-for="c in iconCats"
               :key="c.label"
-              class="d-flex flex-column align-items-center"
-              style="min-width:48px;"
-
-               @click="selectTag(c.label)"
+              class="d-flex flex-column align-items-center category-item"
+              style="min-width:48px; cursor: pointer;"
+              @click="selectTag(c.label)"
             >
-              <div class="d-flex align-items-center justify-content-center rounded-circle border"
-                   style="width:40px;height:40px;transition: all .2s; cursor: pointer;">
+              <div class="d-flex align-items-center justify-content-center rounded-circle border category-icon"
+                   :class="{ 'active': selectedTag === c.label }"
+                   style="width:40px;height:40px;transition: all .2s;">
                 <i :class="c.icon"></i>
               </div>
-              <small class="text-muted mt-1 text-bold">{{ c.label }}</small>
+              <small class="mt-1 category-label"
+                     :class="{ 'text-medium': selectedTag === c.label, 'text-muted': selectedTag !== c.label }">
+                {{ c.label }}
+              </small>
             </div>
           </div>
 
@@ -181,13 +184,23 @@ onMounted(() => {
 })
 </script>
 
-<style>
-.rounded-circle:hover {
-  background-color: #e9ecef; /* 연한 회색 */
-  transform: scale(1.1);
-  transition: all 0.2s ease;
+<style scoped>
+/* 선택된 카테고리 아이콘 스타일 */
+.category-icon.active {
+  background-color: #e9ecef;
+  border-color: #e9ecef !important;
+  color: black;
+  transform: scale(1.05);
 }
 
+/* 선택된 카테고리 아이콘 호버 */
+.category-item:hover .category-icon.active {
+  background-color: #e9ecef;
+  transform: scale(1.1);
+}
 
-
+/* 라벨 전환 애니메이션 */
+.category-label {
+  transition: all 0.2s ease;
+}
 </style>
