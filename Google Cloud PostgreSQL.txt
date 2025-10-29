@@ -18,3 +18,13 @@ Cloud Build 트리거 (/springboot_child/Dockerfile)
 
 서비스 이름: child119
 엔드포인트 URL: https://child119-251868777139.asia-northeast3.run.app
+
+
+
+
+GeoServer
+
+http://34.64.34.180:8080/geoserver
+기본 ID: admin
+비밀번호: Child119@
+
