@@ -12,20 +12,15 @@
       <div class="pe-auto">
         <button type="button" class="btn btn-light border rounded-pill px-3 shadow-sm text-bold" data-bs-toggle="modal"
           data-bs-target="#symptomModal">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19 8c.56 0 1 .43 1 1a1 1 0 0 1-1 1c-.57 0-1-.45-1-1c0-.57.43-1 1-1M2 2v9c0 2.96 2.19 5.5 5.14 5.91c.62 3.01 3.28 5.09 6.36 5.09a6.5 6.5 0 0 0 6.5-6.5v-3.69c1.16-.42 2-1.52 2-2.81a3 3 0 0 0-3-3a3 3 0 0 0-3 3c0 1.29.84 2.4 2 2.81v3.6c0 2.5-2 4.5-4.5 4.5c-2 0-3.68-1.21-4.28-3.01C12 16.3 14 13.8 14 11V2h-4v3h2v6a4 4 0 0 1-4 4a4 4 0 0 1-4-4V5h2V2z"/></svg> 증상 확인
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <path fill="currentColor"
+              d="M19 8c.56 0 1 .43 1 1a1 1 0 0 1-1 1c-.57 0-1-.45-1-1c0-.57.43-1 1-1M2 2v9c0 2.96 2.19 5.5 5.14 5.91c.62 3.01 3.28 5.09 6.36 5.09a6.5 6.5 0 0 0 6.5-6.5v-3.69c1.16-.42 2-1.52 2-2.81a3 3 0 0 0-3-3a3 3 0 0 0-3 3c0 1.29.84 2.4 2 2.81v3.6c0 2.5-2 4.5-4.5 4.5c-2 0-3.68-1.21-4.28-3.01C12 16.3 14 13.8 14 11V2h-4v3h2v6a4 4 0 0 1-4 4a4 4 0 0 1-4-4V5h2V2z" />
+          </svg> 증상 확인
         </button>
       </div>
 
-     
 
-      <div v-if="selectedSymptoms.length" class="mt-2 d-flex flex-wrap gap-1 pe-auto">
-        <span v-for="sym in selectedSymptoms" :key="`chip-map-${sym}`"
-          class="badge text-bg-primary rounded-pill d-inline-flex align-items-center">
-          {{ sym }}
-          <button type="button" class="btn-close btn-close-white btn-sm ms-1" aria-label="삭제"
-            @click="removeSymptom(sym)" style="transform: scale(.8);"></button>
-        </span>
-      </div>
+
     </div>
   </div>
   <!-- 바텀시트 -->
@@ -41,17 +36,9 @@
       <!-- 상단 라인 -->
       <div class="d-flex align-items-center justify-content-between gap-2 mb-3 ms-2 me-2">
         <div class="d-flex align-items-center gap-2 flex-wrap">
-          <button type="button" class="btn btn-light border rounded-pill px-3" data-bs-toggle="modal"
-            data-bs-target="#symptomModal">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 48 48">
-              <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
-                d="m24 42l-9-13h18zm0-36l-9 13h18z" />
-            </svg><span class="fw-bold">거리순</span>
-          </button>
 
-          <span class="badge text-bg-info rounded-pill">
-            {{ displayKeyword }}
-          </span>
+
+
 
           <div class="d-flex flex-wrap gap-1" v-if="selectedSymptoms.length">
             <span v-for="sym in selectedSymptoms" :key="sym"
@@ -67,65 +54,80 @@
       </div>
 
       <!-- 타이틀 -->
-      <div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2">
-        <h5 class="fw-bold mb-0">응급실 리스트</h5>
-        <span v-if="hospitals.length > 0" class="badge bg-white text-black">{{ hospitals.length }}개</span>
-      </div>
+<div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2">
+  <!-- 왼쪽 -->
+  <div class="d-flex align-items-center gap-2">
+    <h5 class="fw-bold mb-0">응급실 리스트</h5>
+    
+    <svg  @click="goToHospitalDetail" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M11 9h2V7h-2m1 13c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8m0-18A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m-1 15h2v-6h-2z"/></svg>
+    
+    <span v-if="hospitals.length > 0" class="badge bg-white text-black">{{ hospitals.length }}개</span>
+  </div>
+
+  <!-- 오른쪽: 버튼 그룹 -->
+  <div class="d-flex gap-2">
+    <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByDistance">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
+        <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
+          d="m24 42l-9-13h18zm0-36l-9 13h18z" />
+      </svg>
+      <span class="fw-bold">거리순</span>
+    </button>
+
+    <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByTime">
+      <svg xmlns="http://www.w3.org/2000/svg" 
+      width="24" height="24" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M12 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8a8 8 0 0 0-8 8a8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10a10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7z"/>
+      </svg>
+      시간순
+    </button>
+  </div>
+</div>
 
       <!-- 리스트 스크롤 영역 -->
-      <div class="overflow-auto">
-        <div class="card shadow-sm mb-3" v-for="h in hospitals" :key="h.id">
+      <div class="overflow-auto px-3">
+        <!-- 응급실 목록 (데모) -->
+        <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.id">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <h6 class="card-title fw-bold mb-0">{{ h.name }}</h6>
+            <div class="d-flex justify-content-between align-items-start">
+              <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
               <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="15px" viewBox="0 0 24 24">
                   <path fill="#008A64"
                     d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
-                </svg> {{ (h.distance / 1000).toFixed(2) }}km
+                </svg> 2/7
               </span>
             </div>
 
-            <div class="small text-muted mb-2">
-              <div class="mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                  <path fill="#525252"
-                    d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
-                </svg>{{ h.address || ' 주소 정보 없음' }}
-              </div>
-              <div class="mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24">
-                  <path fill="#525252"
-                    d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25c1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57c.11.35.03.74-.25 1.02z" />
-                </svg>{{ h.tel || ' 전화번호 정보 없음' }}
-              </div>
-              <div class="mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24">
-                  <path fill="#525252"
-                    d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m4.2 14.2L11 13V7h1.5v5.2l4.5 2.7z" />
-                </svg>{{ h.hours || ' 운영시간 정보 없음' }}
-              </div>
-              <div v-if="h.services?.length"><i class="bi bi-ui-checks me-1"></i>{{ h.services.join(', ') }}</div>
+            <div class="mb-2">
+              <span class="badge bg-danger-subtle text-danger-emphasis me-1">장폐색x</span>
+              <span class="badge bg-warning-subtle text-warning-emphasis">화상 진료 불가</span>
+            </div>
+
+            <div class="text-muted small d-flex align-items-center mb-3">
+              <span><i class="bi bi-clock me-1"></i> {{ h.etaMin }}분</span>
+              <span class="mx-2">|</span>
+              <span><i class="bi bi-geo-alt me-1"></i> {{ h.distanceKm.toFixed(1) }}km</span>
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
-              <a class="btn btn-outline-primary w-100" :href="h.tel ? `tel:${h.tel}` : '#'"
-                :class="{ 'disabled': !h.tel }">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                  <path fill="#0D6EFD"
-                    d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25c1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57c.11.35.03.74-.25 1.02z" />
-                </svg> 전화
-              </a>
-              <a class="btn btn-primary w-100" :href="`https://map.naver.com/v5/search/${encodeURIComponent(h.name)}`"
-                target="_blank" rel="noopener noreferrer">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                  <path fill="#fff"
-                    d="M18 15a3 3 0 0 1 3 3a3 3 0 0 1-3 3a2.99 2.99 0 0 1-2.83-2H14v-2h1.17c.41-1.17 1.52-2 2.83-2m0 2a1 1 0 0 0-1 1a1 1 0 0 0 1 1a1 1 0 0 0 1-1a1 1 0 0 0-1-1m0-9a1.43 1.43 0 0 0 1.43-1.43a1.43 1.43 0 1 0-2.86 0A1.43 1.43 0 0 0 18 8m0-5.43a4 4 0 0 1 4 4C22 9.56 18 14 18 14s-4-4.44-4-7.43a4 4 0 0 1 4-4M8.83 17H10v2H8.83A2.99 2.99 0 0 1 6 21a3 3 0 0 1-3-3c0-1.31.83-2.42 2-2.83V14h2v1.17c.85.3 1.53.98 1.83 1.83M6 17a1 1 0 0 0-1 1a1 1 0 0 0 1 1a1 1 0 0 0 1-1a1 1 0 0 0-1-1M6 3a3 3 0 0 1 3 3c0 1.31-.83 2.42-2 2.83V10H5V8.83A2.99 2.99 0 0 1 3 6a3 3 0 0 1 3-3m0 2a1 1 0 0 0-1 1a1 1 0 0 0 1 1a1 1 0 0 0 1-1a1 1 0 0 0-1-1m5 14v-2h2v2zm-4-6H5v-2h2z" />
-                </svg> 길찾기
-              </a>
+              <button class="btn btn-outline-primary w-100">
+                <i class="bi bi-telephone-fill"></i> 전화
+              </button>
+              <button class="btn btn-primary w-100">
+                <i class="bi bi-sign-turn-right-fill"></i> 길찾기
+              </button>
             </div>
           </div>
         </div>
+
+
+
+
+
+
+
+
 
         <div v-if="loadingHospitals" class="text-center text-muted py-4">
           <div class="spinner-border spinner-border-sm me-2" role="status">
@@ -196,7 +198,72 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+
+
+import { useRouter } from 'vue-router';
+
+const router = useRouter()
+
+function goToHospitalDetail() {
+  router.push('/hospitalDetail')
+}
+
+
+
+
+
+/* 데모 데이터: hospitals가 비어있을 때 사용 */
+const demoHospitals = ref([
+  { id: 'demo-1', name: '서울대학교병원', distanceKm: 0.8, etaMin: 7 },
+  { id: 'demo-2', name: '구로병원', distanceKm: 0.2, etaMin: 5 },
+  { id: 'demo-3', name: '일산병원', distanceKm: 1, etaMin: 3 },
+  { id: 'demo-4', name: '대림병원', distanceKm: 0.9, etaMin: 2 },
+  { id: 'demo-5', name: '구청병원', distanceKm: 2, etaMin: 10 },
+  { id: 'demo-6', name: '병원', distanceKm: 0.5, etaMin: 15 },
+])
+
+/* 정렬 상태 (토글용) */
+const distanceAsc = ref(true)
+
+/* 실제 렌더링 목록: 검색 결과가 있으면 그걸, 없으면 데모를 사용 */
+const listHospitals = computed(() => {
+  if (hospitals.value.length > 0) {
+    // hospitals는 meter 단위 distance가 이미 있음
+    return hospitals.value.map(h => ({
+      id: h.id,
+      name: h.name,
+      distanceKm: (h.distance ?? 0) / 1000,
+      etaMin: Math.max(1, Math.round((h.distance ?? 0) / 1000 / 0.4)), // 대략 24km/h 가정한 임시 ETA
+    }))
+  }
+  return demoHospitals.value
+})
+
+/* 거리순 정렬: hospitals가 있으면 hospitals를, 아니면 데모를 정렬 */
+function sortByDistance() {
+  const arr = hospitals.value.length ? hospitals.value : demoHospitals.value
+  const key = hospitals.value.length ? (h => h.distance ?? Infinity) : (h => h.distanceKm)
+
+  arr.sort((a, b) => {
+    const A = key(a)
+    const B = key(b)
+    return distanceAsc.value ? A - B : B - A
+  })
+
+  // 다음 클릭 때 반대 방향
+  //distanceAsc.value = !distanceAsc.value
+}
+
+
+function sortByTime() {
+  demoHospitals.value.sort((a, b) => a.etaMin - b.etaMin);
+}
+
+
+
+
+
 
 const symptomOptions = ['발열', '감기', '기침', '호흡곤란', '구토', '설사', '복통', '발진', '화상', '경련']
 const selectedSymptoms = ref([])
@@ -221,7 +288,7 @@ const sheetHeightRatio = ref(0)
 const dragStart = ref({ y: 0, ratio: 0 })
 
 const MAX_SHEET_HEIGHT = window.innerHeight * 0.8
-const MIN_SHEET_HEIGHT = 210
+const MIN_SHEET_HEIGHT = 200
 
 const sheetY = computed(() => (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT) * (1 - sheetHeightRatio.value))
 const sheetStyle = computed(() => ({
@@ -240,9 +307,7 @@ const keywordWithSymptoms = computed(() => {
 })
 const displayKeyword = computed(() => useSymptomsMode.value ? keywordWithSymptoms.value : keywordBase.value)
 
-function sortByDistance() {
-  hospitals.value = [...hospitals.value].sort((a, b) => a.distance - b.distance)
-}
+
 
 const toRad = (d) => d * Math.PI / 180
 function haversineMeter(lat1, lon1, lat2, lon2) {
