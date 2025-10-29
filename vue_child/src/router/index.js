@@ -84,6 +84,11 @@ const router = createRouter({
       name: 'FindPassword',
       component: () => import('../views/FindPassword.vue'),
     },
+    {
+      path: '/hospitalDetail',
+      name: 'hospitalDetail',
+      component: () => import('../views/hospitalDetail.vue'),
+    },
   ],
 })
 
