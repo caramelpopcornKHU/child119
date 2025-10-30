@@ -3,7 +3,7 @@
     style="height: calc(100vh - 140px); ">
 
     <!-- 지도 -->
-    <div id="map_div" class="position-fixed top-0 start-0 w-100" style="height:100dvh; z-index:0;"></div>
+    <div id="map_div" class="position-fixed top-0 start-0 w-100" ></div>
 
 
 
@@ -24,22 +24,21 @@
     </div>
   </div>
   <!-- 바텀시트 -->
-  <div class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg " :style="sheetStyle" ref="bottomSheet"
-    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2;">
+  <div class="position-fixed start-0 end-0 bg-white padding-bottom  rounded-top-4 shadow-lg " :style="sheetStyle" ref="bottomSheet"
+    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2; padding-bottom: 150px;">
+    
     <!-- 그립 -->
     <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
-      <div class="rounded-pill bg-body-secondary" style="width:40px;height:5px;"></div>
+      <div class="bg-secondary-subtle rounded-pill w-25" style="height:5px;"></div>
     </div>
+  <!-- 핸들 -->
+    <div class="py-3 d-flex justify-content-center" @click="toggleSheet" ></div>
 
     <!-- 내용 -->
     <div class="d-flex flex-column" style="height: 100%;">
       <!-- 상단 라인 -->
       <div class="d-flex align-items-center justify-content-between gap-2 mb-3 ms-2 me-2">
         <div class="d-flex align-items-center gap-2 flex-wrap">
-
-
-
-
           <div class="d-flex flex-wrap gap-1" v-if="selectedSymptoms.length">
             <span v-for="sym in selectedSymptoms" :key="sym"
               class="badge text-bg-primary rounded-pill d-inline-flex align-items-center">
@@ -49,17 +48,15 @@
             </span>
           </div>
         </div>
-
-
       </div>
 
       <!-- 타이틀 -->
 <div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2">
+
+  
   <!-- 왼쪽 -->
   <div class="d-flex align-items-center gap-2">
     <h5 class="fw-bold mb-0">응급실 리스트</h5>
-    
-    <svg  @click="goToHospitalDetail" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M11 9h2V7h-2m1 13c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8m0-18A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m-1 15h2v-6h-2z"/></svg>
     
     <span v-if="hospitals.length > 0" class="badge bg-white text-black">{{ hospitals.length }}개</span>
   </div>
@@ -85,12 +82,14 @@
 </div>
 
       <!-- 리스트 스크롤 영역 -->
-      <div class="overflow-auto px-3">
+      <div class="overflow-auto px-3 ">
+        
+
         <!-- 응급실 목록 (데모) -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.id">
-          <div class="card-body">
+          <div class="card-body" @click="goToHospitalDetail">
             <div class="d-flex justify-content-between align-items-start">
-              <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
+              <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>              
               <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="15px" viewBox="0 0 24 24">
                   <path fill="#008A64"
@@ -120,9 +119,6 @@
             </div>
           </div>
         </div>
-
-
-
 
 
 
@@ -169,7 +165,7 @@
             </div>
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-search"></i>
-              <span class="badge text-bg-primary rounded-pill">{{ keywordWithSymptoms }}</span>
+              
             </div>
           </div>
 
@@ -288,7 +284,7 @@ const sheetHeightRatio = ref(0)
 const dragStart = ref({ y: 0, ratio: 0 })
 
 const MAX_SHEET_HEIGHT = window.innerHeight * 0.8
-const MIN_SHEET_HEIGHT = 200
+const MIN_SHEET_HEIGHT = 220
 
 const sheetY = computed(() => (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT) * (1 - sheetHeightRatio.value))
 const sheetStyle = computed(() => ({
@@ -472,10 +468,24 @@ const initTmap = () => {
 }
 
 /* 바텀시트 제스처 */
-const onTouchStart = e => { isDragging.value = true; dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }; e.preventDefault() }
-const onTouchMove = e => { if (!isDragging.value) return; const dY = e.touches[0].clientY - dragStart.value.y; const dR = -dY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT); sheetHeightRatio.value = Math.min(1, Math.max(0, dragStart.value.ratio + dR)) }
-const onTouchEnd = () => { isDragging.value = false; sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0 }
+/* 터치 핸들러 */
+const onTouchStart = e => {
+  isDragging.value = true
+  dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }
+}
+const onTouchMove = e => {
+  if (!isDragging.value) return
+  const deltaY = e.touches[0].clientY - dragStart.value.y
+  const deltaRatio = -deltaY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT)
+  let newRatio = dragStart.value.ratio + deltaRatio
+  sheetHeightRatio.value = Math.max(0, Math.min(1, newRatio))
+}
+const onTouchEnd = () => {
+  isDragging.value = false
+  sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0
+}
 const toggleSheet = () => { sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 0 : 1 }
+
 
 /* Tmap 스크립트 로더 */
 function loadTmapScript() {
@@ -509,4 +519,107 @@ onMounted(() => {
   })
 })
 onBeforeUnmount(() => { clearMarkers(); if (map.value) map.value.destroy() })
+
+
+
+
+onMounted(() => {
+  const grip = document.querySelector('.sheet-grip')
+  if (grip) {
+    grip.addEventListener('touchstart', onGripTouchStart, { passive: false })
+    grip.addEventListener('touchmove', onGripTouchMove, { passive: false })
+    grip.addEventListener('touchend', onGripTouchEnd, { passive: true })
+  }
+})
+
+
+
+
+
+
+const onGripTouchStart = (e) => {
+  isDragging.value = true
+  dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }
+  e.preventDefault()
+}
+const onGripTouchMove = (e) => {
+  if (!isDragging.value) return
+  e.preventDefault() // iOS에서 필수
+
+  const dY = e.touches[0].clientY - dragStart.value.y
+  const dR = -dY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT)
+  sheetHeightRatio.value = Math.min(1, Math.max(0, dragStart.value.ratio + dR))
+}
+
+
+
+
+const onGripTouchEnd = () => {
+  isDragging.value = false
+  sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0
+}
+
+
+
+
+
+
+
+
 </script>
+
+
+
+
+<style scoped>
+/* 리스트 위에 살짝 여유(선택) */
+.er-list { padding-top: 4px; }
+
+/* 카드 기본/호버/클릭 */
+.card {
+  cursor: pointer;
+  /* 핵심: 위쪽을 기준으로 확대 → 위로는 안 튐 */
+  transform-origin: top center;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.25s ease,
+    border-color 0.18s ease;
+  background-color: #fff;
+}
+
+/* 호버: 아래쪽으로만 커짐 */
+.card:hover {
+  transform: scale(1.02);              /* ↑ translateY(-) 제거 */
+  background-color: #f0f6ff;
+  border-color: #0d6efd;
+  box-shadow: 0 6px 20px rgba(13,110,253,.15);
+}
+
+/* 클릭(눌림) */
+.card:active {
+  transform: scale(0.98);              /* 위아래 이동 없이 눌림만 */
+  background-color: #e2ebff;
+  box-shadow: 0 3px 10px rgba(0,0,0,.15);
+}
+
+
+
+
+
+
+
+/* 스크롤 영역: iOS/WebView 부드러운 스크롤 */
+.sheet-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  /* 스크롤 제스처를 브라우저가 처리하도록 명시 */
+  touch-action: pan-y;
+}
+
+/* 그립: 제스처는 우리가 처리 (스크롤로 해석되지 않도록) */
+.sheet-grip {
+  touch-action: none;
+}
+
+</style>
