@@ -14,7 +14,7 @@
               v-for="c in iconCats"
               :key="c.label"
               class="d-flex flex-column align-items-center category-item"
-              style="min-width:48px; cursor: pointer;"
+              style="cursor: pointer;"
               @click="selectTag(c.label)"
             >
               <div class="d-flex align-items-center justify-content-center rounded-circle border category-icon"
