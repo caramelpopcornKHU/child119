@@ -8,7 +8,7 @@
           <div class="card shadow-sm">
 
             <div class="card-body p-4">
-              <h2 class="h5 text-center fw-bold mb-4">회원가입</h2>
+              <h2 class="h5 text-center text-bold mb-4">회원가입</h2>
 
               <form class="needs-validation" novalidate @submit.prevent="onSubmit" :class="{'was-validated': tried}">
                 <!-- 이름 -->
@@ -17,7 +17,7 @@
                   <input
                     v-model.trim="form.userName"
                     type="text"
-                    class="form-control"
+                    class="form-control text-plight"
                     placeholder="이름을 입력하세요"
                     required
                   />
@@ -30,13 +30,12 @@
                   <input
                     v-model.trim="form.userPhoneNum"
                     type="tel"
-                    class="form-control"
+                    class="form-control text-plight"
                     placeholder="전화번호를 입력하세요"
                     pattern="^0[0-9]{1,2}-?[0-9]{3,4}-?[0-9]{4}$"
                     required
                   />
                   <div class="invalid-feedback">올바른 연락처 형식으로 입력해주세요.</div>
-                  <div class="form-text">예) 010-1234-5678</div>
                 </div>
 
                 <!-- 아이디 -->
@@ -45,7 +44,7 @@
                   <input
                     v-model.trim="form.userId"
                     type="text"
-                    class="form-control"
+                    class="form-control text-plight"
                     placeholder="아이디를 입력해주세요"
                     minlength="4"
                     required
@@ -59,7 +58,7 @@
                   <input
                     v-model.trim="form.userEmail"
                     type="email"
-                    class="form-control"
+                    class="form-control text-plight"
                     placeholder="이메일을 입력해주세요"
                     required
                   />
@@ -72,22 +71,22 @@
                   <input
                     v-model="form.userPw"
                     type="password"
-                    class="form-control"
+                    class="form-control text-plight"
                     placeholder="비밀번호를 입력해주세요"
                     minlength="8"
                     required
                   />
-                  <div class="form-text">영문/숫자/특수문자 조합 8자 이상 권장</div>
+                  <div class="form-text text-plight mx-2 ">영문/숫자/특수문자 조합 8자 이상 권장</div>
                   <div class="invalid-feedback">비밀번호(8자 이상)를 입력해주세요.</div>
                 </div>
 
                 <!-- 비밀번호 확인 -->
-                <div class="mb-3">
+                <div class="mb-4">
                   <label class="form-label text-medium">비밀번호 확인</label>
                   <input
                     v-model="form.userPwCheck"
                     type="password"
-                    class="form-control"
+                    class="form-control text-plight"
                     placeholder="비밀번호를 다시 입력해주세요"
                     :class="{'is-invalid': tried && !passwordsMatch}"
                     required
@@ -96,34 +95,32 @@
                 </div>
 
                 <!-- 체크박스 -->
-                <div class="form-check mb-2">
+                <div class="form-check mb-2 mx-2"  style="font-size: 13px;">
                   <input class="form-check-input" type="checkbox" id="terms" v-model="form.agreeTerms" required />
-                  <label class="form-check-label text-medium" for="terms">이용약관 및 개인정보처리방침에 동의합니다.</label>
-                  <div class="invalid-feedback text-bold">약관 동의가 필요합니다.</div>
+                  <label class="form-check-label text-plight " for="terms">이용약관 및 개인정보처리방침에 동의합니다.</label>
                 </div>
 
-                <div class="form-check mb-3">
+                <div class="form-check mb-5 mx-2"  style="font-size: 13px;">
                   <input class="form-check-input" type="checkbox" id="marketing" v-model="form.agreeMarketing" />
-                  <label class="form-check-label text-medium" for="marketing">마케팅 정보 수신에 동의합니다. (선택)</label>
+                  <label class="form-check-label text-plight" for="marketing" >마케팅 정보 수신에 동의합니다. (선택)</label>
                 </div>
 
                 <!-- 버튼 -->
                 <div class="d-flex gap-2 mt-4">
-                  <button type="button" class="btn btn-outline-secondary flex-fill text-medium" @click="onBack">이전</button>
+                  <button type="button" class="btn btn-outline-secondary flex-fill text-bold" @click="onBack">이전</button>
                   <button type="submit" class="btn btn-primary flex-fill text-bold" :disabled="!canSubmit || isLoading" style="background-color: #0D6EFD; border-color: #0D6EFD;">
                     {{ isLoading ? '처리중...' : '가입완료' }}
                   </button>
                 </div>
               </form>
 
-              <div class=" text-bold text-center mt-4 small text-body-secondary">
+              <div class=" text-plight text-center mt-4 small text-body-secondary">
                 이미 계정이 있으신가요?
                 <a href="#" class="link-primary text-decoration-none text-bold" @click.prevent="goLogin">로그인</a>
               </div>
             </div>
           </div>
 
-          <div class="text-center mt-3 small text-body-secondary">© 2025 아이119</div>
         </div>
       </div>
     </div>

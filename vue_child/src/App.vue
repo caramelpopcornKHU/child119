@@ -189,7 +189,7 @@ export default {
 }
 
 
-.text-light {
+.text-plight {
   font-family: 'Pretendard';
   font-weight: 300;
 }

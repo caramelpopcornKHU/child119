@@ -6,7 +6,7 @@
             </div>
       <div class="card shadow-sm">
         <div class="card-body p-4 ">
-          <h2 class="h5 text-center text-black fw-bold mb-4">아이디 찾기</h2>
+          <h2 class="h5 text-center text-black text-bold mb-4">아이디 찾기</h2>
 
           <form class="needs-validation" novalidate @submit.prevent="onSubmit" :class="{'was-validated': tried}">
             <!-- 이름 -->
@@ -15,7 +15,7 @@
               <input
                 v-model.trim="form.name"
                 type="text"
-                class="form-control"
+                class="form-control text-plight"
                 placeholder="이름을 입력해주세요"
                 required
               />
@@ -23,28 +23,29 @@
             </div>
 
             <!-- 연락번호 -->
-            <div class="mb-3">
-              <label class="form-label text-medium">연락번호</label>
+            <div class="mb-5">
+              <label class="form-label text-medium">전화 번호</label>
               <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                <span class="input-group-text">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="#AAAABC" d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25c1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57c.11.35.03.74-.25 1.02z"/></svg>
+                </span>
                 <input
                   v-model.trim="form.phone"
                   type="tel"
-                  class="form-control"
+                  class="form-control text-plight"
                   placeholder="전화번호를 입력해주세요"
                   pattern="^0[0-9]{1,2}-?[0-9]{3,4}-?[0-9]{4}$"
                   required
                 />
                 <div class="invalid-feedback">올바른 연락처 형식으로 입력해주세요.</div>
               </div>
-              <div class="form-text">예) 010-1234-5678</div>
             </div>
 
             <!-- 버튼 -->
             <div class="d-flex gap-2 mt-3">
-              <button type="button" class="btn btn-outline-secondary flex-fill text-bold" @click="onBack">이전</button>
-              <button type="submit" class="btn btn-primary flex-fill text-bold" :disabled="loading" style="background-color: #0D6EFD; border-color: #0D6EFD; color: white;">
-                <span v-if="loading" class="spinner-border spinner-border-sm " aria-hidden="true"></span>
+              <button type="button" class="btn btn-outline-secondary flex-fill  text-bold" @click="onBack">이전</button>
+              <button type="submit" class="btn btn-primary flex-fill text-bold" :disabled="!canSubmit || isLoading">
+                <span v-if="isLoading" class="spinner-border spinner-border-sm " aria-hidden="true"></span>
                 <span v-else>아이디 찾기</span>
               </button>
             </div>

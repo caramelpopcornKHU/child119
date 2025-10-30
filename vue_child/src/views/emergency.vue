@@ -46,7 +46,7 @@
         <div class="card-body p-0">
 
           <!-- 썸네일 16:9 (부트스트랩 ratio) -->
-          <div class="position-relative ratio ratio-16x9">
+          <div class="position-relative ratio ratio-16x9" @click="goToEmergencyorder()">
             <img :src="v.thumbnail" :alt="v.title" class="w-100 h-100 object-fit-cover">
            
           </div>
@@ -60,7 +60,6 @@
                 {{ v.channel }} · {{ v.views }} · {{ v.age }}
               </div>
             </div>
-            <button class="btn btn-link text-body-tertiary px-1"><i class="bi bi-three-dots-vertical"></i></button>
           </div>
         </div>
       </article>
@@ -79,6 +78,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 /* 아이콘 카테고리 예시 */
 const iconCats = [
@@ -176,6 +176,11 @@ function loadMore() {
     items.value = sampleVideos()
     finished.value = true
   }
+}
+
+const router = useRouter();
+function goToEmergencyorder() {
+  router.push('/emergencyorder')
 }
 
 onMounted(() => {
