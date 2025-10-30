@@ -30,7 +30,7 @@
 
           <div class="mt-5">
             <button
-              class="btn w-100 py-2 fw-medium"
+              class="btn w-100 py-2 text-medium"
               style="background-color: #0D6EFD; color: white;"
               @click="confirmPopup"
             >
