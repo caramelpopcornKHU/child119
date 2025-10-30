@@ -479,7 +479,7 @@ async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
   // CQL: DWithin(geom, POINT(lon lat), radius, meters)
   const cql = `DWithin(geom, POINT(${centerLon} ${centerLat}), ${radiusMeters}, meters)`
 
-  const base = 'http://api.child119.com/geoserver/hospital/wfs'
+  const base = 'https://api.child119.com/geoserver/hospital/wfs'
   const params = new URLSearchParams({
     service: 'WFS',
     version: '1.0.0',
