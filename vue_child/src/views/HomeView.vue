@@ -3,7 +3,7 @@
     style="height: calc(100vh - 140px); ">
 
     <!-- 지도 -->
-    <div id="map_div" class="position-fixed top-0 start-0 w-100" style="height:100dvh; z-index:0;"></div>
+    <div id="map_div" class="position-fixed top-0 start-0 w-100" ></div>
 
 
 
@@ -24,22 +24,21 @@
     </div>
   </div>
   <!-- 바텀시트 -->
-  <div class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg " :style="sheetStyle" ref="bottomSheet"
-    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2;">
+  <div class="position-fixed start-0 end-0 bg-white padding-bottom  rounded-top-4 shadow-lg " :style="sheetStyle" ref="bottomSheet"
+    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2; padding-bottom: 150px;">
+    
     <!-- 그립 -->
     <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
-      <div class="rounded-pill bg-body-secondary" style="width:40px;height:5px;"></div>
+      <div class="bg-secondary-subtle rounded-pill w-25" style="height:5px;"></div>
     </div>
+  <!-- 핸들 -->
+    <div class="py-3 d-flex justify-content-center" @click="toggleSheet" ></div>
 
     <!-- 내용 -->
     <div class="d-flex flex-column" style="height: 100%;">
       <!-- 상단 라인 -->
       <div class="d-flex align-items-center justify-content-between gap-2 mb-3 ms-2 me-2">
         <div class="d-flex align-items-center gap-2 flex-wrap">
-
-
-
-
           <div class="d-flex flex-wrap gap-1" v-if="selectedSymptoms.length">
             <span v-for="sym in selectedSymptoms" :key="sym"
               class="badge text-bg-primary rounded-pill d-inline-flex align-items-center">
@@ -49,17 +48,15 @@
             </span>
           </div>
         </div>
-
-
       </div>
 
       <!-- 타이틀 -->
 <div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2">
+
+  
   <!-- 왼쪽 -->
   <div class="d-flex align-items-center gap-2">
     <h5 class="fw-bold mb-0">응급실 리스트</h5>
-    
-    <svg  @click="goToHospitalDetail" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M11 9h2V7h-2m1 13c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8m0-18A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m-1 15h2v-6h-2z"/></svg>
     
     <span v-if="hospitals.length > 0" class="badge bg-white text-black">{{ hospitals.length }}개</span>
   </div>
@@ -85,12 +82,14 @@
 </div>
 
       <!-- 리스트 스크롤 영역 -->
-      <div class="overflow-auto px-3">
+      <div class="overflow-auto px-3 ">
+        
+
         <!-- 응급실 목록 (데모) -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.id">
-          <div class="card-body">
+          <div class="card-body" @click="goToHospitalDetail">
             <div class="d-flex justify-content-between align-items-start">
-              <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
+              <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>              
               <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="15px" viewBox="0 0 24 24">
                   <path fill="#008A64"
@@ -120,9 +119,6 @@
             </div>
           </div>
         </div>
-
-
-
 
 
 
@@ -169,7 +165,7 @@
             </div>
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-search"></i>
-              <span class="badge text-bg-primary rounded-pill">{{ keywordWithSymptoms }}</span>
+              
             </div>
           </div>
 
@@ -214,50 +210,77 @@ function goToHospitalDetail() {
 
 
 /* 데모 데이터: hospitals가 비어있을 때 사용 */
-const demoHospitals = ref([
-  { id: 'demo-1', name: '서울대학교병원', distanceKm: 0.8, etaMin: 7 },
-  { id: 'demo-2', name: '구로병원', distanceKm: 0.2, etaMin: 5 },
-  { id: 'demo-3', name: '일산병원', distanceKm: 1, etaMin: 3 },
-  { id: 'demo-4', name: '대림병원', distanceKm: 0.9, etaMin: 2 },
-  { id: 'demo-5', name: '구청병원', distanceKm: 2, etaMin: 10 },
-  { id: 'demo-6', name: '병원', distanceKm: 0.5, etaMin: 15 },
-])
+// const demoHospitals = ref([
+//   { id: 'demo-1', name: '서울대학교병원', distanceKm: 0.8, etaMin: 7 },
+//   { id: 'demo-2', name: '구로병원', distanceKm: 0.2, etaMin: 5 },
+//   { id: 'demo-3', name: '일산병원', distanceKm: 1, etaMin: 3 },
+//   { id: 'demo-4', name: '대림병원', distanceKm: 0.9, etaMin: 2 },
+//   { id: 'demo-5', name: '구청병원', distanceKm: 2, etaMin: 10 },
+//   { id: 'demo-6', name: '병원', distanceKm: 0.5, etaMin: 15 },
+// ])
 
 /* 정렬 상태 (토글용) */
 const distanceAsc = ref(true)
 
 /* 실제 렌더링 목록: 검색 결과가 있으면 그걸, 없으면 데모를 사용 */
+// const listHospitals = computed(() => {
+//   if (hospitals.value.length > 0) {
+//     // hospitals는 meter 단위 distance가 이미 있음
+//     return hospitals.value.map(h => ({
+//       id: h.id,
+//       name: h.name,
+//       distanceKm: (h.distance ?? 0) / 1000,
+//       etaMin: Math.max(1, Math.round((h.distance ?? 0) / 1000 / 0.4)), // 대략 24km/h 가정한 임시 ETA
+//     }))
+//   }
+//   return demoHospitals.value
+// })
+
+
+/* 실제 렌더링 목록: 항상 WFS에서 가져온 hospitals 사용 */
 const listHospitals = computed(() => {
-  if (hospitals.value.length > 0) {
-    // hospitals는 meter 단위 distance가 이미 있음
-    return hospitals.value.map(h => ({
-      id: h.id,
-      name: h.name,
-      distanceKm: (h.distance ?? 0) / 1000,
-      etaMin: Math.max(1, Math.round((h.distance ?? 0) / 1000 / 0.4)), // 대략 24km/h 가정한 임시 ETA
-    }))
-  }
-  return demoHospitals.value
+
+  return hospitals.value.map(h => ({
+    id: h.id,
+    name: h.name,
+    distanceKm: (h.distance ?? 0) / 1000,
+    // 대략 24km/h 가정(도보/차 혼합 임시치): 0.4km/min
+    etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
+  }))
 })
+
+
+
+
+
 
 /* 거리순 정렬: hospitals가 있으면 hospitals를, 아니면 데모를 정렬 */
 function sortByDistance() {
-  const arr = hospitals.value.length ? hospitals.value : demoHospitals.value
-  const key = hospitals.value.length ? (h => h.distance ?? Infinity) : (h => h.distanceKm)
+  // const arr = hospitals.value.length ? hospitals.value : demoHospitals.value
+  // const key = hospitals.value.length ? (h => h.distance ?? Infinity) : (h => h.distanceKm)
 
-  arr.sort((a, b) => {
-    const A = key(a)
-    const B = key(b)
+  // arr.sort((a, b) => {
+  //   const A = key(a)
+  //   const B = key(b)
+  //   return distanceAsc.value ? A - B : B - A
+  // })
+  hospitals.value.sort((a, b) => {
+    const A = a.distance ?? Infinity
+    const B = b.distance ?? Infinity
     return distanceAsc.value ? A - B : B - A
   })
-
-  // 다음 클릭 때 반대 방향
-  //distanceAsc.value = !distanceAsc.value
+  
 }
 
 
 function sortByTime() {
-  demoHospitals.value.sort((a, b) => a.etaMin - b.etaMin);
+  //demoHospitals.value.sort((a, b) => a.etaMin - b.etaMin);
+
+  // ETA = (distance(km) / 0.4)
+  const eta = (h) => ((h.distance ?? Infinity) / 1000) / 0.4
+  hospitals.value.sort((a, b) => eta(a) - eta(b))
+
+
 }
 
 
@@ -288,7 +311,7 @@ const sheetHeightRatio = ref(0)
 const dragStart = ref({ y: 0, ratio: 0 })
 
 const MAX_SHEET_HEIGHT = window.innerHeight * 0.8
-const MIN_SHEET_HEIGHT = 200
+const MIN_SHEET_HEIGHT = 220
 
 const sheetY = computed(() => (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT) * (1 - sheetHeightRatio.value))
 const sheetStyle = computed(() => ({
@@ -359,11 +382,79 @@ function drawMarkers(items) {
 }
 
 async function searchER(radiusMeters, useSymptoms) {
-  if (!cur.value.lat || !cur.value.lon) { alert('현재 위치 확인 후 다시 시도해주세요.'); return }
+  // if (!cur.value.lat || !cur.value.lon) { alert('현재 위치 확인 후 다시 시도해주세요.'); return }
+
+  // const sanitizedRadius = Math.max(0, Number(radiusMeters) || 0)
+  // const radiusKm = Math.max(0.1, Math.min(33, sanitizedRadius / 1000 || 0))
+
+  // loadingHospitals.value = true
+  // searchAttempted.value = true
+  // hospitals.value = []
+  // lastRadius.value = sanitizedRadius
+  // useSymptomsMode.value = !!useSymptoms
+
+  // try {
+  //   const searchKeyword = (useSymptoms ? keywordWithSymptoms.value : keywordBase.value).trim()
+  //   const params = new URLSearchParams({
+  //     version: '1',
+  //     searchKeyword,
+  //     centerLon: String(cur.value.lon),
+  //     centerLat: String(cur.value.lat),
+  //     radius: radiusKm.toString(),
+  //     reqCoordType: 'WGS84GEO',
+  //     resCoordType: 'WGS84GEO',
+  //     page: '1',
+  //     count: '20'
+  //   })
+  //   const url = `https://apis.openapi.sk.com/tmap/pois?${params}`
+
+  //   const res = await fetch(url, {
+  //     method: 'GET',
+  //     mode: 'cors',
+  //     headers: { 'Accept': 'application/json', 'appKey': TMAP_APP_KEY }
+  //   })
+  //   const raw = await res.text()
+  //   if (!res.ok) { console.error('[POI ERROR]', res.status, raw); alert('POI 검색 실패: ' + res.status); return }
+  //   if (!raw?.trim()) { alert('응답이 비어 있습니다. (도메인 등록/appKey 확인)'); return }
+
+  //   let data
+  //   try { data = JSON.parse(raw) } catch (e) { console.error('파싱 실패', e, raw); alert('검색 응답을 해석할 수 없습니다.'); return }
+
+  //   const pois = data?.searchPoiInfo?.pois?.poi || []
+  //   const list = pois.map(poi => {
+  //     const lat = parseFloat(poi.noorLat ?? poi.frontLat ?? poi.lat)
+  //     const lon = parseFloat(poi.noorLon ?? poi.frontLon ?? poi.lon)
+  //     const distance = (lat && lon) ? haversineMeter(cur.value.lat, cur.value.lon, lat, lon) : Infinity
+  //     return {
+  //       id: poi.id,
+  //       name: poi.name,
+  //       address:
+  //         (poi.upperAddrName && poi.middleAddrName)
+  //           ? `${poi.upperAddrName} ${poi.middleAddrName} ${poi.roadName || ''}`.trim()
+  //           : (poi.newAddressList?.newAddress?.[0]?.fullAddressRoad || poi.detailAddrName || ''),
+  //       tel: poi.telNo || '',
+  //       hours: poi.bizhourInfo || '',
+  //       services: useSymptoms ? selectedSymptoms.value.slice() : [],
+  //       lat, lon, distance
+  //     }
+  //   })
+
+  //   hospitals.value = list
+  //     .filter(x => Number.isFinite(x.distance) && x.distance <= sanitizedRadius)
+  //     .sort((a, b) => a.distance - b.distance)
+
+  //   drawMarkers(hospitals.value)
+  //   if (hospitals.value.length) sheetHeightRatio.value = 1
+  // } catch (e) {
+  //   console.error('Tmap POI 검색 실패:', e)
+  //   alert('주변 소아응급실 검색 중 오류가 발생했습니다.')
+  // } finally {
+  //   loadingHospitals.value = false
+  // }
+
+if (!cur.value.lat || !cur.value.lon) { alert('현재 위치 확인 후 다시 시도해주세요.'); return }
 
   const sanitizedRadius = Math.max(0, Number(radiusMeters) || 0)
-  const radiusKm = Math.max(0.1, Math.min(33, sanitizedRadius / 1000 || 0))
-
   loadingHospitals.value = true
   searchAttempted.value = true
   hospitals.value = []
@@ -371,64 +462,74 @@ async function searchER(radiusMeters, useSymptoms) {
   useSymptomsMode.value = !!useSymptoms
 
   try {
-    const searchKeyword = (useSymptoms ? keywordWithSymptoms.value : keywordBase.value).trim()
-    const params = new URLSearchParams({
-      version: '1',
-      searchKeyword,
-      centerLon: String(cur.value.lon),
-      centerLat: String(cur.value.lat),
-      radius: radiusKm.toString(),
-      reqCoordType: 'WGS84GEO',
-      resCoordType: 'WGS84GEO',
-      page: '1',
-      count: '20'
-    })
-    const url = `https://apis.openapi.sk.com/tmap/pois?${params}`
-
-    const res = await fetch(url, {
-      method: 'GET',
-      mode: 'cors',
-      headers: { 'Accept': 'application/json', 'appKey': TMAP_APP_KEY }
-    })
-    const raw = await res.text()
-    if (!res.ok) { console.error('[POI ERROR]', res.status, raw); alert('POI 검색 실패: ' + res.status); return }
-    if (!raw?.trim()) { alert('응답이 비어 있습니다. (도메인 등록/appKey 확인)'); return }
-
-    let data
-    try { data = JSON.parse(raw) } catch (e) { console.error('파싱 실패', e, raw); alert('검색 응답을 해석할 수 없습니다.'); return }
-
-    const pois = data?.searchPoiInfo?.pois?.poi || []
-    const list = pois.map(poi => {
-      const lat = parseFloat(poi.noorLat ?? poi.frontLat ?? poi.lat)
-      const lon = parseFloat(poi.noorLon ?? poi.frontLon ?? poi.lon)
-      const distance = (lat && lon) ? haversineMeter(cur.value.lat, cur.value.lon, lat, lon) : Infinity
-      return {
-        id: poi.id,
-        name: poi.name,
-        address:
-          (poi.upperAddrName && poi.middleAddrName)
-            ? `${poi.upperAddrName} ${poi.middleAddrName} ${poi.roadName || ''}`.trim()
-            : (poi.newAddressList?.newAddress?.[0]?.fullAddressRoad || poi.detailAddrName || ''),
-        tel: poi.telNo || '',
-        hours: poi.bizhourInfo || '',
-        services: useSymptoms ? selectedSymptoms.value.slice() : [],
-        lat, lon, distance
-      }
-    })
-
-    hospitals.value = list
-      .filter(x => Number.isFinite(x.distance) && x.distance <= sanitizedRadius)
-      .sort((a, b) => a.distance - b.distance)
-
+    const list = await fetchHospitalsFromWFS(cur.value.lon, cur.value.lat, sanitizedRadius)
+    hospitals.value = list.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
     drawMarkers(hospitals.value)
     if (hospitals.value.length) sheetHeightRatio.value = 1
   } catch (e) {
-    console.error('Tmap POI 검색 실패:', e)
-    alert('주변 소아응급실 검색 중 오류가 발생했습니다.')
+    console.error('WFS 검색 실패:', e)
+    alert('주변 병원 검색 중 오류가 발생했습니다. (WFS)')
   } finally {
     loadingHospitals.value = false
   }
+ }
+
+/** GeoServer WFS에서 DWithin으로 병원 받아오기 */
+async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
+  // CQL: DWithin(geom, POINT(lon lat), radius, meters)
+  const cql = `DWithin(geom, POINT(${centerLon} ${centerLat}), ${radiusMeters}, meters)`
+
+  const base = 'https://api.child119.com/geoserver/hospital/wfs'
+  const params = new URLSearchParams({
+    service: 'WFS',
+    version: '1.0.0',
+    request: 'GetFeature',
+    typeName: 'hospital:emergency',
+    outputFormat: 'application/json',
+    cql_filter: cql
+  })
+
+  const url = `${base}?${params.toString()}`
+  const res = await fetch(url, { method: 'GET' })
+  if (!res.ok) {
+    const t = await res.text().catch(() => '')
+    throw new Error(`WFS ${res.status} ${t}`)
+  }
+  const data = await res.json()
+  const feats = Array.isArray(data?.features) ? data.features : []
+
+  // 안전한 포인트 추출(Polygon 등일 경우 중심점 계산은 간단히 첫 좌표 사용)
+  const getLonLat = (geom) => {
+    if (!geom) return [undefined, undefined]
+    if (geom.type === 'Point') return geom.coordinates
+    // Multi* 또는 Line/Polygon의 경우 대충 첫 좌표 사용 (꼭 필요하면 centroid 계산로직 추가)
+    try {
+      let coords = geom.coordinates
+      while (Array.isArray(coords[0])) coords = coords[0]
+      return coords // [lon, lat] 가정
+    } catch { return [undefined, undefined] }
+  }
+
+  const coalesce = (...vals) => vals.find(v => v !== undefined && v !== null && String(v).trim() !== '') ?? ''
+
+  return feats.map((f, i) => {
+    const [lon, lat] = getLonLat(f.geometry)
+    const p = f.properties || {}
+    const name = coalesce(p.name, p.hospname, p.yadmNm, p.inst_nm, p.emergency_nm, `병원 ${i + 1}`)
+    const address = coalesce(p.addr, p.road_address, p.addrRoad, p.address, p.doro, '')
+    const tel = coalesce(p.tel, p.phone, p.telno, p.telNo, '')
+    const hours = coalesce(p.hours, p.oper_time, '')
+    const distance = (Number.isFinite(lat) && Number.isFinite(lon))
+      ? haversineMeter(centerLat, centerLon, lat, lon)
+      : Infinity
+    return { id: f.id || `wfs-${i}`, name, address, tel, hours, lat, lon, distance }
+  })
 }
+
+
+
+
+
 
 function onConfirmSymptoms() { searchER(3000, true) }
 
@@ -437,7 +538,7 @@ const initTmap = () => {
   const el = document.getElementById('map_div')
   if (!el) return
   map.value = new window.Tmapv3.Map('map_div', {
-    center: new window.Tmapv3.LatLng(37.5662952, 126.9779451),
+    center: new window.Tmapv3.LatLng(37.566295, 126.9779451),
     width: '100%', height: '100%', zoom: 16
   })
 
@@ -460,22 +561,36 @@ const initTmap = () => {
       err => {
         console.error('Geolocation 오류:', err)
         alert('현재 위치를 가져올 수 없습니다. (위치 권한/HTTPS 확인)')
-        cur.value = { lat: 37.5662952, lon: 126.9779451 }
+        cur.value = { lat: 37.566295, lon: 126.9779451 }
         searchER(5000, false)
       }
     )
   } else {
     alert('이 브라우저에서는 위치 정보를 지원하지 않습니다.')
-    cur.value = { lat: 37.5662952, lon: 126.9779451 }
+    cur.value = { lat: 37.566295, lon: 126.9779451 }
     searchER(5000, false)
   }
 }
 
 /* 바텀시트 제스처 */
-const onTouchStart = e => { isDragging.value = true; dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }; e.preventDefault() }
-const onTouchMove = e => { if (!isDragging.value) return; const dY = e.touches[0].clientY - dragStart.value.y; const dR = -dY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT); sheetHeightRatio.value = Math.min(1, Math.max(0, dragStart.value.ratio + dR)) }
-const onTouchEnd = () => { isDragging.value = false; sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0 }
+/* 터치 핸들러 */
+const onTouchStart = e => {
+  isDragging.value = true
+  dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }
+}
+const onTouchMove = e => {
+  if (!isDragging.value) return
+  const deltaY = e.touches[0].clientY - dragStart.value.y
+  const deltaRatio = -deltaY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT)
+  let newRatio = dragStart.value.ratio + deltaRatio
+  sheetHeightRatio.value = Math.max(0, Math.min(1, newRatio))
+}
+const onTouchEnd = () => {
+  isDragging.value = false
+  sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0
+}
 const toggleSheet = () => { sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 0 : 1 }
+
 
 /* Tmap 스크립트 로더 */
 function loadTmapScript() {
@@ -509,4 +624,107 @@ onMounted(() => {
   })
 })
 onBeforeUnmount(() => { clearMarkers(); if (map.value) map.value.destroy() })
+
+
+
+
+onMounted(() => {
+  const grip = document.querySelector('.sheet-grip')
+  if (grip) {
+    grip.addEventListener('touchstart', onGripTouchStart, { passive: false })
+    grip.addEventListener('touchmove', onGripTouchMove, { passive: false })
+    grip.addEventListener('touchend', onGripTouchEnd, { passive: true })
+  }
+})
+
+
+
+
+
+
+const onGripTouchStart = (e) => {
+  isDragging.value = true
+  dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }
+  e.preventDefault()
+}
+const onGripTouchMove = (e) => {
+  if (!isDragging.value) return
+  e.preventDefault() // iOS에서 필수
+
+  const dY = e.touches[0].clientY - dragStart.value.y
+  const dR = -dY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT)
+  sheetHeightRatio.value = Math.min(1, Math.max(0, dragStart.value.ratio + dR))
+}
+
+
+
+
+const onGripTouchEnd = () => {
+  isDragging.value = false
+  sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0
+}
+
+
+
+
+
+
+
+
 </script>
+
+
+
+
+<style scoped>
+/* 리스트 위에 살짝 여유(선택) */
+.er-list { padding-top: 4px; }
+
+/* 카드 기본/호버/클릭 */
+.card {
+  cursor: pointer;
+  /* 핵심: 위쪽을 기준으로 확대 → 위로는 안 튐 */
+  transform-origin: top center;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.25s ease,
+    border-color 0.18s ease;
+  background-color: #fff;
+}
+
+/* 호버: 아래쪽으로만 커짐 */
+.card:hover {
+  transform: scale(1.02);              /* ↑ translateY(-) 제거 */
+  background-color: #f0f6ff;
+  border-color: #0d6efd;
+  box-shadow: 0 6px 20px rgba(13,110,253,.15);
+}
+
+/* 클릭(눌림) */
+.card:active {
+  transform: scale(0.98);              /* 위아래 이동 없이 눌림만 */
+  background-color: #e2ebff;
+  box-shadow: 0 3px 10px rgba(0,0,0,.15);
+}
+
+
+
+
+
+
+
+/* 스크롤 영역: iOS/WebView 부드러운 스크롤 */
+.sheet-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  /* 스크롤 제스처를 브라우저가 처리하도록 명시 */
+  touch-action: pan-y;
+}
+
+/* 그립: 제스처는 우리가 처리 (스크롤로 해석되지 않도록) */
+.sheet-grip {
+  touch-action: none;
+}
+
+</style>
