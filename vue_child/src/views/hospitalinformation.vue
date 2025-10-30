@@ -27,9 +27,9 @@
     </div>
 
     <!-- 내용 -->
-    <div class="d-flex flex-column" style="height: 100%;">
+    <div class="d-flex flex-column" style="height: calc(100% - 60px); overflow: hidden;">
       <!-- 상단 라인 -->
-      <div class="d-flex align-items-center justify-content-between gap-2 mb-3 ms-2 me-2">
+      <div class="d-flex align-items-center justify-content-between gap-2 mb-3 ms-2 me-2 flex-shrink-0">
         <div class="d-flex align-items-center gap-2 flex-wrap">
           <div class="d-flex flex-wrap gap-1" v-if="selectedDepartments.length">
             <span v-for="dept in selectedDepartments" :key="dept"
@@ -43,7 +43,7 @@
       </div>
 
       <!-- 타이틀 -->
-      <div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2">
+      <div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2 flex-shrink-0">
         <!-- 왼쪽 -->
         <div class="d-flex align-items-center gap-2">
           <h5 class="fw-bold mb-0">병원 리스트</h5>
@@ -63,7 +63,7 @@
       </div>
 
       <!-- 리스트 스크롤 영역 -->
-      <div class="overflow-auto px-3">
+      <div class="overflow-auto px-3 flex-grow-1" style="min-height: 0; max-height: 100%;">
         <!-- 병원 목록 -->
         <div class="card shadow-sm mb-3" v-for="hospital in hospitals" :key="hospital.id">
           <div class="card-body">
@@ -215,8 +215,13 @@ const fetchHospitalsFromGeoServer = async (lat, lon, radiusKm) => {
     console.log('GeoServer 요청 URL:', url)
     const response = await axios.get(url)
 
+    console.log('GeoServer 전체 응답:', response)
+    console.log('응답 데이터:', response.data)
+    console.log('features 개수:', response.data?.features?.length)
+
     if (response.data && response.data.features) {
       console.log('GeoServer 응답 데이터:', response.data)
+      console.log('받아온 병원 개수:', response.data.features.length)
 
       // 거리 계산 및 필터링
       let hospitalsWithDistance = response.data.features.map(feature => {
@@ -232,19 +237,32 @@ const fetchHospitalsFromGeoServer = async (lat, lon, radiusKm) => {
         }
       }).filter(h => h.distance <= radiusKm * 1000)
 
+      console.log('거리 필터링 후 병원 수:', hospitalsWithDistance.length)
+      console.log('선택된 진료과:', selectedDepartments.value)
+
       // 진료과 필터링 (선택된 진료과가 있을 경우)
       if (selectedDepartments.value.length > 0) {
+        const beforeFilter = hospitalsWithDistance.length
         hospitalsWithDistance = hospitalsWithDistance.filter(h => {
           const deptName = h.properties.dept_name || ''
           // 선택된 진료과 중 하나라도 dept_name에 포함되면 true (OR 조건)
           return selectedDepartments.value.some(dept => deptName.includes(dept))
         })
+        console.log(`진료과 필터링: ${beforeFilter}개 → ${hospitalsWithDistance.length}개`)
       }
 
       // 거리순 정렬
       hospitalsWithDistance.sort((a, b) => a.distance - b.distance)
 
       hospitals.value = hospitalsWithDistance
+
+      console.log('최종 병원 수:', hospitalsWithDistance.length)
+      console.log('hospitals.value:', hospitals.value)
+
+      // 데이터가 있으면 바텀시트 자동으로 올리기
+      if (hospitalsWithDistance.length > 0) {
+        sheetHeightRatio.value = 0.5 // 중간 높이로 펼치기
+      }
 
       // 지도에 마커 추가
       addHospitalMarkers(hospitalsWithDistance)
@@ -334,6 +352,36 @@ function sortByDistance() {
     const B = b.distance ?? Infinity
     return distanceAsc.value ? A - B : B - A
   })
+  distanceAsc.value = !distanceAsc.value
+}
+
+/* 병원 전화 걸기 */
+function callHospital(tel) {
+  if (!tel) {
+    alert('전화번호가 없습니다.')
+    return
+  }
+  window.location.href = `tel:${tel}`
+}
+
+/* 병원 길찾기 */
+function navigateToHospital(coordinates) {
+  if (!coordinates || coordinates.length < 2) {
+    alert('위치 정보가 없습니다.')
+    return
+  }
+  // Naver 지도로 길찾기 (목적지 좌표 전달)
+  const lon = coordinates[0]
+  const lat = coordinates[1]
+  const naverMapUrl = `nmap://route/car?dlat=${lat}&dlng=${lon}&dname=목적지&appname=com.example.child119`
+
+  // 모바일에서 앱 열기 시도, 실패하면 웹으로
+  window.location.href = naverMapUrl
+
+  // 2초 후에도 페이지가 안 바뀌면 웹 버전으로
+  setTimeout(() => {
+    window.open(`https://map.naver.com/v5/directions/-/-/-/car?c=${lon},${lat},15,0,0,0,dh`, '_blank')
+  }, 2000)
 }
 
 /* 지도 초기화 */
@@ -469,7 +517,7 @@ watch(selectedDepartments, () => {
 }, { deep: true })
 
 onMounted(() => {
-  sheetHeightRatio.value = 0
+  sheetHeightRatio.value = 0.3 // 초기에 살짝 올려서 리스트 보이게
   loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
     console.error('Tmap 로딩 실패:', e)
     alert('지도를 불러오지 못했습니다. 네트워크/Tmap 콘솔 설정을 확인해주세요.')
