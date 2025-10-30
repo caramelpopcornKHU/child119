@@ -1,0 +1,3 @@
+crontab -e
+
+저장 및 종료: (Nano의 경우: Ctrl+O -> Enter -> Ctrl+X

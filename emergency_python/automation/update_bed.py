@@ -1,4 +1,3 @@
-import pandas as pd
 import requests
 from urllib.parse import urlencode
 import psycopg2
@@ -24,10 +23,11 @@ for r in region:
         print(f"지역 코드 {r} 요청 실패: {response.status_code}")
 
 # ------------------------------------
-DB_HOST = "34.50.41.93"
-DB_NAME = "hospital"       # 아까 확인한 데이터베이스 이름
-DB_USER = "postgres"       # pgAdmin 로그인할 때 쓰는 사용자 이름
-DB_PASS = "Child119@"  # pgAdmin 로그인할 때 쓰는 비밀번호
+# 하드코딩된 값 대신, os.environ.get()을 사용해 환경 변수에서 값을 가져옴
+DB_HOST = os.environ.get('DB_HOST')
+DB_NAME = os.environ.get('DB_NAME')
+DB_USER = os.environ.get('DB_USER')
+DB_PASS = os.environ.get('DB_PASS')
 # ------------------------------------
 
 conn = None
