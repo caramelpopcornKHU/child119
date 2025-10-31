@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="d-flex justify-content-center align-items-center position-relative mt-1"
     style="height: calc(100vh - 140px); ">
 
@@ -28,6 +28,52 @@
 
     <!-- 내용 -->
     <div class="d-flex flex-column" style="height: calc(100% - 60px); overflow: hidden;">
+
+      <!-- 경로 결과 정보 (경로 탐색 후 표시) -->
+      <div v-if="isRouteMode" class="p-3 border-bottom bg-primary bg-gradient text-white flex-shrink-0">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-white">
+            <i class="bi bi-geo-alt-fill me-1"></i>{{ selectedHospital?.properties?.hospital_name || '경로 안내' }}
+          </h6>
+          <button type="button" class="btn-close btn-close-white" @click="exitRouteMode" aria-label="닫기"></button>
+        </div>
+
+        <!-- 경로 상세 정보 -->
+        <div class="bg-white text-dark rounded p-3">
+          <div class="row g-2 small">
+            <div class="col-6">
+              <div class="text-muted mb-1">
+                <i class="bi bi-signpost me-1"></i>총 거리
+              </div>
+              <div class="fw-bold fs-6">{{ routeDetails.distance }}</div>
+            </div>
+            <div class="col-6">
+              <div class="text-muted mb-1">
+                <i class="bi bi-clock me-1"></i>소요 시간
+              </div>
+              <div class="fw-bold fs-6">{{ routeDetails.time }}</div>
+            </div>
+            <div class="col-6" v-if="transportType === 'car' && routeDetails.fare">
+              <div class="text-muted mb-1">
+                <i class="bi bi-credit-card me-1"></i>통행 요금
+              </div>
+              <div class="fw-bold fs-6">{{ routeDetails.fare }}</div>
+            </div>
+            <div class="col-6" v-if="transportType === 'car' && routeDetails.taxiFare">
+              <div class="text-muted mb-1">
+                <i class="bi bi-taxi-front me-1"></i>예상 택시 요금
+              </div>
+              <div class="fw-bold fs-6">{{ routeDetails.taxiFare }}</div>
+            </div>
+            <div class="col-6" v-if="transportType === 'walk' && routeDetails.walkTime">
+              <div class="text-muted mb-1">
+                <i class="bi bi-person-walking me-1"></i>도보 시간
+              </div>
+              <div class="fw-bold fs-6">{{ routeDetails.walkTime }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- 상단 라인 -->
       <div class="d-flex align-items-center justify-content-between gap-2 mb-3 ms-2 me-2 flex-shrink-0">
         <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -91,7 +137,7 @@
                 @click="callHospital(hospital.properties.hospital_tel)">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
-              <button class="btn btn-primary w-100" @click="navigateToHospital(hospital.coordinates)">
+              <button class="btn btn-primary w-100" @click="openRouteModal(hospital)">
                 <i class="bi bi-sign-turn-right-fill"></i> 길찾기
               </button>
             </div>
@@ -141,11 +187,69 @@
     </div>
   </div>
 
+  <!-- 경로 안내 옵션 모달 -->
+  <div class="modal fade" id="routeModal" tabindex="-1" aria-labelledby="routeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="routeModalLabel">
+            <i class="bi bi-signpost-2-fill me-2"></i>경로 안내
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="닫기"></button>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="selectedHospital" class="alert alert-light border mb-3">
+            <div class="fw-bold text-dark mb-1">
+              <i class="bi bi-hospital me-1"></i>{{ selectedHospital.properties.hospital_name }}
+            </div>
+            <small class="text-muted">
+              <i class="bi bi-geo-alt me-1"></i>{{ selectedHospital.distanceKm }}km
+            </small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">이동 수단 선택</label>
+            <div class="btn-group w-100" role="group">
+              <input type="radio" class="btn-check" name="transportType" id="transport-car" value="car" v-model="transportType" checked>
+              <label class="btn btn-outline-primary" for="transport-car">
+                <i class="bi bi-car-front-fill d-block fs-4 mb-1"></i>
+                <small>자동차</small>
+              </label>
+
+              <input type="radio" class="btn-check" name="transportType" id="transport-walk" value="walk" v-model="transportType">
+              <label class="btn btn-outline-primary" for="transport-walk">
+                <i class="bi bi-person-walking d-block fs-4 mb-1"></i>
+                <small>도보</small>
+              </label>
+
+              <input type="radio" class="btn-check" name="transportType" id="transport-transit" value="transit" v-model="transportType">
+              <label class="btn btn-outline-primary" for="transport-transit">
+                <i class="bi bi-bus-front-fill d-block fs-4 mb-1"></i>
+                <small>대중교통</small>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
+          <button type="button" class="btn btn-primary" @click="findRoute">
+            <i class="bi bi-compass-fill me-1"></i>경로 탐색
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
 import axios from 'axios'
+
+// TMAP API 키
+const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8"
 
 /* 진료과 필터 상태 */
 const departmentOptions = [
@@ -166,14 +270,32 @@ const searchRadius = ref(5) // 기본 5km 반경
 /* 지도 상태 */
 const map = ref(null)
 
+/* 경로 탐색 상태 */
+const isRouteMode = ref(false)
+const selectedHospital = ref(null)
+const transportType = ref('car') // car, walk, transit
+const searchOption = ref('2') // 교통최적+최소시간
+const trafficInfo = ref('N')
+const routeDetails = ref({
+  distance: '',
+  time: '',
+  fare: '',
+  taxiFare: '',
+  walkTime: '' // 도보 시간
+})
+
+// 경로 탐색 결과물 (마커, 라인)
+const resultMarkerArr = ref([])
+const resultdrawArr = ref([])
+
 /* 바텀시트 드래그 */
 const bottomSheet = ref(null)
 const isDragging = ref(false)
 const sheetHeightRatio = ref(0)
 const dragStart = ref({ y: 0, ratio: 0 })
 
-const MAX_SHEET_HEIGHT = window.innerHeight * 0.8
-const MIN_SHEET_HEIGHT = 210
+const MAX_SHEET_HEIGHT = window.innerHeight * 0.7
+const MIN_SHEET_HEIGHT = 220
 
 const sheetY = computed(() =>
   (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT) * (1 - sheetHeightRatio.value)
@@ -252,8 +374,8 @@ const fetchHospitalsFromGeoServer = async (lat, lon, radiusKm) => {
       }
 
       // 거리순 정렬
-      hospitalsWithDistance.sort((a, b) => a.distance - b.distance)
-
+      hospitalsWithDistance.sort((a, b) => a.distance - b.distance) 
+      //const finalHospitals = hospitalsWithDistance(0,10)
       hospitals.value = hospitalsWithDistance
 
       console.log('최종 병원 수:', hospitalsWithDistance.length)
@@ -310,33 +432,13 @@ const addHospitalMarkers = (hospitalList) => {
     bounds.extend(position)
 
     const marker = new window.Tmapv3.Marker({ position: position, map: map.value })
-    const html = `
-      <div style="min-width:240px;max-width:280px">
-        <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${hospital.properties.hospital_name || '병원명 없음'}</div>
-        <div style="font-size:12px;color:#6c757d;margin-bottom:6px;">
-          <div><i class="bi bi-pin-map-fill"></i> ${hospital.properties.hospital_address || '주소 정보 없음'}</div>
-          <div><i class="bi bi-telephone"></i> ${hospital.properties.hospital_tel || '전화 없음'}</div>
-          ${hospital.properties.dept_name ? `<div><i class="bi bi-ui-checks"></i> ${hospital.properties.dept_name}</div>` : ''}
-        </div>
-        <div class="d-flex gap-2">
-          <a href="${hospital.properties.hospital_tel ? `tel:${hospital.properties.hospital_tel}` : '#'}"
-             class="btn btn-outline-primary flex-fill ${hospital.properties.hospital_tel ? '' : 'disabled'}">전화</a>
-          <a href="https://map.naver.com/v5/search/${encodeURIComponent(hospital.properties.hospital_name || '')}" target="_blank" rel="noopener"
-             class="btn btn-primary flex-fill">길찾기</a>
-        </div>
-      </div>`
-    const info = new window.Tmapv3.InfoWindow({
-      position: position,
-      content: html,
-      type: 2,
-      map: null,
-      offset: new window.Tmapv3.Point(0, -10)
-    })
+
+    // 마커 클릭 시 경로 안내 모달 표시
     window.Tmapv3.event.addListener(marker, 'click', () => {
-      markers.forEach(m => m.__info?.setMap(null))
-      info.setMap(map.value)
+      openRouteModal(hospital)
     })
-    marker.__info = info
+
+    marker.__hospital = hospital
     markers.push(marker)
   })
 
@@ -364,24 +466,225 @@ function callHospital(tel) {
   window.location.href = `tel:${tel}`
 }
 
-/* 병원 길찾기 */
-function navigateToHospital(coordinates) {
-  if (!coordinates || coordinates.length < 2) {
-    alert('위치 정보가 없습니다.')
+/* 길찾기 모달 열기 */
+function openRouteModal(hospital) {
+  selectedHospital.value = hospital
+
+  // Bootstrap 5 Modal API 사용
+  const modalEl = document.getElementById('routeModal')
+  if (modalEl) {
+    // Bootstrap이 로드되어 있는지 확인
+    if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
+      const modal = new window.bootstrap.Modal(modalEl)
+      modal.show()
+    } else {
+      // Bootstrap이 없으면 직접 모달 표시 (fallback)
+      modalEl.classList.add('show')
+      modalEl.style.display = 'block'
+      document.body.classList.add('modal-open')
+
+      // 백드롭 추가
+      const backdrop = document.createElement('div')
+      backdrop.className = 'modal-backdrop fade show'
+      backdrop.id = 'route-modal-backdrop'
+      document.body.appendChild(backdrop)
+    }
+  }
+}
+
+/* 경로 탐색 실행 */
+async function findRoute() {
+  if (!map.value || !userLocation.value || !selectedHospital.value) {
+    alert('위치 정보를 확인할 수 없습니다.')
     return
   }
-  // Naver 지도로 길찾기 (목적지 좌표 전달)
-  const lon = coordinates[0]
-  const lat = coordinates[1]
-  const naverMapUrl = `nmap://route/car?dlat=${lat}&dlng=${lon}&dname=목적지&appname=com.example.child119`
 
-  // 모바일에서 앱 열기 시도, 실패하면 웹으로
-  window.location.href = naverMapUrl
+  // 모달 닫기
+  const modalEl = document.getElementById('routeModal')
+  if (modalEl) {
+    if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
+      const modal = window.bootstrap.Modal.getInstance(modalEl)
+      if (modal) modal.hide()
+    } else {
+      modalEl.classList.remove('show')
+      modalEl.style.display = 'none'
+      document.body.classList.remove('modal-open')
+      const backdrop = document.getElementById('route-modal-backdrop')
+      if (backdrop) backdrop.remove()
+    }
+  }
 
-  // 2초 후에도 페이지가 안 바뀌면 웹 버전으로
-  setTimeout(() => {
-    window.open(`https://map.naver.com/v5/directions/-/-/-/car?c=${lon},${lat},15,0,0,0,dh`, '_blank')
-  }, 2000)
+  // 기존 병원 마커 숨기기
+  clearMarkers()
+
+  // 기존 경로 정보 초기화
+  clearRouteData()
+
+  const headers = {
+    "appKey": TMAP_APP_KEY,
+    "Content-Type": "application/json"
+  }
+
+  try {
+    let resultData, props
+
+    // 이동 수단에 따라 다른 API 호출
+    if (transportType.value === 'car') {
+      // 자동차 경로
+      const data = {
+        "startX": String(userLocation.value.lon),
+        "startY": String(userLocation.value.lat),
+        "endX": String(selectedHospital.value.coordinates[0]),
+        "endY": String(selectedHospital.value.coordinates[1]),
+        "reqCoordType": "WGS84GEO",
+        "resCoordType": "WGS84GEO",
+        "searchOption": searchOption.value,
+        "trafficInfo": trafficInfo.value
+      }
+
+      const response = await axios.post(
+        "https://apis.openapi.sk.com/tmap/routes?version=1&format=json",
+        data,
+        { headers: headers }
+      )
+
+      resultData = response.data.features
+      props = resultData[0].properties
+
+      routeDetails.value = {
+        distance: `${(props.totalDistance / 1000).toFixed(1)}km`,
+        time: `${(props.totalTime / 60).toFixed(0)}분`,
+        fare: `${props.totalFare}원`,
+        taxiFare: `${props.taxiFare}원`,
+        walkTime: ''
+      }
+    } else if (transportType.value === 'walk') {
+      // 도보 경로
+      const data = {
+        "startX": String(userLocation.value.lon),
+        "startY": String(userLocation.value.lat),
+        "endX": String(selectedHospital.value.coordinates[0]),
+        "endY": String(selectedHospital.value.coordinates[1]),
+        "reqCoordType": "WGS84GEO",
+        "resCoordType": "WGS84GEO",
+        "startName": "출발지",
+        "endName": selectedHospital.value.properties.hospital_name || "도착지"
+      }
+
+      const response = await axios.post(
+        "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json",
+        data,
+        { headers: headers }
+      )
+
+      resultData = response.data.features
+      props = resultData[0].properties
+
+      routeDetails.value = {
+        distance: `${(props.totalDistance / 1000).toFixed(1)}km`,
+        time: `${(props.totalTime / 60).toFixed(0)}분`,
+        fare: '',
+        taxiFare: '',
+        walkTime: `${(props.totalTime / 60).toFixed(0)}분`
+      }
+    } else if (transportType.value === 'transit') {
+      // 대중교통 경로 (간단한 직선 거리로 대체 - TMAP 대중교통 API는 별도 상품)
+      alert('대중교통 경로는 현재 지원하지 않습니다. 도보 또는 자동차를 선택해주세요.')
+      return
+    }
+
+    isRouteMode.value = true
+
+    // 경로 및 마커 그리기 - 파란색 라인
+    for (const i in resultData) {
+      const geometry = resultData[i].geometry
+      const properties = resultData[i].properties
+
+      if (geometry.type === "LineString") {
+        const drawInfoArr = []
+        for (const coord of geometry.coordinates) {
+          drawInfoArr.push(new window.Tmapv3.LatLng(coord[1], coord[0]))
+        }
+        drawLine(drawInfoArr) // 파란색 라인으로 그리기
+      } else {
+        // 출발지(S)와 도착지(E) 마커만 표시
+        if (properties.pointType === "S" || properties.pointType === "E") {
+          const [lng, lat] = geometry.coordinates
+          const position = new window.Tmapv3.LatLng(lat, lng)
+
+          const label = properties.pointType === "S" ? "출발" : "도착"
+          const color = properties.pointType === "S" ? "#0d6efd" : "#dc3545"
+
+          const marker = new window.Tmapv3.Marker({
+            position: position,
+            map: map.value,
+            title: label
+          })
+
+          // 커스텀 라벨 추가
+          const infoWindow = new window.Tmapv3.InfoWindow({
+            position: position,
+            content: `<div style="padding:5px 10px;background:${color};color:white;border-radius:5px;font-weight:bold;font-size:12px;">${label}</div>`,
+            type: 2,
+            map: map.value,
+            offset: new window.Tmapv3.Point(0, -10)
+          })
+
+          resultMarkerArr.value.push(marker)
+        }
+      }
+    }
+
+    // 바텀시트 올리기
+    sheetHeightRatio.value = 0.5
+
+  } catch (error) {
+    console.error("경로 탐색 API 오류:", error)
+    alert("경로 탐색에 실패했습니다.")
+    if (error.response) {
+      console.error("응답 데이터:", error.response.data)
+    }
+  }
+}
+
+/* 경로 라인 그리기 - 깔끔한 파란색 */
+function drawLine(arrPoint) {
+  if (!window.Tmapv3) return
+
+  // 파란색 경로 라인
+  const polyline_ = new window.Tmapv3.Polyline({
+    path: arrPoint,
+    strokeColor: "#0d6efd", // Bootstrap primary 파란색
+    strokeWeight: 6,
+    map: map.value
+  })
+  resultdrawArr.value.push(polyline_)
+}
+
+/* 경로 데이터 초기화 */
+function clearRouteData() {
+  resultMarkerArr.value.forEach(marker => marker.setMap(null))
+  resultMarkerArr.value = []
+
+  resultdrawArr.value.forEach(line => line.setMap(null))
+  resultdrawArr.value = []
+}
+
+/* 경로 모드 종료 */
+function exitRouteMode() {
+  isRouteMode.value = false
+  selectedHospital.value = null
+  clearRouteData()
+
+  // 병원 마커 다시 표시
+  if (userLocation.value) {
+    fetchHospitalsFromGeoServer(userLocation.value.lat, userLocation.value.lon, searchRadius.value)
+  }
+}
+
+/* 경로 정보 토글 */
+function toggleRouteInfo() {
+  isRouteInfoExpanded.value = !isRouteInfoExpanded.value
 }
 
 /* 지도 초기화 */
@@ -485,7 +788,7 @@ function loadTmapScript() {
       return
     }
     const script = document.createElement('script')
-    script.src = `https://apis.openapi.sk.com/tmap/vectorjs?version=1&appKey=pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8`
+    script.src = `https://apis.openapi.sk.com/tmap/vectorjs?version=1&appKey=${TMAP_APP_KEY}`
     script.dataset.tmap = 'v3'
     script.onload = resolve
     script.onerror = reject
@@ -505,26 +808,28 @@ function waitTmapReady(retry = 10) {
 
 /* 반경 또는 진료과 변경 시 재검색 */
 watch(searchRadius, (newRadius) => {
-  if (userLocation.value) {
+  if (userLocation.value && !isRouteMode.value) {
     fetchHospitalsFromGeoServer(userLocation.value.lat, userLocation.value.lon, newRadius)
   }
 })
 
 watch(selectedDepartments, () => {
-  if (userLocation.value) {
+  if (userLocation.value && !isRouteMode.value) {
     fetchHospitalsFromGeoServer(userLocation.value.lat, userLocation.value.lon, searchRadius.value)
   }
 }, { deep: true })
 
 onMounted(() => {
-  sheetHeightRatio.value = 0.3 // 초기에 살짝 올려서 리스트 보이게
+  sheetHeightRatio.value = 0.3
   loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
     console.error('Tmap 로딩 실패:', e)
     alert('지도를 불러오지 못했습니다. 네트워크/Tmap 콘솔 설정을 확인해주세요.')
   })
 })
+
 onBeforeUnmount(() => {
   clearMarkers()
+  clearRouteData()
   if (map.value) map.value.destroy()
 })
 </script>
