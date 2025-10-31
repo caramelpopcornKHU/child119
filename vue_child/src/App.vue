@@ -205,11 +205,11 @@ export default {
 }
 
 .text-gray {
-  color: #00000090;
+  color: #00000090 !important;
 }
 
 .nav-link.bg-light {
-  color: #000000 !important;
+  color: #0D6EFD !important;
 }
 
 .btn-primary {
