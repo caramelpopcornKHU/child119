@@ -85,14 +85,14 @@
       <!-- 상단 라인 -->
       <div class="d-flex align-items-center justify-content-between gap-2 mb-3 ms-2 me-2 flex-shrink-0">
         <div class="d-flex align-items-center gap-2 flex-wrap">
-          <div class="d-flex flex-wrap gap-1" v-if="selectedDepartments.length">
-            <span v-for="dept in selectedDepartments" :key="dept"
-              class="badge text-bg-primary rounded-pill d-inline-flex align-items-center">
-              {{ dept }}
-              <button type="button" class="btn-close btn-close-white btn-sm ms-1" aria-label="삭제"
-                @click="removeDepartment(dept)" style="transform: scale(.8);"></button>
+          <div class="d-flex flex-wrap gap-1" v-if="selectedMessages.length">
+            <span v-for="tag in selectedMessages" :key="tag"
+            class="badge text-bg-primary rounded-pill d-inline-flex align-items-center">
+            {{ tag }}
+            <button type="button" class="btn-close btn-close-white btn-sm ms-1" aria-label="삭제"
+            @click="removeMessageTag(tag)" style="transform: scale(.8);"></button>
             </span>
-          </div>
+         </div>
         </div>
       </div>
 
@@ -132,8 +132,14 @@
               </span>
             </div>
 
-            <div class="mb-2" v-if="hospital.properties.dept_name">
-              <span class="badge bg-danger-subtle text-danger-emphasis me-1">{{ hospital.properties.dept_name }}</span>
+            <div class="mb-2" v-if="hospital.properties.message">
+                <span
+                    class="badge me-1"
+                    :class="hospital.properties.message.includes('가능')
+                    ? 'bg-success-subtle text-success-emphasis'
+                    : 'bg-secondary-subtle text-secondary-emphasis'">
+                    {{ hospital.properties.message }}
+                </span>
             </div>
 
             <div class="text-muted small d-flex align-items-center mb-3">
@@ -157,7 +163,7 @@
         <div v-if="hospitals.length === 0" class="text-center text-muted py-4">
           <i class="bi bi-search fs-1 d-block mb-2"></i>
           <p class="mb-1">주변에 병원 정보가 없습니다.</p>
-          <small class="text-muted">진료과를 변경하거나 다시 시도해주세요.</small>
+          <small class="text-muted">필터(소아가능/불가능)를 변경하거나 다시 시도해주세요.</small>
         </div>
       </div>
     </div>
@@ -169,21 +175,20 @@
       <div class="modal-content border-0 shadow">
         <div class="modal-header">
           <h5 class="modal-title" id="departmentModalLabel">
-            <i class="bi bi-clipboard2-pulse me-1"></i> 진료과 선택
+           <i class="bi bi-clipboard2-pulse me-1"></i> 소아 진료 가능여부
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
         </div>
 
         <div class="modal-body">
           <div class="d-flex flex-wrap gap-2">
-            <template v-for="opt in departmentOptions" :key="opt">
-              <input class="btn-check" type="checkbox" :id="`dept-${opt}`" :value="opt" v-model="selectedDepartments" />
-              <label class="btn btn-outline-secondary rounded-pill py-1 px-3" :for="`dept-${opt}`">{{ opt }}</label>
+            <template v-for="opt in messageOptions" :key="opt">
+                <input class="btn-check" type="checkbox" :id="`msg-${opt}`" :value="opt" v-model="selectedMessages" />
+                <label class="btn btn-outline-secondary rounded-pill py-1 px-3" :for="`msg-${opt}`">{{ opt }}</label>
             </template>
           </div>
-
-          <div v-if="selectedDepartments.length" class="mt-3 text-muted small">
-            <i class="bi bi-check2-circle"></i> {{ selectedDepartments.length }}개 진료과 선택됨
+          <div v-if="selectedMessages.length" class="mt-3 text-muted small">
+           <i class="bi bi-check2-circle"></i> {{ selectedMessages.length }}개 상태 선택됨
           </div>
         </div>
 
@@ -261,16 +266,12 @@ import axios from 'axios'
 // TMAP API 키
 const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8"
 
-/* 진료과 필터 상태 */
-const departmentOptions = [
-  '내과', '외과', '정형외과', '신경외과', '마취통증의학과',
-  '소아청소년과', '피부과', '영상의학과', '재활의학과', '가정의학과',
-  '응급의학과', '성형외과', '안과', '한방내과', '산부인과'
-]
-const selectedDepartments = ref([])
-function removeDepartment(dept) {
-  selectedDepartments.value = selectedDepartments.value.filter(d => d !== dept)
-}
+/*소아 진료 가능여부 필터 상태 */
+ const messageOptions = ['소아가능', '불가능']           // 필요시 값만 더 추가
+ const selectedMessages = ref([])                       // 다중 선택 OR 필터
+ function removeMessageTag(tag) {
+   selectedMessages.value = selectedMessages.value.filter(t => t !== tag)
+ }
 
 /* 병원 데이터 상태 */
 const hospitals = ref([])
@@ -357,31 +358,37 @@ const fetchHospitalsFromGeoServer = async (lat, lon, radiusKm) => {
 
       // 거리 계산 및 필터링
       let hospitalsWithDistance = response.data.features.map(feature => {
-        const coords = feature.geometry.coordinates
-        const distance = calculateDistance(lat, lon, coords[1], coords[0])
+   const coords = feature.geometry.coordinates
+   const distance = calculateDistance(lat, lon, coords[1], coords[0])
 
-        return {
-          id: feature.id,
-          properties: feature.properties,
-          coordinates: coords,
-          distance: distance,
-          distanceKm: (distance / 1000).toFixed(1)
-        }
-      }).filter(h => h.distance <= radiusKm * 1000)
+   // 속성 정규화: name, message를 반드시 채움
+   const raw = feature.properties || {}
+   const name = raw.name ?? raw.hospital_name ?? raw.yadmNm ?? raw.dutyName ?? ''
+   const message = raw.message ?? raw.MSG ?? '' // GeoJSON이면 보통 'message' 그대로 옴
+
+   return {
+     id: feature.id,
+     properties: { ...raw, name, message }, // 표준 키로 덮어쓰기
+     coordinates: coords,
+     distance,
+     distanceKm: (distance / 1000).toFixed(1)
+   }
+ }).filter(h => h.distance <= radiusKm * 1000)
 
       console.log('거리 필터링 후 병원 수:', hospitalsWithDistance.length)
-      console.log('선택된 진료과:', selectedDepartments.value)
+      console.log('선택된 message:', selectedMessages.value)
 
       // 진료과 필터링 (선택된 진료과가 있을 경우)
-      if (selectedDepartments.value.length > 0) {
-        const beforeFilter = hospitalsWithDistance.length
-        hospitalsWithDistance = hospitalsWithDistance.filter(h => {
-          const deptName = h.properties.dept_name || ''
-          // 선택된 진료과 중 하나라도 dept_name에 포함되면 true (OR 조건)
-          return selectedDepartments.value.some(dept => deptName.includes(dept))
-        })
-        console.log(`진료과 필터링: ${beforeFilter}개 → ${hospitalsWithDistance.length}개`)
-      }
+      // 소아 진료 가능여부 필터 (선택된 메시지가 있을 경우)
+ if (selectedMessages.value.length > 0) {
+   const before = hospitalsWithDistance.length
+   hospitalsWithDistance = hospitalsWithDistance.filter(h => {
+     const msg = (h.properties.message || '').trim()
+     // '소아가능' 정확히 또는 포함 매칭 (둘 다 허용)
+     return selectedMessages.value.some(sel => msg === sel || msg.includes(sel))
+   })
+   console.log(`message 필터링: ${before}개 → ${hospitalsWithDistance.length}개`)
+ }
 
       // 거리순 정렬
       hospitalsWithDistance.sort((a, b) => a.distance - b.distance) 
@@ -823,12 +830,11 @@ watch(searchRadius, (newRadius) => {
   }
 })
 
-watch(selectedDepartments, () => {
-  if (userLocation.value && !isRouteMode.value) {
-    fetchHospitalsFromGeoServer(userLocation.value.lat, userLocation.value.lon, searchRadius.value)
-  }
-}, { deep: true })
-
+watch(selectedMessages, () => {
+   if (userLocation.value && !isRouteMode.value) {
+     fetchHospitalsFromGeoServer(userLocation.value.lat, userLocation.value.lon, searchRadius.value)
+   }
+ }, { deep: true })
 onMounted(() => {
   sheetHeightRatio.value = 0.3
   loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
