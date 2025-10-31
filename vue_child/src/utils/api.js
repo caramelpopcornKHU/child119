@@ -92,6 +92,25 @@ export async function getEmergencyFromWFSByBBox(minX, minY, maxX, maxY, options)
   }
 }
 
+export async function getEmergencyFormWFSByFilter(hpid){
+   try{
+    const res = await WFSApi.get("",{
+      params:{
+      service: 'WFS',
+      version: '1.0.0',
+      request: 'GetFeature',
+      typeName: 'hospital:emergency',
+      outputFormat: 'application/json',
+      FeatureID:  hpid,
+      },
+    })
+    return res.data.features[0].properties
+  } catch(err) {
+    console.error(`WFS 조회 실패 -> ${err}`)
+  }
+
+}
+
 // tmap API
 export const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8";
 

@@ -1,6 +1,6 @@
 <template>
   <div class="bg-gray min-vh-100 d-flex justify-content-center align-items-start py-4">
-    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white" style="width: 420px;">
+    <div v-if="hospitalData" class="card shadow-sm border-0 rounded-4 p-4 bg-white" style="width: 420px;">
       <!-- 상단 헤더 -->
       <div class="d-flex align-items-center mb-3 gap-2">
         <button class="btn btn-link p-0 me-2 text-dark d-flex" @click="goBack">
@@ -96,9 +96,9 @@
             </span>
           </div>
 
-          <div class="text-center">
-            <button v-if="hospital.departments.length > 6"
-              class="btn btn-sm btn-outline-primary rounded-pill px-3 text-bold" @click="toggleShowAll"><svg
+          <div class="text-center pb-5">
+            <button v-if="hospitalData.dgidIdName.length > 6"
+              class="btn btn-sm btn-outline-primary rounded-pill px-3  text-bold" @click="toggleShowAll"><svg
                 xmlns="http://www.w3.org/2000/svg" width="10" height="20" viewBox="0 0 24 24">
                 <path fill="#0D6EFD" d="M1 3h22L12 22" />
               </svg>
@@ -112,7 +112,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 
@@ -121,31 +121,23 @@ const goBack = () => router.back();
 
 // 더미데이터
 const showAll = ref(false);
-const hospital = ref({
-  dutyName: "고대구로병원",
-  dutyAddr: "서울특별시 동대문구 경희대로 23(회기동)",
-  dutyTel3: "02-958-8114",
-  childEmergencyAvailable: 4,
-  childEmergencyTotal: 5,
-  departments: [
-    "내과", "소아청소년과", "신경과", "정신건강의학과",
-    "외과", "피부과", "심장혈관흉부외과", "정형외과",
-    "신경외과", "성형외과", "산부인과", "이비인후과",
-    "마취통증의학과", "영상의학과", "가정의학과"
-  ]
-});
+
 
 const visibleDepartments = computed(() => {
-  return showAll.value ? hospital.value.departments : hospital.value.departments.slice(0, 12);
+    // hospitalData.value가 존재하고 dgidIdName이 문자열일 때만 처리
+    if (hospitalData.value && typeof hospitalData.value.dgidIdName === 'string') {
+        // 쉼표(,)를 기준으로 문자열을 분리하여 배열로 반환
+        return hospitalData.value.dgidIdName.split(',');
+    }
+    return []; // 데이터가 없거나 형식이 아니면 빈 배열 반환
 });
-
+  
 const toggleShowAll = () => {
   showAll.value = !showAll.value;
 };
 
 // api 연결
-const state = ref('원활');
-import { getEmergencyHospitalByHPID } from '@/utils/api'
+import { getEmergencyHospitalByHPID, getEmergencyFormWFSByFilter } from '@/utils/api'
 
 let hospitalData = ref(null)
 let realTimeData = ref(null)
@@ -156,37 +148,32 @@ const hpid = 'A1100001';
 async function getHospitalData(hpid) {
   try{
     hospitalData.value = await getEmergencyHospitalByHPID(hpid);
+    console.log( hospitalData.value)
   } catch(err) {
     console.error(`병원 정보 조회 실패 -> ${err}`)
   }
 }
 
-getHospitalData(hpid);
+
+
 
 async function getRealTimeData(hpid) {
-
-  const base = 'https://api.child119.com/geoserver/hospital/wfs'
-  const params = new URLSearchParams({
-    service: 'WFS',
-    version: '1.0.0',
-    request: 'GetFeature',
-    typeName: 'hospital:emergency',
-    outputFormat: 'application/json',
-    FeatureID_filter: hpid
-  })
-  const url = `${base}?${params.toString()}`
-  const res = await fetch(url, { method: 'GET' })
-  if (!res.ok) {
-    const t = await res.text().catch(() => '')
-    throw new Error(`WFS ${res.status} ${t}`)
+  try{
+    realTimeData.value = await getEmergencyFormWFSByFilter(hpid);
+    console.log(realTimeData.value)
+  } catch (err) {
+    console.error(`WFS실행 오류 -> ${err}`)
   }
-  const response = await res.json()
-  realTimeData.value = response.features[0].properties
-  console.log(realTimeData)
-  return realTimeData;
+
 }
 
-getRealTimeData();
+onMounted(async () => {
+  getHospitalData(hpid)
+  getRealTimeData(hpid)
+});
+
+
+
 
 
 
