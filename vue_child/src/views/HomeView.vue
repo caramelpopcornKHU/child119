@@ -88,7 +88,7 @@
       <div class="overflow-auto px-3 ">
         
 
-        <!-- 응급실 목록 (데모) -->
+        <!-- 응급실 목록 -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.id">
           <div class="card-body" @click="goToHospitalDetail">
             <div class="d-flex justify-content-between align-items-start">
@@ -116,7 +116,7 @@
               <button class="btn btn-outline-primary w-100">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
-              <button class="btn btn-primary w-100">
+              <button class="btn btn-primary w-100"  @click="openRouteModal(hospital)">
                 <i class="bi bi-sign-turn-right-fill"></i> 길찾기
               </button>
             </div>
@@ -319,6 +319,132 @@ async function drawRouteTo(destLat, destLon) {
 
 
 
+/** 가까운 3곳 경로 모두 표시 */
+async function drawRoutesToTop3() {
+  if (!map.value || !cur.value.lat || !cur.value.lon) {
+    alert('출발 위치가 없습니다. (위치 권한 필요)')
+    return
+  }
+
+  // 기존 경로 지우기
+  if (routeLine) {
+    if (Array.isArray(routeLine)) routeLine.forEach(r => r.setMap(null))
+    else routeLine.setMap(null)
+  }
+
+  // 상위 3개 병원만 선택
+  const top3 = hospitals.value
+    .filter(h => Number.isFinite(h.distance))
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, 3)
+
+  if (top3.length === 0) {
+    alert('표시할 병원이 없습니다.')
+    return
+  }
+
+  const colors = ['#0d6efd', '#198754', '#ffc107'] // 파랑/초록/노랑
+
+  const startX = +cur.value.lon
+  const startY = +cur.value.lat
+  const polylines = []
+
+  for (let i = 0; i < top3.length; i++) {
+    const dest = top3[i]
+    const endX = +dest.lon
+    const endY = +dest.lat
+
+    try {
+      const url = `https://apis.openapi.sk.com/tmap/routes?version=1&format=json&appKey=${TMAP_APP_KEY}`
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'appKey': TMAP_APP_KEY
+        },
+        body: JSON.stringify({
+          startX, startY, endX, endY,
+          reqCoordType: 'WGS84GEO',
+          resCoordType: 'WGS84GEO',
+          searchOption: '0'
+        })
+      })
+
+      const data = await res.json()
+      const features = Array.isArray(data.features) ? data.features : []
+
+      const paths = []
+      for (const f of features) {
+        const g = f.geometry
+        if (!g) continue
+        if (g.type === 'LineString')
+          paths.push(...g.coordinates.map(([x, y]) => new window.Tmapv3.LatLng(y, x)))
+        else if (g.type === 'MultiLineString')
+          g.coordinates.forEach(seg =>
+            paths.push(...seg.map(([x, y]) => new window.Tmapv3.LatLng(y, x)))
+          )
+      }
+
+      if (!paths.length) continue
+
+      const poly = new window.Tmapv3.Polyline({
+        path: paths,
+        strokeColor: colors[i % colors.length],
+        strokeWeight: 6,
+        strokeOpacity: 0.9,
+        map: map.value
+      })
+      polylines.push(poly)
+    } catch (e) {
+      console.error(`경로 ${i + 1} 실패:`, e)
+    }
+  }
+
+  // Polyline 저장 (나중에 clearRoute()에서 제거용)
+  routeLine = polylines
+
+  // 모든 경로가 그려졌으면 지도 범위 맞춤
+  const b = new window.Tmapv3.LatLngBounds()
+  hospitals.value.slice(0, 3).forEach(h => {
+    if (h.lat && h.lon) b.extend(new window.Tmapv3.LatLng(h.lat, h.lon))
+  })
+  map.value.fitBounds(b)
+}
+
+
+
+// 선택된 병원(모달/경로 공용)
+const selectedHospital = ref(null)
+
+/* 길찾기 모달 열기 */
+function openRouteModal(hospital) {
+  selectedHospital.value = hospital
+
+  // Bootstrap 5 Modal API 사용
+  const modalEl = document.getElementById('routeModal')
+  if (modalEl) {
+    // Bootstrap이 로드되어 있는지 확인
+    if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
+      const modal = new window.bootstrap.Modal(modalEl)
+      modal.show()
+    } else {
+      // Bootstrap이 없으면 직접 모달 표시 (fallback)
+      modalEl.classList.add('show')
+      modalEl.style.display = 'block'
+      document.body.classList.add('modal-open')
+
+      // 백드롭 추가
+      const backdrop = document.createElement('div')
+      backdrop.className = 'modal-backdrop fade show'
+      backdrop.id = 'route-modal-backdrop'
+      document.body.appendChild(backdrop)
+    }
+  }
+}
+
+
+
 
 const router = useRouter()
 
@@ -481,7 +607,7 @@ function drawMarkers(items) {
     })
 
     // 클릭 → 인포윈도우 + 경로
-const handlePick = () => {
+  const handlePick = () => {
   console.log('[marker] picked:', h.name, h.lat, h.lon)
   markers.forEach(m => m.__info?.setMap?.(null))
   info.setMap(map.value)
@@ -514,12 +640,16 @@ if (isDesktop) {
 
 // ✅ 루프와 fitBounds 이후에 (그리고 필요 시 one-time 플래그 사용)
   if (!autoPickedOnce && markers[0]) {
-    autoPickedOnce = true
-    console.log('[auto-pick test] first marker')
-    const p = markers[0].getPosition?.()
-    const mLat = p._lat ?? p.lat?.() ?? p.lat
-    const mLon = p._lng ?? p.lng?.() ?? p.lng
-    drawRouteTo(mLat, mLon)
+    // autoPickedOnce = true
+    // console.log('[auto-pick test] first marker')
+    // const p = markers[0].getPosition?.()
+    // const mLat = p._lat ?? p.lat?.() ?? p.lat
+    // const mLon = p._lng ?? p.lng?.() ?? p.lng
+    // drawRouteTo(mLat, mLon)
+
+    console.log('[auto-pick test] top 3 routes')
+    drawRoutesToTop3()
+    
   }
 
 

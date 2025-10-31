@@ -28,7 +28,7 @@
     </div>
   <!-- 바텀시트 -->
   <div class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg " :style="sheetStyle" ref="bottomSheet"
-    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2;">
+    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 1;">
     <!-- 그립 -->
     <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
       <div class="rounded-pill bg-body-secondary" style="width:40px;height:5px;"></div>
@@ -153,7 +153,7 @@
                 @click="callHospital(hospital.properties.hospital_tel)">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
-              <button class="btn btn-primary w-100" @click="openRouteModal(hospital)">
+              <button class="btn btn-primary w-100" @click="openRouteModal(hospital)" style="z-index: 2;">
                 <i class="bi bi-sign-turn-right-fill"></i> 길찾기
               </button>
             </div>
@@ -262,6 +262,20 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
 import axios from 'axios'
+
+
+
+
+//마커에 응급실 이름 
+const markerIconHover = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none">
+    <path d="M12 2C8.1 2 5 5.1 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.9-3.1-7-7-7z" fill="#0d6efd"/>
+    <circle cx="12" cy="9" r="3.4" fill="white"/>
+  </svg>`)
+
+
+
+
 
 // TMAP API 키
 const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8"
