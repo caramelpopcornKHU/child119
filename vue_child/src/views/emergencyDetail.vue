@@ -8,7 +8,7 @@
             <path fill="#000" d="M20 11v2H8l5.5 5.5l-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5L8 11z" />
           </svg>
         </button>
-        <div class="mb-0 text-bold fs-5 d-flex">{{ hospital.dutyName }}</div>
+        <div class="mb-0 text-bold fs-5 d-flex">{{ hospitalData.dutyName }}</div>
       </div>
 
       <!-- 병원 정보 -->
@@ -21,7 +21,7 @@
               d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
           </svg>
           <div class="d-flex text-plight">
-            {{ hospital.dutyAddr }}
+            {{ hospitalData.dutyAddr }}
           </div>
         </div>
 
@@ -31,7 +31,7 @@
               d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25c1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57c.11.35.03.74-.25 1.02z" />
           </svg>
           <div class=" text-plight">
-            {{ hospital.dutyTel3 }}
+            {{ hospitalData.dutyTel3 }}
           </div>
         </div>
 
@@ -42,10 +42,10 @@
               <path fill="#000"
                 d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
             </svg>
-            <div class="text-medium badge rounded-pill bg-success d-flex">
-              {{ hospital.childEmergencyAvailable }} / {{ hospital.childEmergencyTotal }}
+            <div class="text-medium badge rounded-pill bg-success d-flex" v-if="realTimeData">
+              {{ realTimeData.bed_avail }} / {{ realTimeData.bed_total }}
             </div>
-            <div class="d-flex text-medium">{{ state }}</div>
+            <div class="d-flex text-medium" v-if="realTimeData">{{ realTimeData.state }}</div>
           </div>
         </div>
 
@@ -55,31 +55,31 @@
             <tbody>
               <tr>
                 <th>월</th>
-                <td>{{ dutyTime1s }} - {{ dutyTime1c }}</td>
+                <td>{{ hospitalData.dutyTime1s }} - {{ hospitalData.dutyTime1c }}</td>
               </tr>
               <tr>
                 <th>화</th>
-                <td>{{ dutyTime2s }} - {{ dutyTime2c }}</td>
+                <td>{{ hospitalData.dutyTime2s }} - {{ hospitalData.dutyTime2c }}</td>
               </tr>
               <tr>
                 <th>수</th>
-                <td>{{ dutyTime3s }} - {{ dutyTime3c }}</td>
+                <td>{{ hospitalData.dutyTime3s }} - {{ hospitalData.dutyTime3c }}</td>
               </tr>
               <tr>
                 <th>목</th>
-                <td>{{ dutyTime4s }} - {{ dutyTime4c }}</td>
+                <td>{{ hospitalData.dutyTime4s }} - {{ hospitalData.dutyTime4c }}</td>
               </tr>
               <tr>
                 <th>금</th>
-                <td>{{ dutyTime5s }} - {{ dutyTime5c }}</td>
+                <td>{{ hospitalData.dutyTime5s }} - {{ hospitalData.dutyTime5c }}</td>
               </tr>
               <tr>
                 <th>토</th>
-                <td>{{ dutyTime6s }} - {{ dutyTime6c }}</td>
+                <td>{{ hospitalData.dutyTime6s }} - {{ hospitalData.dutyTime6c }}</td>
               </tr>
               <tr>
                 <th>일</th>
-                <td>{{ dutyTime7s }} - {{ dutyTime7c }}</td>
+                <td>{{ hospitalData.dutyTime7s }} - {{ hospitalData.dutyTime7c }}</td>
               </tr>
             </tbody>
           </table>
@@ -115,11 +115,11 @@
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 
-const state = ref('원활');
 
 const router = useRouter();
 const goBack = () => router.back();
 
+// 더미데이터
 const showAll = ref(false);
 const hospital = ref({
   dutyName: "고대구로병원",
@@ -142,6 +142,56 @@ const visibleDepartments = computed(() => {
 const toggleShowAll = () => {
   showAll.value = !showAll.value;
 };
+
+// api 연결
+const state = ref('원활');
+import { getEmergencyHospitalByHPID } from '@/utils/api'
+
+let hospitalData = ref(null)
+let realTimeData = ref(null)
+
+// homeview에서 클릭할때 param 전달
+const hpid = 'A1100001';
+
+async function getHospitalData(hpid) {
+  try{
+    hospitalData.value = await getEmergencyHospitalByHPID(hpid);
+  } catch(err) {
+    console.error(`병원 정보 조회 실패 -> ${err}`)
+  }
+}
+
+getHospitalData(hpid);
+
+async function getRealTimeData(hpid) {
+
+  const base = 'https://api.child119.com/geoserver/hospital/wfs'
+  const params = new URLSearchParams({
+    service: 'WFS',
+    version: '1.0.0',
+    request: 'GetFeature',
+    typeName: 'hospital:emergency',
+    outputFormat: 'application/json',
+    FeatureID_filter: hpid
+  })
+  const url = `${base}?${params.toString()}`
+  const res = await fetch(url, { method: 'GET' })
+  if (!res.ok) {
+    const t = await res.text().catch(() => '')
+    throw new Error(`WFS ${res.status} ${t}`)
+  }
+  const response = await res.json()
+  realTimeData.value = response.features[0].properties
+  console.log(realTimeData)
+  return realTimeData;
+}
+
+getRealTimeData();
+
+
+
+
+
 </script>
 
 <style scoped>
