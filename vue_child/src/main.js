@@ -10,6 +10,8 @@ import { getUser, setUser, clearUser } from './utils/userService.js'
 import { auth, db } from './firebase/index'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'; // ← 모달 동작 핵심(JS + Popper 번들)
 
 const app = createApp(App)
 
