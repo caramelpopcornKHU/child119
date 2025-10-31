@@ -3,53 +3,89 @@ package com.lx.savechild;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.webkit.JavascriptInterface; // 1. 임포트
+import android.webkit.JavascriptInterface;
+import android.webkit.WebResourceRequest; // 1. 임포트 추가
 import android.webkit.WebView;
+import android.webkit.WebViewClient; // 1. 임포트 추가
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class WebActivity extends AppCompatActivity {
+
+    // 2. 멤버 변수로 선언 (생명주기 관리를 위해)
+    private WebView webview;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_web);
 
-        WebView webview = findViewById(R.id.webview);
-        webview.getSettings().setJavaScriptEnabled(true); // 2. JS는 필수!
+        webview = findViewById(R.id.webview);
+        webview.getSettings().setJavaScriptEnabled(true);
+        webview.getSettings().setDomStorageEnabled(true);
+        // 3. (필수) WebViewClient 설정: 외부 브라우저로 열리는 현상 방지
+        webview.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                view.loadUrl(request.getUrl().toString());
+                return true; // true를 반환하면 WebView가 URL을 직접 처리
+            }
+        });
 
-        // 3. 웹뷰에 "AndroidBridge"라는 이름으로 인터페이스 주입
-        webview.addJavascriptInterface(new WebViewBridge(this), "AndroidBridge");
+        // 4. 리팩토링된 브릿지 주입 (ApplicationContext 전달)
+        webview.addJavascriptInterface(new WebViewBridge(getApplicationContext()), "AndroidBridge");
 
-        //webview.loadUrl("http://172.168.10.30:5173/");
+        // 5. 프로토콜을 명시한 URL 로드
 
-        webview.loadUrl("http://172.168.10.12:5173/");
-
-        webview.loadUrl("https://www.child119.com/");
+        //webview.loadUrl("api.child119.com");
+        webview.loadUrl("https://child119-5fe1f.web.app/");
 
     }
 
+    // 6. WebView 생명주기 관리 (메모리 누수 방지)
+    @Override
+    protected void onPause() {
+        super.onPause();
+        webview.onPause(); // WebView 일시정지
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        webview.onResume(); // WebView 재개
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // onDestroy에서 WebView를 제거해야 메모리 누수가 발생하지 않습니다.
+        if (webview != null) {
+            webview.destroy();
+            webview = null; // 참조 해제
+        }
+    }
+
     /**
-     * 4. 웹에서 호출할 함수들을 정의하는 브릿지 클래스
+     * 7. 'static' 내부 클래스로 변경 (WebActivity에 대한 암시적 참조 방지)
      */
-    public class WebViewBridge {
-        private Context context;
+    private static class WebViewBridge {
+        // 8. ApplicationContext 사용
+        private Context appContext;
 
         WebViewBridge(Context context) {
-            this.context = context;
+            // Activity Context 대신 Application Context를 저장
+            this.appContext = context.getApplicationContext();
         }
 
-        /**
-         * 5. @JavascriptInterface 어노테이션이 있어야만
-         * 웹에서 이 함수를 호출할 수 있습니다.
-         */
         @JavascriptInterface
         public void startNavigation() {
-            // 이 코드는 안드로이드에서 실행됩니다.
-            Intent intent = new Intent(context, MainActivity.class);
-            context.startActivity(intent);
-        }
+            // 9. ApplicationContext로 Activity 시작
+            Intent intent = new Intent(appContext, MainActivity.class);
 
-        // 여기에 필요한 다른 함수들(ex: showToast(String msg))을 추가할 수 있습니다.
+            // 10. ApplicationContext에서 Activity를 시작할 때는 FLAG_ACTIVITY_NEW_TASK 필수
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            appContext.startActivity(intent);
+        }
     }
 }
