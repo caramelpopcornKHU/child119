@@ -99,13 +99,20 @@
           <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
-              <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="15px" viewBox="0 0 24 24">
-                  <path fill="#008A64"
-                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
-                </svg> 2/7
+              <!-- ✅ 병상 현황: 'avail/total' -->
+              <span
+                v-if="h.bedAvail !== null || h.bedTotal !== null"
+                class="badge rounded-pill"
+                :class="bedBadgeClass(h)"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="15" viewBox="0 0 24 24" class="me-1">
+                  <path fill="currentColor"
+                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3"/>
+                </svg>
+                {{ bedLabel(h) }}
               </span>
             </div>
+
 
             <!-- ✅ 병원 데이터의 message 필드를 이용해 소아가능 / 불가능 자동 표시 -->
             <div class="mb-2" v-if="h.message">
@@ -609,6 +616,8 @@ const listHospitals = computed(() => {
     name: h.name,
     message: h.message,
     state: h.state,
+    bedAvail: h.bedAvail,   // ✅ 추가
+    bedTotal: h.bedTotal, 
     distanceKm: (h.distance ?? 0) / 1000,
     etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
     lat: h.lat, lon: h.lon,     // (선택) 모달/길찾기 즉시 사용
@@ -871,7 +880,20 @@ async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
       ? haversineMeter(centerLat, centerLon, lat, lon)
       : Infinity
 
-    return { id: f.id || `wfs-${i}`, hpid: p.hpid, name, address, tel, hours, lat, lon, distance, message, state }
+
+    const toInt = (v) => {
+      if (v === null || v === undefined) return null
+      const n = parseInt(String(v).trim(), 10)
+      return Number.isFinite(n) ? n : null
+    }
+
+    const bedAvail = toInt(p.bed_avail ?? p.bedAvail ?? p.bedavail)
+    const bedTotal = toInt(p.bed_total ?? p.bedTotal ?? p.bedtotal)
+  
+
+    return { id: f.id || `wfs-${i}`, hpid: p.hpid, name, address, tel, hours, lat, lon, distance, message, state ,bedAvail,
+            bedTotal  
+            }
   })
 }
 
@@ -1000,6 +1022,37 @@ function waitTmapReady(retry = 10) {
     tick()
   })
 }
+
+
+function bedLabel(h) {
+  const a = h.bedAvail
+  const t = h.bedTotal
+  const showA = (a === null || a === undefined) ? '?' : a
+  const showT = (t === null || t === undefined) ? '?' : t
+  return `${showA}/${showT}`
+}
+
+function bedBadgeClass(h) {
+  // 가용률에 따라 색상 분기 (선택 로직)
+  const a = h.bedAvail
+  const t = h.bedTotal
+  if (!Number.isFinite(a) || !Number.isFinite(t) || t <= 0) {
+    return 'bg-secondary-subtle text-secondary-emphasis' // 정보 부족
+  }
+  const ratio = a / t
+  if (ratio >= 0.5) return 'bg-success-subtle text-success-emphasis'   // 여유
+  if (ratio > 0)   return 'bg-warning-subtle text-warning-emphasis'    // 부족
+  return 'bg-danger-subtle text-danger-emphasis'                        // 없음
+}
+
+
+
+
+
+
+
+
+
 
 onMounted(() => {
   sheetHeightRatio.value = 0; loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
