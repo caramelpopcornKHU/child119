@@ -111,8 +111,21 @@ const router = createRouter({
       name: 'HomeViewApp',
       component: () => import('../views/HomeViewApp.vue'),
     },
-
-
+    {
+      path: '/HomeViewHSM',
+      name: 'HomeViewHSM',
+      component: () => import('../views/HomeViewHSM.vue'),
+    },
+    {
+      path: '/HomeView_SH',
+      name: 'HomeView_SH',
+      component: () => import('../views/HomeView_SH.vue'),
+    },
+    {
+      path: '/HomeView_nono',
+      name: 'HomeView_nono',
+      component: () => import('../views/HomeView_nono.vue'),
+    },
 
   ],
 })
