@@ -185,10 +185,17 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { initVworldMap, fetchHospitalsFromWFS } from '@/utils/vworldfunction';
-// vmap 변수 - vworld 지도를 위한 변수
-let vmap;
+import { 
+  initVworldMap, 
+  getVMap,
+  clearMarkers,
+  addMarker,
+  getCurrentBBox4326
+} from '@/utils/vworldfunction';
+import { getEmergencyFromWFSByBBox } from '@/utils/api';
 
+// vmap 변수
+let vmap = null;
 
 // 선택된 증상 - 반응형
 const symptomOptions = ['발열', '감기', '기침', '호흡곤란', '구토', '설사', '복통', '발진', '화상', '경련']
@@ -206,7 +213,7 @@ const useSymptomsMode = ref(false)
 
 // 마커
 let markers = []
-
+let debounceTimer = null
 
 /* 바텀시트 상태 start */
 const bottomSheet = ref(null)
@@ -219,14 +226,13 @@ const MIN_SHEET_HEIGHT = 220
 
 const sheetY = computed(() => (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT) * (1 - sheetHeightRatio.value))
 const sheetStyle = computed(() => {
-  const interactive = sheetHeightRatio.value > 0.12 // ⬅️ 0.12로 상향
+  const interactive = sheetHeightRatio.value > 0.12
   return {
     transition: isDragging.value ? 'none' : 'transform 0.3s ease-out',
     transform: `translateY(${sheetY.value}px)`,
     height: `${MAX_SHEET_HEIGHT}px`,
     bottom: '0px',
     top: 'auto',
-    //pointerEvents: interactive ? 'auto' : 'none',
     willChange: 'transform'
   }
 })
@@ -242,7 +248,6 @@ const displayKeyword = computed(() => useSymptomsMode.value ? keywordWithSymptom
 /* 키워드 end */
 
 /* 바텀시트 제스처 start */
-/* 터치 핸들러 */
 const onTouchStart = e => {
   isDragging.value = true
   dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }
@@ -270,7 +275,7 @@ const onGripTouchStart = (e) => {
 }
 const onGripTouchMove = (e) => {
   if (!isDragging.value) return
-  e.preventDefault() // iOS에서 필수
+  e.preventDefault()
 
   const dY = e.touches[0].clientY - dragStart.value.y
   const dR = -dY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT)
@@ -282,62 +287,175 @@ const onGripTouchEnd = () => {
 }
 /* 그립 액션 end */
 
-// onMounted - 초기실행하면 나오는 부분
-onMounted(() => {
-
- 
-  initVworldMap(vmap);
-  
-
-  // grip 초기화
-  const grip = document.querySelector('.sheet-grip')
-  if (grip) {
-    grip.addEventListener('touchstart', onGripTouchStart, { passive: false })
-    grip.addEventListener('touchmove', onGripTouchMove, { passive: false })
-    grip.addEventListener('touchend', onGripTouchEnd, { passive: true })
-  }
-});
-
-/* 실제 렌더링 목록: 항상 WFS에서 가져온 hospitals 사용 */
+/* 실제 렌더링 목록 */
 const listHospitals = computed(() => {
-
-  return hospitals.value.map(h => ({
-    id: h.id,
-    name: h.name,
-    distanceKm: (h.distance ?? 0) / 1000,
-    // 대략 24km/h 가정(도보/차 혼합 임시치): 0.4km/min
-    etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
+  return hospitals.value.map((h, idx) => ({
+    id: h.id || `hospital-${idx}`,
+    name: h.name || '병원명 미상',
+    distanceKm: 0,
+    etaMin: 0,
   }))
 })
 
-async function searchER(radiusMeters, useSymptoms) {
+// 🔹 WFS 마커 로드 함수
+const loadWFSMarkers = async () => {
+  if (!vmap) {
+    console.warn('vmap이 아직 초기화되지 않았습니다.')
+    return
+  }
+
+  const bbox = getCurrentBBox4326()
+  if (!bbox) {
+    console.warn('bbox를 가져올 수 없습니다.')
+    return
+  }
+
+  const [minX, minY, maxX, maxY] = bbox
   
-
-if (!cur.value.lat || !cur.value.lon) { alert('현재 위치 확인 후 다시 시도해주세요.'); return }
-
-  const sanitizedRadius = Math.max(0, Number(radiusMeters) || 0)
+  console.log('🔍 WFS 조회 시작:', { minX, minY, maxX, maxY })
+  
   loadingHospitals.value = true
   searchAttempted.value = true
-  hospitals.value = []
-  lastRadius.value = sanitizedRadius
-  useSymptomsMode.value = !!useSymptoms
 
   try {
-    const list = await fetchHospitalsFromWFS(cur.value.lon, cur.value.lat, sanitizedRadius)
-    hospitals.value = list.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
-    drawMarkers(hospitals.value)
+    const featuresData = await getEmergencyFromWFSByBBox(minX, minY, maxX, maxY)
     
-    // 사용자 요청(증상 검색)일 때만 자동 펼침
-   if (useSymptoms && hospitals.value.length) sheetHeightRatio.value = 1
+    console.log('✅ WFS 응답:', featuresData.length, '개')
+
+    // 기존 마커 제거
+    clearMarkers()
+    hospitals.value = []
+
+    featuresData.forEach((f) => {
+      if (f.geometry?.type === 'Point' && Array.isArray(f.geometry.coordinates)) {
+        const [lon, lat] = f.geometry.coordinates
+        const props = f.properties || {}
+        
+        // 마커 추가
+        addMarker(lon, lat, { id: f.id, ...props })
+        
+        // hospitals 배열에 추가
+        hospitals.value.push({
+          id: f.id || `wfs-${hospitals.value.length}`,
+          name: props.dutyName || props.name || '응급실',
+          lon,
+          lat,
+          properties: props
+        })
+      }
+    })
+    
+    console.log('📍 마커 추가 완료:', hospitals.value.length, '개')
 
   } catch (e) {
-    console.error('WFS 검색 실패:', e)
-    alert('주변 병원 검색 중 오류가 발생했습니다. (WFS)')
+    console.error('❌ WFS 마커 로드 실패', e)
   } finally {
     loadingHospitals.value = false
   }
- }
+}
 
+// 🔹 현재 위치 가져오기
+function getCurrentLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation not supported'))
+      return
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        cur.value.lat = position.coords.latitude
+        cur.value.lon = position.coords.longitude
+        resolve({ lat: cur.value.lat, lon: cur.value.lon })
+      },
+      error => reject(error),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    )
+  })
+}
+
+// onMounted - 초기실행
+onMounted(async () => {
+  // 1. VWorld 라이브러리 로드 대기
+  await new Promise((resolve) => {
+    const checkVworld = setInterval(() => {
+      if (window.vw && window.vw.ol3 && window.ol) {
+        clearInterval(checkVworld)
+        resolve()
+      }
+    }, 100)
+  })
+
+  try {
+    // 2. 현재 위치 가져오기
+    let centerCoords
+    try {
+      const location = await getCurrentLocation()
+      centerCoords = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
+    } catch {
+      centerCoords = ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
+    }
+
+    // 3. 지도 초기화
+    vmap = initVworldMap({ 
+      containerId: 'vmap',
+      defaultCenter: centerCoords,
+      defaultZoom: 15,
+      autoFetch: false
+    })
+
+    if (!vmap) throw new Error('vmap 초기화 실패')
+
+    // ✅ 여기서 바로 이벤트 등록
+    vmap.on('moveend', () => {
+      console.log('🗺️ 지도 이동/줌 감지 (vmap 이벤트)')
+      if (debounceTimer) clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(() => {
+        loadWFSMarkers()
+      }, 300)
+    })
+
+    // 4. 초기 마커 로드
+    setTimeout(() => loadWFSMarkers(), 500)
+
+  } catch (error) {
+    console.error('초기화 실패:', error)
+    alert('지도를 초기화할 수 없습니다.')
+  }
+})
+
+// 🔹 정렬 함수들
+const sortByDistance = () => {
+  hospitals.value.sort((a, b) => a.name.localeCompare(b.name))
+}
+
+const sortByTime = () => {
+  hospitals.value.sort((a, b) => a.name.localeCompare(b.name))
+}
+
+// 🔹 증상 확인 후 재검색
+const onConfirmSymptoms = async () => {
+  await loadWFSMarkers()
+  if (hospitals.value.length) sheetHeightRatio.value = 1
+}
+
+// 🔹 병원 상세 페이지로 이동
+const router = useRouter()
+const goToHospitalDetail = () => {
+  // router.push(...) 구현
+}
+
+// cleanup
+onBeforeUnmount(() => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  
+  const grip = document.querySelector('.sheet-grip')
+  if (grip) {
+    grip.removeEventListener('touchstart', onGripTouchStart)
+    grip.removeEventListener('touchmove', onGripTouchMove)
+    grip.removeEventListener('touchend', onGripTouchEnd)
+  }
+})
 </script>
 
 <style scoped>
