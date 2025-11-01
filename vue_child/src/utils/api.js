@@ -92,6 +92,31 @@ export async function getEmergencyFromWFSByBBox(minX, minY, maxX, maxY, options)
   }
 }
 
+export async function getHospitalFromWFSByBBox(minX, minY, maxX, maxY, options) {
+  try {
+    // GeoServer WFS 1.1.0 + EPSG:4326 축 순서 혼동 방지용 srsName 명시
+    const bboxParam = `${minX},${minY},${maxX},${maxY},EPSG:4326`
+
+    const res = await WFSApi.get("", {
+      params: {
+        service: "WFS",
+        version: "1.1.0",                 // 문제가 있으면 '1.0.0'으로 바꿔 축순서 혼선 제거
+        request: "GetFeature",
+        typeName: "hospital:hospital",
+        srsName: "EPSG:4326",             // ✅ 명시적으로 설정
+        outputFormat: "application/json", // GeoServer는 이 값으로 GeoJSON 반환 가능
+        bbox: bboxParam,                  // lon,lat 순서
+      },
+      ...options,
+    })
+    return res.data.features || []
+  } catch (e) {
+    console.error("WFS 조회 실패", e)
+    throw e
+  }
+}
+
+
 export async function getEmergencyFormWFSByFilter(hpid){
    try{
     const res = await WFSApi.get("",{

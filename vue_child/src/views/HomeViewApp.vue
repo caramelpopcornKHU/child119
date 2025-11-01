@@ -187,7 +187,6 @@ import { useRouter } from 'vue-router';
 
 import { 
   initVworldMap, 
-  getVMap,
   clearMarkers,
   addMarker,
   getCurrentBBox4326

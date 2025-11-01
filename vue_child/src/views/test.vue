@@ -29,7 +29,7 @@
 import { ref, onMounted, onBeforeUnmount  } from "vue"
 import axios from "axios"
 
-import { getEmergencyHospitalByHPID, searchEgenHospitalByRadius, loadTmapScript, getEmergencyFromWFSByBBox, TMAP_APP_KEY } from "@/utils/api"
+import { loadTmapScript, getEmergencyFromWFSByBBox } from "@/utils/api"
 
 const hospitalData = ref(null)
 const egenHospitalData = ref(null)
@@ -40,100 +40,6 @@ const wfsData = ref([]);
 let debounceTimeout = null
 let cancelToken = null
 
-
-async function fetchHospitalDetail() {
-  try {
-    hospitalData.value = await getEmergencyHospitalByHPID("A1100001")
-    console.log("✅ 병원 정보:", hospitalData.value)
-  } catch (err) {
-    console.error("❌ 조회 실패:", err)
-  }
-}
-
-async function fetchEgenHospital() {
-  try {
-    if (!navigator.geolocation) {
-      alert("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        egenHospitalData.value = await searchEgenHospitalByRadius(lat, lon, 1000);
-        console.log("위치 기반 병원:", egenHospitalData.value);
-      },
-      (err) => {
-        console.error("Geolocation 오류:", err);
-        alert("현재 위치를 가져올 수 없습니다. 기본 위치로 조회합니다.");
-
-        // 기본 위치 : 구로구청
-        const defaultLat = 37.494348;
-        const defaultLon = 126.887676;
-
-        searchEgenHospitalByRadius(defaultLat, defaultLon, 1000)
-          .then((res) => {
-            egenHospitalData.value = res;
-            console.log("기본 위치 기반 병원:", egenHospitalData.value);
-          })
-          .catch((err) => console.error("위치 기반 병원 조회 실패:", err));
-      }
-    );
-  } catch (err) {
-    console.error("위치 기반 병원 조회 실패:", err);
-  }
-}
-
-// homeview fetchHospitalFromWFS 수정
-async function fetchEmergencyFromWFS() {
-  try {
-    if (!navigator.geolocation) {
-      alert("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
-      return;
-    }
- navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        wfsData.value = await getEmergencyFromWFS(lat, lon, 3000);
-        console.log("위치 기반 병원:", wfsData.value);
-      },
-      (err) => {
-        console.error("Geolocation 오류:", err);
-        alert("현재 위치를 가져올 수 없습니다. 기본 위치로 조회합니다.");
-
-        // 기본 위치 : 구로구청
-        const defaultLat = 37.494348;
-        const defaultLon = 126.887676;
-
-        getEmergencyFromWFS(defaultLat, defaultLon, 3000)
-          .then((res) => {
-            wfsData.value = res;
-            console.log("기본 위치 기반 병원:", wfsData.value);
-          })
-          .catch((err) => console.error("위치 기반 병원 조회 실패:", err));
-      }
-    );
-  } catch (err) {
-    console.error("위치 기반 병원 조회 실패:", err);
-  }
-
-   return feats.map((f, i) => {
-    const [lon, lat] = getLonLat(f.geometry)
-    const p = f.properties || {}
-    const name = coalesce(p.name, p.hospname, p.yadmNm, p.inst_nm, p.emergency_nm, `병원 ${i + 1}`)
-    const address = coalesce(p.addr, p.road_address, p.addrRoad, p.address, p.doro, '')
-    const tel = coalesce(p.tel, p.phone, p.telno, p.telNo, '')
-    const hours = coalesce(p.hours, p.oper_time, '')
-    const distance = (Number.isFinite(lat) && Number.isFinite(lon))
-      ? haversineMeter(centerLat, centerLon, lat, lon)
-      : Infinity
-    return { id: f.id || `wfs-${i}`, name, address, tel, hours, lat, lon, distance }
-  })
-} 
-
-//TMAP 
 // 사용자 위치 가져오기
 const getUserLocation = () =>
   new Promise((resolve) => {

@@ -3,7 +3,7 @@
     style="height: calc(100vh - 140px); ">
 
     <!-- 지도 -->
-    <div id="map_div" class="position-fixed top-0 start-0 w-100" style="height:100dvh; z-index:0;"></div>
+    <div id="map_div" class="position-fixed top-0 start-0 w-100" style="height:100dvh; z-index:0;  pointer-events:auto;"></div>
 
     <!-- 진료과 선택 -->
     <div class="position-fixed start-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
@@ -18,7 +18,13 @@
     </div>
 
     <!-- 내 위치 새로고침 버튼 -->
-    <div class="position-fixed end-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
+    <div class="position-fixed start-0 end-0 bg-white rounded-top-4 shadow-lg" 
+     :style="sheetStyle" 
+     ref="bottomSheet"
+     @touchstart="onTouchStart" 
+     @touchmove="onTouchMove" 
+     @touchend="onTouchEnd" 
+     style="z-index: 2; padding-bottom: 150px; pointer-events: auto;">
       <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="refreshLocation" style="width: 48px; height: 48px; padding: 0;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
           <path fill="currentColor" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4s-1.79-4-4-4m8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7s7 3.13 7 7s-3.13 7-7 7" />
@@ -28,14 +34,15 @@
     </div>
   <!-- 바텀시트 -->
   <div class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg " :style="sheetStyle" ref="bottomSheet"
-    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2;">
+    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2; padding-bottom: 150px;">
     <!-- 그립 -->
     <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
-      <div class="rounded-pill bg-body-secondary" style="width:40px;height:5px;"></div>
+      <div class="bg-secondary-subtle rounded-pill w-25" style="height:5px;"></div>
     </div>
+    <div class="py-3 d-flex justify-content-center" @click="toggleSheet" ></div>
 
     <!-- 내용 -->
-    <div class="d-flex flex-column" style="height: calc(100% - 60px); overflow: hidden;">
+    <div class="d-flex flex-column" style="height: 100%;">
 
       <!-- 경로 결과 정보 (경로 탐색 후 표시) -->
       <div v-if="isRouteMode" class="p-3 border-bottom bg-primary bg-gradient text-white flex-shrink-0">
@@ -117,14 +124,23 @@
         </div>
 
         <!-- 오른쪽: 버튼 그룹 -->
-        <div class="d-flex gap-2">
-          <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByDistance">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-              <path fill="#525252" d="M9 3L5 7h3v8h2V7h3zM16 17v-8h-2v8h-3l4 4l4-4z" />
-            </svg>
-            <span class="fw-bold">거리순</span>
-          </button>
-        </div>
+          <div class="d-flex gap-2">
+    <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByDistance">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
+        <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
+          d="m24 42l-9-13h18zm0-36l-9 13h18z" />
+      </svg>
+      <span class="fw-bold">거리순</span>
+    </button>
+
+    <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByTime">
+      <svg xmlns="http://www.w3.org/2000/svg" 
+      width="24" height="24" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M12 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8a8 8 0 0 0-8 8a8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10a10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7z"/>
+      </svg>
+      시간순
+    </button>
+  </div>
       </div>
 
       <!-- 리스트 스크롤 영역 -->
@@ -154,23 +170,20 @@
             </div>
 
             <div class="text-muted small d-flex align-items-center mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                <path fill="currentColor" d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
-              </svg>
-              <span>{{ hospital.distanceKm }}km</span>
+              <span><i class="bi bi-clock me-1"></i> {{ hospital.etaMin }}분</span>
+              <span class="mx-2">|</span>
+              <span><i class="bi bi-geo-alt me-1"></i> {{ hospital.distanceKm }}km</span>
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
               <button class="btn btn-outline-primary w-100" v-if="hospital.properties.hospital_tel"
-                @click="callHospital(hospital.properties.hospital_tel)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25c1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57c.11.35.03.74-.25 1.02z" />
-                </svg> 전화
+               @click.stop="callHospital(hospital.properties.hospital_tel)"
+                style="pointer-events: auto; z-index: 10;">
+                <i class="bi bi-telephone-fill"></i> 전화
               </button>
-              <button class="btn btn-primary w-100" @click="openRouteModal(hospital)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm1.8 18H14l-2-3.4l-2 3.4H8.2l2.9-4.5L8.2 11H10l2 3.4l2-3.4h1.8l-2.9 4.5z" />
-                </svg> 길찾기
+              <button class="btn btn-primary w-100" @click.stop="openRouteModal(hospital)"
+                style="pointer-events: auto; z-index: 10;">
+                <i class="bi bi-sign-turn-right-fill"></i> 길찾기
               </button>
             </div>
           </div>
@@ -297,13 +310,10 @@
   </div>
 
 </template>
-
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
-import axios from 'axios'
+import { loadTmapScript, getHospitalFromWFSByBBox } from "@/utils/api"
 
-// TMAP API 키
-const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8"
 
 /* 진료과 필터 상태 */
 const departmentOptions = [
@@ -362,6 +372,7 @@ const searchRadius = ref(5) // 기본 5km 반경
 
 /* 지도 상태 */
 const map = ref(null)
+let cancelToken = null
 
 /* 경로 탐색 상태 */
 const isRouteMode = ref(false)
@@ -881,127 +892,182 @@ function refreshLocation() {
   )
 }
 
-/* 지도 초기화 */
-const initTmap = () => {
-  const el = document.getElementById('map_div')
-  if (!el) return
-  map.value = new window.Tmapv3.Map('map_div', {
-    center: new window.Tmapv3.LatLng(37.5662952, 126.9779451),
-    width: '100%',
-    height: '100%',
-    zoom: 16
-  })
+const getUserLocation = () =>
+  new Promise((resolve) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+        () => resolve({ lat: 37.494348, lon: 126.887676 }) // 기본: 구로구청
+      );
+    } else {
+      resolve({ lat: 37.494348, lon: 126.887676 });
+    }
+  });
 
-  if (navigator.geolocation) {
-    // 위치 정보 옵션 설정
-    const geoOptions = {
-      enableHighAccuracy: true,  // 높은 정확도 요청
-      timeout: 10000,            // 10초 타임아웃
-      maximumAge: 0              // 캐시된 위치 사용 안함
+// BBox 기반 WFS 마커 갱신
+const updateMarkersByBBox = async (bbox, label = "update") => {
+  if (!map.value) return;
+  console.log(`📦 [${label.toUpperCase()}] BBox:`, bbox);
+
+  // ✅ window에서 Tmapv2 가져오기
+  const { Tmapv2 } = window;
+  if (!Tmapv2) {
+    console.error("❌ Tmapv2를 찾을 수 없습니다!");
+    return;
+  }
+
+  // 이전 요청 취소
+  if (cancelToken) {
+    cancelToken.cancel("새로운 요청으로 인한 취소");
+  }
+  cancelToken = axios.CancelToken.source();
+
+  try {
+    const features = await getHospitalFromWFSByBBox(
+      ...bbox,
+      { cancelToken: cancelToken.token }
+    );
+    wfsData.value = features;
+    console.log(`✅ [${label.toUpperCase()}] ${features.length}개 마커 로드`);
+
+    // ✅ 기존 마커 제거 (안전하게)
+    if (markers.value && Array.isArray(markers.value)) {
+      markers.value.forEach((m) => m.setMap(null));
+      markers.value = [];
+    } else {
+      markers.value = []; // 초기화
     }
 
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const lat = pos.coords.latitude
-        const lon = pos.coords.longitude
-        console.log('위치 정보 가져오기 성공:', { lat, lon })
-        const currentPos = new window.Tmapv3.LatLng(lat, lon)
-        userLocation.value = { lat, lon }
-
-        // 내 위치 마커와 정보창 생성 및 저장
-        currentLocationMarker.value = new window.Tmapv3.Marker({ position: currentPos, map: map.value })
-        currentLocationInfoWindow.value = new window.Tmapv3.InfoWindow({
-          position: currentPos,
-          content: "<div class='p-1 bg-white border rounded-2'>현재 위치</div>",
-          offset: new window.Tmapv3.Point(0, -30),
-          type: 2,
-          map: map.value
-        })
-
-        map.value.setCenter(currentPos)
-        map.value.setZoom(17)
-        fetchHospitalsFromGeoServer(lat, lon, searchRadius.value)
-      },
-      err => {
-        console.error('Geolocation 오류 코드:', err.code, '메시지:', err.message)
-        let errorMsg = '현재 위치를 가져올 수 없습니다.\n'
-
-        switch(err.code) {
-          case 1: // PERMISSION_DENIED
-            errorMsg += '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.'
-            break
-          case 2: // POSITION_UNAVAILABLE
-            errorMsg += '위치 정보를 사용할 수 없습니다.'
-            break
-          case 3: // TIMEOUT
-            errorMsg += '위치 정보 요청 시간이 초과되었습니다.'
-            break
-          default:
-            errorMsg += 'HTTPS 환경인지 확인해주세요.'
-        }
-
-        alert(errorMsg)
-        console.log('기본 위치(서울시청)로 설정합니다.')
-        userLocation.value = { lat: 37.5662952, lon: 126.9779451 }
-        fetchHospitalsFromGeoServer(37.5662952, 126.9779451, searchRadius.value)
-      },
-      geoOptions
-    )
-  } else {
-    alert('이 브라우저에서는 위치 정보를 지원하지 않습니다.')
-    userLocation.value = { lat: 37.5662952, lon: 126.9779451 }
-    fetchHospitalsFromGeoServer(37.5662952, 126.9779451, searchRadius.value)
+    // 새 마커 추가
+    features.forEach((f) => {
+      const geom = f.geometry;
+      if (geom?.type === "Point" && Array.isArray(geom.coordinates)) {
+        const [lon, lat] = geom.coordinates;
+        const marker = new Tmapv2.Marker({
+          position: new Tmapv2.LatLng(lat, lon),
+          map: map.value,
+          title: f.properties?.emergency_nm || "응급실",
+        });
+        markers.value.push(marker);
+      }
+    });
+  } catch (err) {
+    if (!axios.isCancel(err)) {
+      console.error("❌ WFS 마커 업데이트 실패:", err);
+    }
   }
-}
+};
+
+// 현재 지도의 BBox 계산
+const getCurrentBBox = () => {
+  if (!map.value) return null;
+  const bounds = map.value.getBounds();
+  return [
+    bounds._sw.lng(), // minX
+    bounds._sw.lat(), // minY
+    bounds._ne.lng(), // maxX
+    bounds._ne.lat(), // maxY
+  ];
+};
+
+// 이벤트 핸들러: 드래그 끝
+const onDragend = () => {
+  console.log("🗺️ dragend 이벤트 발생!");
+  if (debounceTimeout) clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    const bbox = getCurrentBBox();
+    if (bbox) updateMarkersByBBox(bbox, "dragend");
+  }, 300);
+};
+
+// 이벤트 핸들러: 줌 변경
+const onZoomChanged = () => {
+  console.log("🔍 zoom_changed 이벤트 발생!");
+  if (debounceTimeout) clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    const bbox = getCurrentBBox();
+    if (bbox) updateMarkersByBBox(bbox, "zoom");
+  }, 300);
+};
+/* 지도 초기화 */
+const setupMap = async () => {
+  const { lat, lon } = await getUserLocation();
+
+  // ✅ window에서 Tmapv2 가져오기
+  const { Tmapv2 } = window;
+  
+  if (!Tmapv2) {
+    console.error("❌ Tmapv2가 로드되지 않았습니다!");
+    return;
+  }
+
+  console.log("✅ Tmapv2 확인:", Tmapv2);
+  console.log("📍 Tmapv2.Map:", Tmapv2.Map);
+  console.log("📍 Tmapv2.LatLng:", Tmapv2.LatLng);
+  console.log("📍 Tmapv2.Marker:", Tmapv2.Marker);
+
+  map.value = new Tmapv2.Map("map_div", {
+    center: new Tmapv2.LatLng(lat, lon),
+    width: "100%",
+    height: "600px",
+    zoom: 14,
+  });
+
+  // 현재 위치 마커
+  new Tmapv2.Marker({
+    position: new Tmapv2.LatLng(lat, lon),
+    map: map.value,
+    title: "현재 위치",
+    icon: "https://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png",
+  });
+
+  // 초기 BBox로 마커 로드
+  const initialBbox = getCurrentBBox();
+  if (initialBbox) {
+    console.log("🚀 [INITIAL] BBox:", initialBbox);
+    await updateMarkersByBBox(initialBbox, "initial");
+  }
+
+  // 이벤트 리스너 등록
+  map.value.addListener("dragend", onDragend);
+  map.value.addListener("zoom_changed", onZoomChanged);
+
+  console.log("✅ 지도 초기화 완료 및 이벤트 리스너 등록됨");
+};
 
 /* 바텀시트 제스처 */
 const onTouchStart = e => {
+  const target = e.target
+  if (target.closest('button') || target.closest('.btn') || target.closest('.card-body')) {
+    return
+  }
+  
   isDragging.value = true
   dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }
   e.preventDefault()
 }
+
 const onTouchMove = e => {
   if (!isDragging.value) return
+  const target = e.target
+  if (target.closest('button') || target.closest('.btn')) {
+    return
+  }
+  
   const dY = e.touches[0].clientY - dragStart.value.y
   const dR = -dY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT)
   sheetHeightRatio.value = Math.min(1, Math.max(0, dragStart.value.ratio + dR))
 }
+
 const onTouchEnd = () => {
   isDragging.value = false
   sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0
 }
+
 const toggleSheet = () => {
   sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 0 : 1
 }
 
-/* Tmap 스크립트 로더 */
-function loadTmapScript() {
-  return new Promise((resolve, reject) => {
-    if (window.Tmapv3) return resolve()
-    const exist = document.querySelector('script[data-tmap="v3"]')
-    if (exist) {
-      exist.addEventListener('load', resolve)
-      exist.addEventListener('error', reject)
-      return
-    }
-    const script = document.createElement('script')
-    script.src = `https://apis.openapi.sk.com/tmap/vectorjs?version=1&appKey=${TMAP_APP_KEY}`
-    script.dataset.tmap = 'v3'
-    script.onload = resolve
-    script.onerror = reject
-    document.head.appendChild(script)
-  })
-}
-function waitTmapReady(retry = 10) {
-  return new Promise((resolve, reject) => {
-    const tick = () => {
-      if (window.Tmapv3 && typeof window.Tmapv3.Map === 'function') return resolve()
-      if (retry-- <= 0) return reject(new Error('Tmapv3 초기화 지연'))
-      setTimeout(tick, 100)
-    }
-    tick()
-  })
-}
 
 /* 반경 또는 진료과 변경 시 재검색 */
 watch(searchRadius, (newRadius) => {
@@ -1016,19 +1082,48 @@ watch(selectedDepartments, () => {
   }
 }, { deep: true })
 
+
 onMounted(() => {
-  sheetHeightRatio.value = 0.3
-  loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
-    console.error('Tmap 로딩 실패:', e)
-    alert('지도를 불러오지 못했습니다. 네트워크/Tmap 콘솔 설정을 확인해주세요.')
-  })
-})
+  // ✅ Tmap v2는 2단계 로드 필요
+  const loadTmapV2 = async () => {
+    // 1단계: 메인 스크립트
+    await loadTmapScript();
+    console.log("✅ 1단계 스크립트 로드 완료");
+    
+    // 2단계: 실제 라이브러리 (tmapjs2.min.js)
+    return new Promise((resolve, reject) => {
+      const script2 = document.createElement("script");
+      // ✅ 실제 라이브러리 직접 로드
+      script2.src = "https://topopentile1.tmap.co.kr/scriptSDKV2/tmapjs2.min.js?version=20231206";
+      script2.onload = () => {
+        console.log("✅ 2단계 스크립트 로드 완료");
+        console.log("📍 window.Tmapv2:", window.Tmapv2);
+        console.log("📍 Tmapv2.Map:", window.Tmapv2?.Map);
+        resolve();
+      };
+      script2.onerror = reject;
+      document.head.appendChild(script2);
+    });
+  };
 
+  loadTmapV2()
+    .then(() => {
+      // 약간의 지연 추가 (스크립트 초기화 대기)
+      return new Promise(resolve => setTimeout(resolve, 100));
+    })
+    .then(() => setupMap())
+    .catch((err) => {
+      console.error("❌ 지도 로드 실패:", err);
+    });
+});
+
+// 컴포넌트 언마운트
 onBeforeUnmount(() => {
-  clearMarkers()
-  clearRouteData()
-  if (map.value) map.value.destroy()
-})
+  if (debounceTimeout) clearTimeout(debounceTimeout);
+  if (cancelToken) cancelToken.cancel("컴포넌트 언마운트");
+  
+  // 마커 정리
+  markers.value.forEach((m) => m.setMap(null));
+  markers.value = [];
+});
 </script>
-
-<!-- 커스텀 CSS 없음: Bootstrap/Icons 유틸만 사용 -->
