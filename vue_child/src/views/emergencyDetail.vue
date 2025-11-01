@@ -42,10 +42,9 @@
               <path fill="#000"
                 d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
             </svg>
-            <div class="text-medium badge rounded-pill bg-success d-flex" v-if="realTimeData">
+            <div class="text-bold badge rounded-pill bg-success d-flex" v-if="realTimeData">
               {{ realTimeData.bed_avail }} / {{ realTimeData.bed_total }}
             </div>
-            <div class="d-flex text-medium" v-if="realTimeData">{{ realTimeData.state }}</div>
           </div>
         </div>
 
@@ -55,31 +54,31 @@
             <tbody>
               <tr>
                 <th>월</th>
-                <td>{{ hospitalData.dutyTime1s }} - {{ hospitalData.dutyTime1c }}</td>
+                <td>{{ formatTime(hospitalData.dutyTime1s) }} - {{ formatTime(hospitalData.dutyTime1c) }}</td>
               </tr>
               <tr>
                 <th>화</th>
-                <td>{{ hospitalData.dutyTime2s }} - {{ hospitalData.dutyTime2c }}</td>
+                <td>{{ formatTime(hospitalData.dutyTime2s) }} - {{ formatTime(hospitalData.dutyTime2c) }}</td>
               </tr>
               <tr>
                 <th>수</th>
-                <td>{{ hospitalData.dutyTime3s }} - {{ hospitalData.dutyTime3c }}</td>
+                <td>{{ formatTime(hospitalData.dutyTime3s) }} - {{ formatTime(hospitalData.dutyTime3c) }}</td>
               </tr>
               <tr>
                 <th>목</th>
-                <td>{{ hospitalData.dutyTime4s }} - {{ hospitalData.dutyTime4c }}</td>
+                <td>{{ formatTime(hospitalData.dutyTime4s) }} - {{ formatTime(hospitalData.dutyTime4c) }}</td>
               </tr>
               <tr>
                 <th>금</th>
-                <td>{{ hospitalData.dutyTime5s }} - {{ hospitalData.dutyTime5c }}</td>
+                <td>{{ formatTime(hospitalData.dutyTime5s) }} - {{ formatTime(hospitalData.dutyTime5c) }}</td>
               </tr>
               <tr>
                 <th>토</th>
-                <td>{{ hospitalData.dutyTime6s }} - {{ hospitalData.dutyTime6c }}</td>
+                <td>{{ formatTime(hospitalData.dutyTime6s) }} - {{ formatTime(hospitalData.dutyTime6c) }}</td>
               </tr>
               <tr>
                 <th>일</th>
-                <td>{{ hospitalData.dutyTime7s }} - {{ hospitalData.dutyTime7c }}</td>
+                <td>{{ formatTime(hospitalData.dutyTime7s) }} - {{ formatTime(hospitalData.dutyTime7c) }}</td>
               </tr>
             </tbody>
           </table>
@@ -87,17 +86,17 @@
 
 
         <div class="info-block">
-          <div class="mb-2 text-medium">진료과목</div>
+          <div class="mb-2 text-bold">진료과목</div>
 
           <div class="departments d-flex flex-wrap gap-2 mb-4">
             <span v-for="(dept, i) in visibleDepartments" :key="i"
-              class="badge rounded-pill text-black text-medium px-3 py-2 dept-badge">
+              class="badge rounded-pill text-black text-plight px-3 py-2 dept-badge">
               {{ dept }}
             </span>
           </div>
 
           <div class="text-center pb-5">
-            <button v-if="hospitalData.dgidIdName.length > 6"
+            <button v-if="departments.length > 12"
               class="btn btn-sm btn-outline-primary rounded-pill px-3  text-bold" @click="toggleShowAll"><svg
                 xmlns="http://www.w3.org/2000/svg" width="10" height="20" viewBox="0 0 24 24">
                 <path fill="#0D6EFD" d="M1 3h22L12 22" />
@@ -114,30 +113,18 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+// api 연결
+import { getEmergencyHospitalByHPID, getEmergencyFormWFSByFilter } from '@/utils/api'
 
 
 const router = useRouter();
 const goBack = () => router.back();
 
-// 더미데이터
-const showAll = ref(false);
-
-
-const visibleDepartments = computed(() => {
-    // hospitalData.value가 존재하고 dgidIdName이 문자열일 때만 처리
-    if (hospitalData.value && typeof hospitalData.value.dgidIdName === 'string') {
-        // 쉼표(,)를 기준으로 문자열을 분리하여 배열로 반환
-        return hospitalData.value.dgidIdName.split(',');
-    }
-    return []; // 데이터가 없거나 형식이 아니면 빈 배열 반환
+onMounted(async () => {
+  getHospitalData(hpid)
+  getRealTimeData(hpid)
 });
-  
-const toggleShowAll = () => {
-  showAll.value = !showAll.value;
-};
 
-// api 연결
-import { getEmergencyHospitalByHPID, getEmergencyFormWFSByFilter } from '@/utils/api'
 
 let hospitalData = ref(null)
 let realTimeData = ref(null)
@@ -145,6 +132,7 @@ let realTimeData = ref(null)
 // homeview에서 클릭할때 param 전달
 const hpid = 'A1100001';
 
+// 공공 데이터 불러오기
 async function getHospitalData(hpid) {
   try{
     hospitalData.value = await getEmergencyHospitalByHPID(hpid);
@@ -154,9 +142,7 @@ async function getHospitalData(hpid) {
   }
 }
 
-
-
-
+// geoserver 데이터
 async function getRealTimeData(hpid) {
   try{
     realTimeData.value = await getEmergencyFormWFSByFilter(hpid);
@@ -167,10 +153,40 @@ async function getRealTimeData(hpid) {
 
 }
 
-onMounted(async () => {
-  getHospitalData(hpid)
-  getRealTimeData(hpid)
+
+// 시간 포맷팅 헬퍼 함수
+const formatTime = (time) => {
+    if (!time) return '정보 없음';
+    const timeStr = String(time).padStart(4, '0');
+    return `${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}`;
+};
+
+const showAll = ref(false);
+
+// 원본 진료과목 배열 생성 (dgidIdName 분리)
+const departments = computed(() => {
+    if (hospitalData.value && typeof hospitalData.value.dgidIdName === 'string') {
+        return hospitalData.value.dgidIdName.split(',');
+    }
+    return [];
 });
+ 
+// '더보기/접기' 로직 적용 (12개로 제한)
+const visibleDepartments = computed(() => {
+    // showAll 상태에 따라 전체 또는 일부(12개) 반환
+    return showAll.value ? departments.value : departments.value.slice(0, 12);
+});
+
+const toggleShowAll = () => {
+    showAll.value = !showAll.value;
+};
+
+
+
+
+
+
+
 
 
 

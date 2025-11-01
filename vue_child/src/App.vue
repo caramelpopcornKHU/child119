@@ -212,15 +212,27 @@ export default {
   color: #0D6EFD !important;
 }
 
+.btn {
+  font-family: 'Pretendard' !important;
+  font-weight: 700 !important;
+}
 .btn-primary {
   background-color: #0D6EFD;
   color: #ffff;
+ 
 }
-
 .btn-gray {
   background-color: #00000090;
   color: #ffff;
 }
+
+.badge {
+  font-family: 'Pretendard' !important;
+  font-weight: 500 !important;
+}
+
+
+
 
 
 /* ✅ 헤더/푸터 높이 지정 (화면 계산용) */
