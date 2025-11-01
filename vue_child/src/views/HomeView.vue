@@ -89,8 +89,8 @@
         
 
         <!-- 응급실 목록 -->
-        <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.id">
-          <div class="card-body" @click="goToHospitalDetail">
+        <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id">
+         <div class="card-body" @click="goToemergencyDetail(h)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>              
               <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
@@ -113,10 +113,10 @@
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
-              <button class="btn btn-outline-primary w-100">
+              <button class="btn btn-outline-primary w-100" @click.stop>
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
-              <button class="btn btn-primary w-100"  @click="openRouteModal(hospital)">
+              <button class="btn btn-primary w-100" @click.stop="openRouteModal(h)">
                 <i class="bi bi-sign-turn-right-fill"></i> 길찾기
               </button>
             </div>
@@ -448,8 +448,13 @@ function openRouteModal(hospital) {
 
 const router = useRouter()
 
-function goToHospitalDetail() {
-  router.push('/hospitalDetail')
+function goToemergencyDetail(h) {
+  router.push({
+  name: 'emergencyDetail',
+  params: { hpid: h.hpid }, // URL엔 필수 키만
+  state:  { hospital: h }   // 추가 데이터는 history state로(길어도 URL 안 지저분)
+})
+
 }
 
 
@@ -465,10 +470,12 @@ const listHospitals = computed(() => {
 
   return hospitals.value.map(h => ({
     id: h.id,
+    hpid: h.hpid,               // ← 추가
     name: h.name,
     distanceKm: (h.distance ?? 0) / 1000,
-    // 대략 24km/h 가정(도보/차 혼합 임시치): 0.4km/min
     etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
+    lat: h.lat, lon: h.lon,     // (선택) 모달/길찾기 즉시 사용
+    tel: h.tel || ''
   }))
 })
 
@@ -736,7 +743,7 @@ async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
     const distance = (Number.isFinite(lat) && Number.isFinite(lon))
       ? haversineMeter(centerLat, centerLon, lat, lon)
       : Infinity
-    return { id: f.id || `wfs-${i}`, name, address, tel, hours, lat, lon, distance }
+    return { id: f.id || `wfs-${i}`, hpid: p.hpid, name, address, tel, hours, lat, lon, distance }
   })
 }
 
