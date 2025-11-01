@@ -18,6 +18,14 @@
         </button>
       </div>
     </div>
+    <!-- 내 위치 새로고침 버튼 -->
+    <div class="position-fixed end-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
+      <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="getCurrentPositionApp()" style="width: 48px; height: 48px; padding: 0;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4s-1.79-4-4-4m8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7s7 3.13 7 7s-3.13 7-7 7" />
+        </svg>
+      </button>
+    </div>
   </div>
   <!-- 바텀시트 -->
   <div class="position-fixed start-0 end-0 bg-white padding-bottom  rounded-top-4 shadow-lg " :style="sheetStyle"
@@ -182,7 +190,7 @@
 
 <script setup>
 // import
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount,onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 
 import {
@@ -423,6 +431,60 @@ onMounted(async () => {
     alert('지도를 초기화할 수 없습니다.')
   }
 })
+
+//캐시된 후 '다시 돌아올 때마다' 실행
+onActivated(async () => {
+  await new Promise((resolve) => {
+    const checkVworld = setInterval(() => {
+      if (window.vw && window.vw.ol3 && window.ol) {
+        clearInterval(checkVworld)
+        resolve()
+      }
+    }, 100)
+  })
+
+  try {
+    // 2. 현재 위치 가져오기
+    let centerCoords
+    try {
+      const location = await getCurrentLocation()
+      centerCoords = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
+    } catch {
+      centerCoords = ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
+    }
+
+    // 3. 지도 초기화
+    vmap = initVworldMap({
+      containerId: 'vmap',
+      defaultCenter: centerCoords,
+      defaultZoom: 15,
+      autoFetch: false
+    })
+
+    if (!vmap) throw new Error('vmap 초기화 실패')
+
+    // ✅ 여기서 바로 이벤트 등록
+    vmap.on('moveend', () => {
+      console.log('🗺️ 지도 이동/줌 감지 (vmap 이벤트)')
+      if (debounceTimer) clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(() => {
+        loadWFSMarkers()
+      }, 300)
+    })
+
+    // 4. 초기 마커 로드
+    setTimeout(() => loadWFSMarkers(), 500)
+
+  } catch (error) {
+    console.error('초기화 실패:', error)
+    alert('지도를 초기화할 수 없습니다.')
+  }
+});
+
+async function getCurrentPositionApp() {
+  getCurrentLocation();
+  loadWFSMarkers();
+}
 
 // 🔹 정렬 함수들
 const sortByDistance = () => {
