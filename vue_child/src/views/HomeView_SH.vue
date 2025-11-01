@@ -90,7 +90,7 @@
 
         <!-- 응급실 목록 -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id">
-         <div class="card-body" @click="goToemergencyDetail(h)">
+         <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>              
               <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
@@ -101,10 +101,41 @@
               </span>
             </div>
 
-            <div class="mb-2">
-              <span class="badge bg-danger-subtle text-danger-emphasis me-1">장폐색x</span>
-              <span class="badge bg-warning-subtle text-warning-emphasis">화상 진료 불가</span>
-            </div>
+           <!-- ✅ 병원 데이터의 message 필드를 이용해 소아가능 / 불가능 자동 표시 -->
+<div class="mb-2" v-if="h.message">
+  <span
+    class="badge me-1"
+    :class="h.message.includes('가능')
+      ? 'bg-success-subtle text-success-emphasis'
+      : 'bg-secondary-subtle text-secondary-emphasis'">
+    {{ h.message }}
+  </span>
+</div>
+
+
+<!-- ✅ state 상태 표시 -->
+<div class="mb-2" v-if="h.state !== undefined && h.state !== null">
+  <span
+    class="badge me-1"
+    :class="{
+      'bg-danger-subtle text-danger-emphasis': h.state === 0,
+      'bg-warning-subtle text-warning-emphasis': h.state === 1,
+      'bg-success-subtle text-success-emphasis': h.state === 2
+    }"
+  >
+    {{
+      h.state === 0
+        ? '진료불가능'
+        : h.state === 1
+        ? '조건부가능'
+        : h.state === 2
+        ? '진료가능'
+        : '정보없음'
+    }}
+  </span>
+</div>
+
+
 
             <div class="text-muted small d-flex align-items-center mb-3">
               <span><i class="bi bi-clock me-1"></i> {{ h.etaMin }}분</span>
@@ -448,11 +479,10 @@ function openRouteModal(hospital) {
 
 const router = useRouter()
 
-function goToemergencyDetail(h) {
+function goToemergencyDetail(hpid) {
   router.push({
   name: 'emergencyDetail',
-  params: { hpid: h.hpid }, // URL엔 필수 키만
-  state:  { hospital: h }   // 추가 데이터는 history state로(길어도 URL 안 지저분)
+  params: { hpid: hpid }, // URL엔 필수 키만
 })
 
 }
@@ -472,6 +502,8 @@ const listHospitals = computed(() => {
     id: h.id,
     hpid: h.hpid,               // ← 추가
     name: h.name,
+    message: h.message,
+    state: h.state,
     distanceKm: (h.distance ?? 0) / 1000,
     etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
     lat: h.lat, lon: h.lon,     // (선택) 모달/길찾기 즉시 사용
@@ -696,10 +728,9 @@ if (!cur.value.lat || !cur.value.lon) { alert('현재 위치 확인 후 다시 �
  }
 
 /** GeoServer WFS에서 DWithin으로 병원 받아오기 */
+/** GeoServer WFS에서 DWithin으로 병원 받아오기 */
 async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
-  // CQL: DWithin(geom, POINT(lon lat), radius, meters)
   const cql = `DWithin(geom, POINT(${centerLon} ${centerLat}), ${radiusMeters}, meters)`
-
   const base = 'https://api.child119.com/geoserver/hospital/wfs'
   const params = new URLSearchParams({
     service: 'WFS',
@@ -711,41 +742,34 @@ async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
   })
 
   const url = `${base}?${params.toString()}`
-  const res = await fetch(url, { method: 'GET' })
-  if (!res.ok) {
-    const t = await res.text().catch(() => '')
-    throw new Error(`WFS ${res.status} ${t}`)
-  }
+  const res = await fetch(url)
   const data = await res.json()
-  const feats = Array.isArray(data?.features) ? data.features : []
+  const feats = data.features || []
 
-  // 안전한 포인트 추출(Polygon 등일 경우 중심점 계산은 간단히 첫 좌표 사용)
-  const getLonLat = (geom) => {
-    if (!geom) return [undefined, undefined]
-    if (geom.type === 'Point') return geom.coordinates
-    // Multi* 또는 Line/Polygon의 경우 대충 첫 좌표 사용 (꼭 필요하면 centroid 계산로직 추가)
-    try {
-      let coords = geom.coordinates
-      while (Array.isArray(coords[0])) coords = coords[0]
-      return coords // [lon, lat] 가정
-    } catch { return [undefined, undefined] }
-  }
-
-  const coalesce = (...vals) => vals.find(v => v !== undefined && v !== null && String(v).trim() !== '') ?? ''
+  const coalesce = (...vals) =>
+    vals.find(v => v !== undefined && v !== null && String(v).trim() !== '') ?? ''
 
   return feats.map((f, i) => {
-    const [lon, lat] = getLonLat(f.geometry)
+    const [lon, lat] = f.geometry?.coordinates || []
     const p = f.properties || {}
-    const name = coalesce(p.name, p.hospname, p.yadmNm, p.inst_nm, p.emergency_nm, `병원 ${i + 1}`)
-    const address = coalesce(p.addr, p.road_address, p.addrRoad, p.address, p.doro, '')
-    const tel = coalesce(p.tel, p.phone, p.telno, p.telNo, '')
+
+    const message = coalesce(p.message, p.MSG, p.msg, '') // ✅ 여기에 소아가능여부 속성 추가
+    const state = Number(p.state ?? -1) // ✅ state 추가
+
+
+
+    const name = coalesce(p.name, p.hospname, p.yadmNm, `병원 ${i + 1}`)
+    const address = coalesce(p.addr, p.address, '')
+    const tel = coalesce(p.tel, p.phone, '')
     const hours = coalesce(p.hours, p.oper_time, '')
     const distance = (Number.isFinite(lat) && Number.isFinite(lon))
       ? haversineMeter(centerLat, centerLon, lat, lon)
       : Infinity
-    return { id: f.id || `wfs-${i}`, hpid: p.hpid, name, address, tel, hours, lat, lon, distance }
+
+    return { id: f.id || `wfs-${i}`, hpid: p.hpid, name, address, tel, hours, lat, lon, distance, message, state }
   })
 }
+
 
 
 
@@ -826,6 +850,27 @@ window.Tmapv3.event.addListener(map.value, 'click', (evt) => {
     searchER(5000, false)
   }
 }
+
+import { getTmapRoute } from '@/utils/api';
+
+async function getETA(destLat, destLon) {
+  if (!cur.value.lat || !cur.value.lon) {
+    alert('출발 위치가 설정되지 않았습니다. (HTTPS 위치 권한 필요)')
+    return
+  }
+  const startX = +cur.value.lon
+  const startY = +cur.value.lat
+  const endX   = +destLon
+  const endY   = +destLat
+
+  try {
+    const res = await getTmapRoute(startX, startY, endX, endY)
+  }catch (err) {
+
+  }
+
+}
+
 
 /* 바텀시트 제스처 */
 /* 터치 핸들러 */
