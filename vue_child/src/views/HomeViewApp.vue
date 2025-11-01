@@ -185,7 +185,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { initVworldMap } from '@/utils/vworldfunction';
+import { initVworldMap, fetchHospitalsFromWFS } from '@/utils/vworldfunction';
 // vmap 변수 - vworld 지도를 위한 변수
 let vmap;
 
@@ -310,7 +310,33 @@ const listHospitals = computed(() => {
   }))
 })
 
+async function searchER(radiusMeters, useSymptoms) {
+  
 
+if (!cur.value.lat || !cur.value.lon) { alert('현재 위치 확인 후 다시 시도해주세요.'); return }
+
+  const sanitizedRadius = Math.max(0, Number(radiusMeters) || 0)
+  loadingHospitals.value = true
+  searchAttempted.value = true
+  hospitals.value = []
+  lastRadius.value = sanitizedRadius
+  useSymptomsMode.value = !!useSymptoms
+
+  try {
+    const list = await fetchHospitalsFromWFS(cur.value.lon, cur.value.lat, sanitizedRadius)
+    hospitals.value = list.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
+    drawMarkers(hospitals.value)
+    
+    // 사용자 요청(증상 검색)일 때만 자동 펼침
+   if (useSymptoms && hospitals.value.length) sheetHeightRatio.value = 1
+
+  } catch (e) {
+    console.error('WFS 검색 실패:', e)
+    alert('주변 병원 검색 중 오류가 발생했습니다. (WFS)')
+  } finally {
+    loadingHospitals.value = false
+  }
+ }
 
 </script>
 
