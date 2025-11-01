@@ -129,11 +129,16 @@ onMounted(async () => {
 let hospitalData = ref(null)
 let realTimeData = ref(null)
 
-// homeview에서 클릭할때 param 전달
-const hpid = 'A1100001';
+// homeview에서 클릭할때 param 전
+const props = defineProps({
+  hpid: String
+})
+const parts = props.hpid.split('.');
+const hpid = parts[1]
 
 // 공공 데이터 불러오기
 async function getHospitalData(hpid) {
+  console.log(hpid)
   try{
     hospitalData.value = await getEmergencyHospitalByHPID(hpid);
     console.log( hospitalData.value)
