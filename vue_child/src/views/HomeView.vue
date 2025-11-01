@@ -476,6 +476,20 @@ function openRouteModal(hospital) {
 }
 
 
+
+// ✅ 내 위치/마커 상태
+const currentLocationMarker = ref(null)
+const currentLocationInfoWindow = ref(null)
+const userLocation = ref({ lat: null, lon: null })
+
+// ✅ 경로 모드 여부 (지금은 경로 모드가 따로 없으니 false 유지)
+const isRouteMode = ref(false)
+
+// ✅ 새로고침 시 재검색 반경(m). 초기에 5000m, 이후엔 마지막 반경 유지
+const searchRadius = ref(5000)
+
+
+
 /* 내 위치 새로고침 */
 function refreshLocation() {
   if (!map.value) {
@@ -503,6 +517,7 @@ function refreshLocation() {
 
       const currentPos = new window.Tmapv3.LatLng(lat, lon)
       userLocation.value = { lat, lon }
+      cur.value = { lat, lon }            // ✅ 검색에 쓰는 기준점도 업데이트
 
       // 기존 내 위치 마커와 정보창 제거
       if (currentLocationMarker.value) {
@@ -530,10 +545,16 @@ function refreshLocation() {
       map.value.setCenter(currentPos)
       map.value.setZoom(17)
 
-      // 경로 모드가 아닐 때만 병원 재검색
-      if (!isRouteMode.value) {
-        fetchHospitalsFromGeoServer(lat, lon, searchRadius.value)
-      }
+      // ✅ 현재 좌표 갱신
+      cur.value = { lat, lon }
+
+    // ✅ 경로 모드가 아닐 때만 병원 재검색 (이 컴포넌트의 WFS 검색 사용)
+    if (!isRouteMode.value) {
+      // 직전 반경이 있으면 그걸 쓰고, 없으면 기본 5000m
+      const radius = lastRadius.value > 0 ? lastRadius.value : searchRadius.value
+      searchER(radius, false)
+}
+
     },
     err => {
       console.error('Geolocation 오류 코드:', err.code, '메시지:', err.message)
@@ -1026,6 +1047,11 @@ const onGripTouchEnd = () => {
   isDragging.value = false
   sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0
 }
+
+
+
+
+
 
 
 
