@@ -88,50 +88,25 @@
 
       <!-- 리스트 스크롤 영역 -->
       <div class="overflow-auto px-3 ">
-        <!-- 응급실 목록 
-        <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.id">
-          <div class="card-body" @click="goToemergencyDetail(h.id)">
-            <div class="d-flex justify-content-between align-items-start">
-              <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
-              <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="15px" viewBox="0 0 24 24">
-                  <path fill="#008A64"
-                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
-                </svg> 2/7
-              </span>
-            </div>
 
-            <div class="mb-2">
-              <span class="badge bg-danger-subtle text-danger-emphasis me-1">장폐색x</span>
-              <span class="badge bg-warning-subtle text-warning-emphasis">화상 진료 불가</span>
-            </div>
 
-            <div class="text-muted small d-flex align-items-center mb-3">
-              <span><i class="bi bi-clock me-1"></i> {{ h.etaMin }}분</span>
-              <span class="mx-2">|</span>
-              <span><i class="bi bi-geo-alt me-1"></i> {{ h.distanceKm.toFixed(1) }}km</span>
-            </div>
-
-            <div class="d-grid gap-2 d-sm-flex">
-              <button class="btn btn-outline-primary w-100">
-                <i class="bi bi-telephone-fill"></i> 전화
-              </button>
-              <button class="btn btn-primary w-100" @click="openRouteModal(hospital)">
-                <i class="bi bi-sign-turn-right-fill"></i> 길찾기
-              </button>
-            </div>
-          </div>
-        </div>-->
         <!-- 응급실 목록 -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id">
           <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
-              <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="15px" viewBox="0 0 24 24">
-                  <path fill="#008A64"
-                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
-                </svg> 2/7
+
+              <!-- ✅ 병상 현황: 'avail/total' -->
+              <span
+                v-if="h.bedAvail !== null || h.bedTotal !== null"
+                class="badge rounded-pill"
+                :class="bedBadgeClass(h)"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="15" viewBox="0 0 24 24" class="me-1">
+                  <path fill="currentColor"
+                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3"/>
+                </svg>
+                {{ bedLabel(h) }}
               </span>
             </div>
 
@@ -377,6 +352,8 @@ const listHospitals = computed(() => {
     name: h.name,
     message: h.message,
     state: h.state,
+    bedAvail: h.bedAvail,   // ✅ 추가
+    bedTotal: h.bedTotal,
     distanceKm: (h.distance ?? 0) / 1000,
     etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
     lat: h.lat, lon: h.lon,     // (선택) 모달/길찾기 즉시 사용
@@ -404,6 +381,11 @@ const loadWFSMarkers = async () => {
   loadingHospitals.value = true
   searchAttempted.value = true
   const coalesce = (...vals) => vals.find(v => v !== undefined && v !== null && String(v).trim() !== '') ?? ''
+  const toInt = (v) => {
+      if (v === null || v === undefined) return null
+      const n = parseInt(String(v).trim(), 10)
+      return Number.isFinite(n) ? n : null
+    }
   try {
   // BBox로 원본 GeoJSON features를 가져옵니다.
   const feats = await getEmergencyFromWFSByBBox(minX, minY, maxX, maxY);
@@ -428,6 +410,8 @@ const loadWFSMarkers = async () => {
     const address = coalesce(p.addr, p.address, p.dutyAddr); // dutyAddr도 추가 (예시)
     const tel = coalesce(p.tel, p.phone, p.dutyTel1);     // dutyTel1도 추가 (예시)
     const hours = coalesce(p.hours, p.oper_time, '');
+     const bedAvail = toInt(p.bed_avail ?? p.bedAvail ?? p.bedavail);
+    const bedTotal = toInt(p.bed_total ?? p.bedTotal ?? p.bedtotal);
 
     // 거리 계산 로직
     const distance = (Number.isFinite(lat) && Number.isFinite(lon))
@@ -447,6 +431,8 @@ const loadWFSMarkers = async () => {
       distance,
       message,
       state,
+      bedAvail,
+      bedTotal,
       // properties: p // 원본 속성이 필요하면 이 줄의 주석을 해제하세요.
     };
   });
@@ -639,6 +625,32 @@ onBeforeUnmount(() => {
     grip.removeEventListener('touchend', onGripTouchEnd)
   }
 })
+
+
+
+function bedLabel(h) {
+  const a = h.bedAvail
+  const t = h.bedTotal
+  const showA = (a === null || a === undefined) ? '?' : a
+  const showT = (t === null || t === undefined) ? '?' : t
+  return `${showA}/${showT}`
+}
+
+function bedBadgeClass(h) {
+  // 가용률에 따라 색상 분기 (선택 로직)
+  const a = h.bedAvail
+  const t = h.bedTotal
+  if (!Number.isFinite(a) || !Number.isFinite(t) || t <= 0) {
+    return 'bg-secondary-subtle text-secondary-emphasis' // 정보 부족
+  }
+  const ratio = a / t
+  if (ratio >= 0.5) return 'bg-success-subtle text-success-emphasis'   // 여유
+  if (ratio > 0)   return 'bg-warning-subtle text-warning-emphasis'    // 부족
+  return 'bg-danger-subtle text-danger-emphasis'                        // 없음
+}
+
+
+
 </script>
 
 <style scoped>
