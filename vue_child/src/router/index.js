@@ -105,6 +105,12 @@ const router = createRouter({
       name: 'HomeViewTest',
       component: () => import('../views/HomeViewTest.vue'),
     },
+    // app 버전 라우팅 ----------------
+    {
+      path: '/HomeViewApp',
+      name: 'HomeViewApp',
+      component: () => import('../views/HomeViewApp.vue'),
+    },
 
 
 
