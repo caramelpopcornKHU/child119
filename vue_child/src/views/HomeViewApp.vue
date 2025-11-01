@@ -20,9 +20,11 @@
     </div>
     <!-- 내 위치 새로고침 버튼 -->
     <div class="position-fixed end-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
-      <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="getCurrentPositionApp()" style="width: 48px; height: 48px; padding: 0;">
+      <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="getCurrentPositionApp()"
+        style="width: 48px; height: 48px; padding: 0;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4s-1.79-4-4-4m8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7s7 3.13 7 7s-3.13 7-7 7" />
+          <path fill="currentColor"
+            d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4s-1.79-4-4-4m8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7s7 3.13 7 7s-3.13 7-7 7" />
         </svg>
       </button>
     </div>
@@ -86,7 +88,7 @@
 
       <!-- 리스트 스크롤 영역 -->
       <div class="overflow-auto px-3 ">
-        <!-- 응급실 목록 -->
+        <!-- 응급실 목록 
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.id">
           <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
@@ -119,7 +121,68 @@
               </button>
             </div>
           </div>
+        </div>-->
+        <!-- 응급실 목록 -->
+        <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id">
+          <div class="card-body" @click="goToemergencyDetail(h.id)">
+            <div class="d-flex justify-content-between align-items-start">
+              <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
+              <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="15px" viewBox="0 0 24 24">
+                  <path fill="#008A64"
+                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
+                </svg> 2/7
+              </span>
+            </div>
+
+            <!-- ✅ 병원 데이터의 message 필드를 이용해 소아가능 / 불가능 자동 표시 -->
+            <div class="mb-2" v-if="h.message">
+              <span class="badge me-1" :class="h.message.includes('가능')
+                ? 'bg-success-subtle text-success-emphasis'
+                : 'bg-secondary-subtle text-secondary-emphasis'">
+                {{ h.message }}
+              </span>
+            </div>
+
+
+            <!-- ✅ state 상태 표시 -->
+            <div class="mb-2" v-if="h.state !== undefined && h.state !== null">
+              <span class="badge me-1" :class="{
+                'bg-danger-subtle text-danger-emphasis': h.state === 0,
+                'bg-warning-subtle text-warning-emphasis': h.state === 1,
+                'bg-success-subtle text-success-emphasis': h.state === 2
+              }">
+                {{
+                  h.state === 0
+                    ? '진료불가능'
+                    : h.state === 1
+                      ? '조건부가능'
+                      : h.state === 2
+                        ? '진료가능'
+                        : '정보없음'
+                }}
+              </span>
+            </div>
+
+
+
+            <div class="text-muted small d-flex align-items-center mb-3">
+              <span><i class="bi bi-clock me-1"></i> {{ h.etaMin }}분</span>
+              <span class="mx-2">|</span>
+              <span><i class="bi bi-geo-alt me-1"></i> {{ h.distanceKm.toFixed(1) }}km</span>
+            </div>
+
+            <div class="d-grid gap-2 d-sm-flex">
+              <button class="btn btn-outline-primary w-100" @click.stop>
+                <i class="bi bi-telephone-fill"></i> 전화
+              </button>
+              <button class="btn btn-primary w-100" @click.stop="openRouteModal(h)">
+                <i class="bi bi-sign-turn-right-fill"></i> 길찾기
+              </button>
+            </div>
+          </div>
         </div>
+
 
         <div v-if="loadingHospitals" class="text-center text-muted py-4">
           <div class="spinner-border spinner-border-sm me-2" role="status">
@@ -190,7 +253,7 @@
 
 <script setup>
 // import
-import { ref, computed, onMounted, onBeforeUnmount,onActivated } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 
 import {
@@ -295,13 +358,29 @@ const onGripTouchEnd = () => {
 }
 /* 그립 액션 end */
 
+const toRad = (d) => d * Math.PI / 180
+function haversineMeter(lat1, lon1, lat2, lon2) {
+  const R = 6371000
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(a))
+}
+
+
 /* 실제 렌더링 목록 */
 const listHospitals = computed(() => {
-  return hospitals.value.map((h, idx) => ({
-    id: h.id || `hospital-${idx}`,
-    name: h.name || '병원명 미상',
-    distanceKm: 0,
-    etaMin: 0,
+
+  return hospitals.value.map(h => ({
+    id: h.id,
+    hpid: h.hpid,               // ← 추가
+    name: h.name,
+    message: h.message,
+    state: h.state,
+    distanceKm: (h.distance ?? 0) / 1000,
+    etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
+    lat: h.lat, lon: h.lon,     // (선택) 모달/길찾기 즉시 사용
+    tel: h.tel || ''
   }))
 })
 
@@ -324,42 +403,80 @@ const loadWFSMarkers = async () => {
 
   loadingHospitals.value = true
   searchAttempted.value = true
-
+  const coalesce = (...vals) => vals.find(v => v !== undefined && v !== null && String(v).trim() !== '') ?? ''
   try {
-    const featuresData = await getEmergencyFromWFSByBBox(minX, minY, maxX, maxY)
+  // BBox로 원본 GeoJSON features를 가져옵니다.
+  const feats = await getEmergencyFromWFSByBBox(minX, minY, maxX, maxY);
 
-    console.log('✅ WFS 응답:', featuresData.length, '개')
+  console.log('✅ WFS 응답:', feats.length, '개');
 
-    // 기존 마커 제거
-    clearMarkers()
-    hospitals.value = []
+  // --- 여기에 첫 번째 코드의 정제 로직을 적용 ---
 
-    featuresData.forEach((f) => {
-      if (f.geometry?.type === 'Point' && Array.isArray(f.geometry.coordinates)) {
-        const [lon, lat] = f.geometry.coordinates
-        const props = f.properties || {}
+  // ※ 중요: 거리 계산을 위해 지도 중심 좌표(centerLon, centerLat)가 필요합니다.
+  //    (아마도 cur.value.lon, cur.value.lat 같은 변수가 있을 것입니다)
+  const centerLon = cur.value.lon; // 이 변수명은 실제 코드에 맞게 수정하세요.
+  const centerLat = cur.value.lat; // 이 변수명은 실제 코드에 맞게 수정하세요.
 
-        // 마커 추가
-        addMarker(lon, lat, { id: f.id, ...props })
+  const processedHospitals = feats.map((f, i) => {
+    const [lon, lat] = f.geometry?.coordinates || [];
+    const p = f.properties || {};
 
-        // hospitals 배열에 추가
-        hospitals.value.push({
-          id: f.id || `wfs-${hospitals.value.length}`,
-          name: props.dutyName || props.name || '응급실',
-          lon,
-          lat,
-          properties: props
-        })
-      }
-    })
+    // 첫 번째 코드의 정제 로직 + 두 번째 코드의 name 필드(dutyName) 결합
+    const message = coalesce(p.message, p.MSG, p.msg, '');
+    const state = Number(p.state ?? -1);
+    const name = coalesce(p.name, p.hospname, p.yadmNm, p.dutyName, `병원 ${i + 1}`);
+    const address = coalesce(p.addr, p.address, p.dutyAddr); // dutyAddr도 추가 (예시)
+    const tel = coalesce(p.tel, p.phone, p.dutyTel1);     // dutyTel1도 추가 (예시)
+    const hours = coalesce(p.hours, p.oper_time, '');
 
-    console.log('📍 마커 추가 완료:', hospitals.value.length, '개')
+    // 거리 계산 로직
+    const distance = (Number.isFinite(lat) && Number.isFinite(lon))
+      ? haversineMeter(centerLat, centerLon, lat, lon)
+      : Infinity;
 
-  } catch (e) {
-    console.error('❌ WFS 마커 로드 실패', e)
-  } finally {
-    loadingHospitals.value = false
-  }
+    // 정제된 객체 반환
+    return {
+      id: f.id || `wfs-${i}`,
+      hpid: p.hpid,
+      name,
+      address,
+      tel,
+      hours,
+      lat,
+      lon,
+      distance,
+      message,
+      state,
+      // properties: p // 원본 속성이 필요하면 이 줄의 주석을 해제하세요.
+    };
+  });
+  // --- 정제 로직 끝 ---
+
+  // 기존 마커 제거
+  clearMarkers();
+
+  // 3. 정제된 데이터(processedHospitals)로 UI를 업데이트합니다.
+  processedHospitals.forEach((hospital) => {
+    // 마커 추가 (이제 hospital 객체는 정제된 데이터만 가짐)
+    addMarker(hospital.lon, hospital.lat, {
+      id: hospital.id,
+      name: hospital.name,
+      message: hospital.message,
+      state: hospital.state,
+      // ... addMarker가 필요로 하는 다른 정제된 속성들
+    });
+  });
+
+  // 4. hospitals.value에 'forEach + push' 대신,
+  //    정제된 배열을 '한 번에' 할당하는 것이 더 효율적입니다.
+  hospitals.value = processedHospitals;
+
+} catch (error) {
+  console.error("WFS 데이터 처리 중 오류 발생:", error);
+  // 에러 발생 시 목록 비우기
+  clearMarkers();
+  hospitals.value = [];
+}
 }
 
 // 🔹 현재 위치 가져오기
