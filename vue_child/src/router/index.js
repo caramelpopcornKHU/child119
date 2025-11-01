@@ -90,9 +90,10 @@ const router = createRouter({
       component: () => import('../views/hospitalDetail.vue'),
     },
     {
-      path: '/emergencyDetail',
+      path: '/emergencyDetail/:hpid',
       name: 'emergencyDetail',
       component: () => import('../views/emergencyDetail.vue'),
+      props: true,
     },
     {
       path: '/test',

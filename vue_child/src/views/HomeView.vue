@@ -90,7 +90,7 @@
 
         <!-- 응급실 목록 -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id">
-         <div class="card-body" @click="goToemergencyDetail(h)">
+         <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>              
               <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
@@ -448,11 +448,10 @@ function openRouteModal(hospital) {
 
 const router = useRouter()
 
-function goToemergencyDetail(h) {
+function goToemergencyDetail(hpid) {
   router.push({
   name: 'emergencyDetail',
-  params: { hpid: h.hpid }, // URL엔 필수 키만
-  state:  { hospital: h }   // 추가 데이터는 history state로(길어도 URL 안 지저분)
+  params: { hpid: hpid }, // URL엔 필수 키만
 })
 
 }
