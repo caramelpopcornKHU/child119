@@ -129,7 +129,8 @@ onMounted(async () => {
 let hospitalData = ref(null)
 let realTimeData = ref(null)
 
-// homeview에서 클릭할때 param 전
+// hpid
+// ex) emergency.A1100001 -> A1100001 
 const props = defineProps({
   hpid: String
 })
