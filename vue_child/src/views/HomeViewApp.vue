@@ -80,7 +80,7 @@
       <div class="overflow-auto px-3 ">
         <!-- 응급실 목록 -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.id">
-          <div class="card-body" @click="goToHospitalDetail">
+          <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
               <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
@@ -185,8 +185,8 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { 
-  initVworldMap, 
+import {
+  initVworldMap,
   getVMap,
   clearMarkers,
   addMarker,
@@ -311,15 +311,15 @@ const loadWFSMarkers = async () => {
   }
 
   const [minX, minY, maxX, maxY] = bbox
-  
+
   console.log('🔍 WFS 조회 시작:', { minX, minY, maxX, maxY })
-  
+
   loadingHospitals.value = true
   searchAttempted.value = true
 
   try {
     const featuresData = await getEmergencyFromWFSByBBox(minX, minY, maxX, maxY)
-    
+
     console.log('✅ WFS 응답:', featuresData.length, '개')
 
     // 기존 마커 제거
@@ -330,10 +330,10 @@ const loadWFSMarkers = async () => {
       if (f.geometry?.type === 'Point' && Array.isArray(f.geometry.coordinates)) {
         const [lon, lat] = f.geometry.coordinates
         const props = f.properties || {}
-        
+
         // 마커 추가
         addMarker(lon, lat, { id: f.id, ...props })
-        
+
         // hospitals 배열에 추가
         hospitals.value.push({
           id: f.id || `wfs-${hospitals.value.length}`,
@@ -344,7 +344,7 @@ const loadWFSMarkers = async () => {
         })
       }
     })
-    
+
     console.log('📍 마커 추가 완료:', hospitals.value.length, '개')
 
   } catch (e) {
@@ -361,7 +361,7 @@ function getCurrentLocation() {
       reject(new Error('Geolocation not supported'))
       return
     }
-    
+
     navigator.geolocation.getCurrentPosition(
       position => {
         cur.value.lat = position.coords.latitude
@@ -397,7 +397,7 @@ onMounted(async () => {
     }
 
     // 3. 지도 초기화
-    vmap = initVworldMap({ 
+    vmap = initVworldMap({
       containerId: 'vmap',
       defaultCenter: centerCoords,
       defaultZoom: 15,
@@ -441,14 +441,18 @@ const onConfirmSymptoms = async () => {
 
 // 🔹 병원 상세 페이지로 이동
 const router = useRouter()
-const goToHospitalDetail = () => {
-  // router.push(...) 구현
+function goToemergencyDetail(hpid) {
+  router.push({
+    name: 'emergencyDetailApp',
+    params: { hpid: hpid }, // URL엔 필수 키만
+  })
+
 }
 
 // cleanup
 onBeforeUnmount(() => {
   if (debounceTimer) clearTimeout(debounceTimer)
-  
+
   const grip = document.querySelector('.sheet-grip')
   if (grip) {
     grip.removeEventListener('touchstart', onGripTouchStart)
