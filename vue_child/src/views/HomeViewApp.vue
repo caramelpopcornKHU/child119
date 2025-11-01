@@ -256,14 +256,9 @@
 import { ref, computed, onMounted, onBeforeUnmount, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 
-<<<<<<< HEAD
-import { 
-  initVworldMap, 
-=======
 import {
   initVworldMap,
   getVMap,
->>>>>>> origin/main
   clearMarkers,
   addMarker,
   getCurrentBBox4326

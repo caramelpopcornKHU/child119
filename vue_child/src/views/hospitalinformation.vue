@@ -313,7 +313,12 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
 import { loadTmapScript, getHospitalFromWFSByBBox } from "@/utils/api"
+import axios from 'axios'
 
+const wfsData = ref([]);
+const markers = ref([]);
+const map = ref(null);
+let cancelToken = null;   
 
 /* 진료과 필터 상태 */
 const departmentOptions = [
@@ -370,9 +375,6 @@ const hospitals = ref([])
 const userLocation = ref(null)
 const searchRadius = ref(5) // 기본 5km 반경
 
-/* 지도 상태 */
-const map = ref(null)
-let cancelToken = null
 
 /* 경로 탐색 상태 */
 const isRouteMode = ref(false)
@@ -415,86 +417,56 @@ const sheetStyle = computed(() => ({
   top: 'auto'
 }))
 
-/* GeoServer에서 병원 데이터 가져오기 */
 const fetchHospitalsFromGeoServer = async (lat, lon, radiusKm) => {
   try {
-    // EPSG:4326 (WGS84) 좌표계로 bbox 계산 (위도/경도)
-    // 1도 = 약 111km
+    // 1도 ≈ 111km → bbox 계산
     const delta = radiusKm / 111
-    const bbox = [
-      lon - delta,
-      lat - delta,
-      lon + delta,
-      lat + delta
-    ].join(',')
+    const minX = lon - delta
+    const minY = lat - delta
+    const maxX = lon + delta
+    const maxY = lat + delta
 
-    // GeoServer WFS 요청 URL (sql2 레이어 사용, EPSG:4326 좌표계)
-    // 개발 환경에서는 프록시 사용, 프로덕션에서는 직접 접속
-    const baseUrl = import.meta.env.DEV ? '/geoserver' : 'https://api.child119.com/geoserver'
-    const url = `${baseUrl}/hospital/ows?` +
-      `service=WFS` +
-      `&version=1.1.0` +
-      `&request=GetFeature` +
-      `&typeName=hospital:sql2` + // hospital 저장소의 sql2 레이어
-      `&srsName=EPSG:4326` +
-      `&outputFormat=application/json` +
-      `&bbox=${bbox},EPSG:4326`
+    // WFS 조회 (options로 AbortController signal 등 가능)
+    const features = await getHospitalFromWFSByBBox(minX, minY, maxX, maxY, {})
 
-    console.log('GeoServer 요청 URL:', url)
-    const response = await axios.get(url)
+    console.log('WFS features 수:', features.length)
 
-    console.log('GeoServer 전체 응답:', response)
-    console.log('응답 데이터:', response.data)
-    console.log('features 개수:', response.data?.features?.length)
-
-    if (response.data && response.data.features) {
-      console.log('GeoServer 응답 데이터:', response.data)
-      console.log('받아온 병원 개수:', response.data.features.length)
-
-      // 거리 계산 및 필터링
-      let hospitalsWithDistance = response.data.features.map(feature => {
-        const coords = feature.geometry.coordinates
-        const distance = calculateDistance(lat, lon, coords[1], coords[0])
-
-        return {
-          id: feature.id,
-          properties: feature.properties,
-          coordinates: coords,
-          distance: distance,
-          distanceKm: (distance / 1000).toFixed(1)
-        }
-      }).filter(h => h.distance <= radiusKm * 1000)
-
-      console.log('거리 필터링 후 병원 수:', hospitalsWithDistance.length)
-      console.log('선택된 진료과:', selectedDepartments.value)
-
-      // 진료과 필터링 (선택된 진료과가 있을 경우)
-      if (selectedDepartments.value.length > 0) {
-        const beforeFilter = hospitalsWithDistance.length
-        hospitalsWithDistance = hospitalsWithDistance.filter(h => {
-          const deptName = h.properties.dept_name || ''
-          // 선택된 진료과 중 하나라도 dept_name에 포함되면 true (OR 조건)
-          return selectedDepartments.value.some(dept => deptName.includes(dept))
-        })
-        console.log(`진료과 필터링: ${beforeFilter}개 → ${hospitalsWithDistance.length}개`)
+    // 거리 계산 + 객체화
+    let hospitalsWithDistance = features.map(feature => {
+      const coords = feature.geometry.coordinates
+      const distance = calculateDistance(lat, lon, coords[1], coords[0])
+      return {
+        id: feature.id,
+        properties: feature.properties,
+        coordinates: coords,
+        distance,
+        distanceKm: (distance / 1000).toFixed(1)
       }
+    })
 
-      // 거리순 정렬
-      hospitalsWithDistance.sort((a, b) => a.distance - b.distance) 
-      //const finalHospitals = hospitalsWithDistance(0,10)
-      hospitals.value = hospitalsWithDistance
+    // 반경 필터
+    hospitalsWithDistance = hospitalsWithDistance.filter(h => h.distance <= radiusKm * 1000)
 
-      console.log('최종 병원 수:', hospitalsWithDistance.length)
-      console.log('hospitals.value:', hospitals.value)
-
-      // 데이터가 있으면 바텀시트 자동으로 올리기
-      if (hospitalsWithDistance.length > 0) {
-        sheetHeightRatio.value = 0.5 // 중간 높이로 펼치기
-      }
-
-      // 지도에 마커 추가
-      addHospitalMarkers(hospitalsWithDistance)
+    // 진료과 필터
+    if (selectedDepartments.value.length > 0) {
+      hospitalsWithDistance = hospitalsWithDistance.filter(h => {
+        const dept = h.properties.dept_name || ''
+        return selectedDepartments.value.some(sel => dept.includes(sel))
+      })
     }
+
+    // 거리순 정렬
+    hospitalsWithDistance.sort((a, b) => a.distance - b.distance)
+
+    // 상태 반영
+    hospitals.value = hospitalsWithDistance
+
+    // 바텀시트 높이
+    if (hospitalsWithDistance.length > 0) sheetHeightRatio.value = 0.5
+
+    // 지도 마커
+    addHospitalMarkers(hospitalsWithDistance)
+
   } catch (error) {
     console.error('병원 데이터 가져오기 실패:', error)
     alert('병원 정보를 가져올 수 없습니다. GeoServer 연결을 확인해주세요.')
@@ -517,7 +489,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   return R * c
 }
 
-let markers = []
+markers = []
 
 function clearMarkers() {
   markers.forEach(m => m.setMap(null));
