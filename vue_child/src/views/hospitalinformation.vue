@@ -312,13 +312,10 @@
 </template>
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
-import { loadTmapScript, getHospitalFromWFSByBBox } from "@/utils/api"
 import axios from 'axios'
 
-const wfsData = ref([]);
-const markers = ref([]);
-const map = ref(null);
-let cancelToken = null;   
+// TMAP API 키
+const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8"
 
 /* 진료과 필터 상태 */
 const departmentOptions = [
@@ -375,6 +372,8 @@ const hospitals = ref([])
 const userLocation = ref(null)
 const searchRadius = ref(5) // 기본 5km 반경
 
+/* 지도 상태 */
+const map = ref(null)
 
 /* 경로 탐색 상태 */
 const isRouteMode = ref(false)
@@ -417,56 +416,86 @@ const sheetStyle = computed(() => ({
   top: 'auto'
 }))
 
+/* GeoServer에서 병원 데이터 가져오기 */
 const fetchHospitalsFromGeoServer = async (lat, lon, radiusKm) => {
   try {
-    // 1도 ≈ 111km → bbox 계산
+    // EPSG:4326 (WGS84) 좌표계로 bbox 계산 (위도/경도)
+    // 1도 = 약 111km
     const delta = radiusKm / 111
-    const minX = lon - delta
-    const minY = lat - delta
-    const maxX = lon + delta
-    const maxY = lat + delta
+    const bbox = [
+      lon - delta,
+      lat - delta,
+      lon + delta,
+      lat + delta
+    ].join(',')
 
-    // WFS 조회 (options로 AbortController signal 등 가능)
-    const features = await getHospitalFromWFSByBBox(minX, minY, maxX, maxY, {})
+    // GeoServer WFS 요청 URL (sql2 레이어 사용, EPSG:4326 좌표계)
+    // 개발 환경에서는 프록시 사용, 프로덕션에서는 직접 접속
+    const baseUrl = import.meta.env.DEV ? '/geoserver' : 'https://api.child119.com/geoserver'
+    const url = `${baseUrl}/hospital/ows?` +
+      `service=WFS` +
+      `&version=1.1.0` +
+      `&request=GetFeature` +
+      `&typeName=hospital:sql2` + // hospital 저장소의 sql2 레이어
+      `&srsName=EPSG:4326` +
+      `&outputFormat=application/json` +
+      `&bbox=${bbox},EPSG:4326`
 
-    console.log('WFS features 수:', features.length)
+    console.log('GeoServer 요청 URL:', url)
+    const response = await axios.get(url)
 
-    // 거리 계산 + 객체화
-    let hospitalsWithDistance = features.map(feature => {
-      const coords = feature.geometry.coordinates
-      const distance = calculateDistance(lat, lon, coords[1], coords[0])
-      return {
-        id: feature.id,
-        properties: feature.properties,
-        coordinates: coords,
-        distance,
-        distanceKm: (distance / 1000).toFixed(1)
+    console.log('GeoServer 전체 응답:', response)
+    console.log('응답 데이터:', response.data)
+    console.log('features 개수:', response.data?.features?.length)
+
+    if (response.data && response.data.features) {
+      console.log('GeoServer 응답 데이터:', response.data)
+      console.log('받아온 병원 개수:', response.data.features.length)
+
+      // 거리 계산 및 필터링
+      let hospitalsWithDistance = response.data.features.map(feature => {
+        const coords = feature.geometry.coordinates
+        const distance = calculateDistance(lat, lon, coords[1], coords[0])
+
+        return {
+          id: feature.id,
+          properties: feature.properties,
+          coordinates: coords,
+          distance: distance,
+          distanceKm: (distance / 1000).toFixed(1)
+        }
+      }).filter(h => h.distance <= radiusKm * 1000)
+
+      console.log('거리 필터링 후 병원 수:', hospitalsWithDistance.length)
+      console.log('선택된 진료과:', selectedDepartments.value)
+
+      // 진료과 필터링 (선택된 진료과가 있을 경우)
+      if (selectedDepartments.value.length > 0) {
+        const beforeFilter = hospitalsWithDistance.length
+        hospitalsWithDistance = hospitalsWithDistance.filter(h => {
+          const deptName = h.properties.dept_name || ''
+          // 선택된 진료과 중 하나라도 dept_name에 포함되면 true (OR 조건)
+          return selectedDepartments.value.some(dept => deptName.includes(dept))
+        })
+        console.log(`진료과 필터링: ${beforeFilter}개 → ${hospitalsWithDistance.length}개`)
       }
-    })
 
-    // 반경 필터
-    hospitalsWithDistance = hospitalsWithDistance.filter(h => h.distance <= radiusKm * 1000)
+      // 거리순 정렬
+      hospitalsWithDistance.sort((a, b) => a.distance - b.distance) 
+      //const finalHospitals = hospitalsWithDistance(0,10)
+      hospitals.value = hospitalsWithDistance
 
-    // 진료과 필터
-    if (selectedDepartments.value.length > 0) {
-      hospitalsWithDistance = hospitalsWithDistance.filter(h => {
-        const dept = h.properties.dept_name || ''
-        return selectedDepartments.value.some(sel => dept.includes(sel))
-      })
+      console.log('최종 병원 수:', hospitalsWithDistance.length)
+      console.log('hospitals.value:', hospitals.value)
+
+      // 데이터가 있으면 바텀시트 자동으로 올리기
+      if (hospitalsWithDistance.length > 0) {
+        sheetHeightRatio.value = 0.5 // 중간 높이로 펼치기
+      }
+
+      // 지도에 마커 추가
+      addHospitalMarkers(hospitalsWithDistance)
     }
-
-    // 거리순 정렬
-    hospitalsWithDistance.sort((a, b) => a.distance - b.distance)
-
-    // 상태 반영
-    hospitals.value = hospitalsWithDistance
-
-    // 바텀시트 높이
-    if (hospitalsWithDistance.length > 0) sheetHeightRatio.value = 0.5
-
-    // 지도 마커
-    addHospitalMarkers(hospitalsWithDistance)
-
   } catch (error) {
     console.error('병원 데이터 가져오기 실패:', error)
     alert('병원 정보를 가져올 수 없습니다. GeoServer 연결을 확인해주세요.')
@@ -489,7 +518,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   return R * c
 }
 
-markers = []
+let markers = []
 
 function clearMarkers() {
   markers.forEach(m => m.setMap(null));
@@ -864,148 +893,78 @@ function refreshLocation() {
   )
 }
 
-const getUserLocation = () =>
-  new Promise((resolve) => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-        () => resolve({ lat: 37.494348, lon: 126.887676 }) // 기본: 구로구청
-      );
-    } else {
-      resolve({ lat: 37.494348, lon: 126.887676 });
-    }
-  });
-
-// BBox 기반 WFS 마커 갱신
-const updateMarkersByBBox = async (bbox, label = "update") => {
-  if (!map.value) return;
-  console.log(`📦 [${label.toUpperCase()}] BBox:`, bbox);
-
-  // ✅ window에서 Tmapv2 가져오기
-  const { Tmapv2 } = window;
-  if (!Tmapv2) {
-    console.error("❌ Tmapv2를 찾을 수 없습니다!");
-    return;
-  }
-
-  // 이전 요청 취소
-  if (cancelToken) {
-    cancelToken.cancel("새로운 요청으로 인한 취소");
-  }
-  cancelToken = axios.CancelToken.source();
-
-  try {
-    const features = await getHospitalFromWFSByBBox(
-      ...bbox,
-      { cancelToken: cancelToken.token }
-    );
-    wfsData.value = features;
-    console.log(`✅ [${label.toUpperCase()}] ${features.length}개 마커 로드`);
-
-    // ✅ 기존 마커 제거 (안전하게)
-    if (markers.value && Array.isArray(markers.value)) {
-      markers.value.forEach((m) => m.setMap(null));
-      markers.value = [];
-    } else {
-      markers.value = []; // 초기화
-    }
-
-    // 새 마커 추가
-    features.forEach((f) => {
-      const geom = f.geometry;
-      if (geom?.type === "Point" && Array.isArray(geom.coordinates)) {
-        const [lon, lat] = geom.coordinates;
-        const marker = new Tmapv2.Marker({
-          position: new Tmapv2.LatLng(lat, lon),
-          map: map.value,
-          title: f.properties?.emergency_nm || "응급실",
-        });
-        markers.value.push(marker);
-      }
-    });
-  } catch (err) {
-    if (!axios.isCancel(err)) {
-      console.error("❌ WFS 마커 업데이트 실패:", err);
-    }
-  }
-};
-
-// 현재 지도의 BBox 계산
-const getCurrentBBox = () => {
-  if (!map.value) return null;
-  const bounds = map.value.getBounds();
-  return [
-    bounds._sw.lng(), // minX
-    bounds._sw.lat(), // minY
-    bounds._ne.lng(), // maxX
-    bounds._ne.lat(), // maxY
-  ];
-};
-
-// 이벤트 핸들러: 드래그 끝
-const onDragend = () => {
-  console.log("🗺️ dragend 이벤트 발생!");
-  if (debounceTimeout) clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    const bbox = getCurrentBBox();
-    if (bbox) updateMarkersByBBox(bbox, "dragend");
-  }, 300);
-};
-
-// 이벤트 핸들러: 줌 변경
-const onZoomChanged = () => {
-  console.log("🔍 zoom_changed 이벤트 발생!");
-  if (debounceTimeout) clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    const bbox = getCurrentBBox();
-    if (bbox) updateMarkersByBBox(bbox, "zoom");
-  }, 300);
-};
 /* 지도 초기화 */
-const setupMap = async () => {
-  const { lat, lon } = await getUserLocation();
+const initTmap = () => {
+  const el = document.getElementById('map_div')
+  if (!el) return
+  map.value = new window.Tmapv3.Map('map_div', {
+    center: new window.Tmapv3.LatLng(37.5662952, 126.9779451),
+    width: '100%',
+    height: '100%',
+    zoom: 16
+  })
 
-  // ✅ window에서 Tmapv2 가져오기
-  const { Tmapv2 } = window;
-  
-  if (!Tmapv2) {
-    console.error("❌ Tmapv2가 로드되지 않았습니다!");
-    return;
+  if (navigator.geolocation) {
+    // 위치 정보 옵션 설정
+    const geoOptions = {
+      enableHighAccuracy: true,  // 높은 정확도 요청
+      timeout: 10000,            // 10초 타임아웃
+      maximumAge: 0              // 캐시된 위치 사용 안함
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const lat = pos.coords.latitude
+        const lon = pos.coords.longitude
+        console.log('위치 정보 가져오기 성공:', { lat, lon })
+        const currentPos = new window.Tmapv3.LatLng(lat, lon)
+        userLocation.value = { lat, lon }
+
+        // 내 위치 마커와 정보창 생성 및 저장
+        currentLocationMarker.value = new window.Tmapv3.Marker({ position: currentPos, map: map.value })
+        currentLocationInfoWindow.value = new window.Tmapv3.InfoWindow({
+          position: currentPos,
+          content: "<div class='p-1 bg-white border rounded-2'>현재 위치</div>",
+          offset: new window.Tmapv3.Point(0, -30),
+          type: 2,
+          map: map.value
+        })
+
+        map.value.setCenter(currentPos)
+        map.value.setZoom(17)
+        fetchHospitalsFromGeoServer(lat, lon, searchRadius.value)
+      },
+      err => {
+        console.error('Geolocation 오류 코드:', err.code, '메시지:', err.message)
+        let errorMsg = '현재 위치를 가져올 수 없습니다.\n'
+
+        switch(err.code) {
+          case 1: // PERMISSION_DENIED
+            errorMsg += '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.'
+            break
+          case 2: // POSITION_UNAVAILABLE
+            errorMsg += '위치 정보를 사용할 수 없습니다.'
+            break
+          case 3: // TIMEOUT
+            errorMsg += '위치 정보 요청 시간이 초과되었습니다.'
+            break
+          default:
+            errorMsg += 'HTTPS 환경인지 확인해주세요.'
+        }
+
+        alert(errorMsg)
+        console.log('기본 위치(서울시청)로 설정합니다.')
+        userLocation.value = { lat: 37.5662952, lon: 126.9779451 }
+        fetchHospitalsFromGeoServer(37.5662952, 126.9779451, searchRadius.value)
+      },
+      geoOptions
+    )
+  } else {
+    alert('이 브라우저에서는 위치 정보를 지원하지 않습니다.')
+    userLocation.value = { lat: 37.5662952, lon: 126.9779451 }
+    fetchHospitalsFromGeoServer(37.5662952, 126.9779451, searchRadius.value)
   }
-
-  console.log("✅ Tmapv2 확인:", Tmapv2);
-  console.log("📍 Tmapv2.Map:", Tmapv2.Map);
-  console.log("📍 Tmapv2.LatLng:", Tmapv2.LatLng);
-  console.log("📍 Tmapv2.Marker:", Tmapv2.Marker);
-
-  map.value = new Tmapv2.Map("map_div", {
-    center: new Tmapv2.LatLng(lat, lon),
-    width: "100%",
-    height: "600px",
-    zoom: 14,
-  });
-
-  // 현재 위치 마커
-  new Tmapv2.Marker({
-    position: new Tmapv2.LatLng(lat, lon),
-    map: map.value,
-    title: "현재 위치",
-    icon: "https://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png",
-  });
-
-  // 초기 BBox로 마커 로드
-  const initialBbox = getCurrentBBox();
-  if (initialBbox) {
-    console.log("🚀 [INITIAL] BBox:", initialBbox);
-    await updateMarkersByBBox(initialBbox, "initial");
-  }
-
-  // 이벤트 리스너 등록
-  map.value.addListener("dragend", onDragend);
-  map.value.addListener("zoom_changed", onZoomChanged);
-
-  console.log("✅ 지도 초기화 완료 및 이벤트 리스너 등록됨");
-};
+}
 
 /* 바텀시트 제스처 */
 const onTouchStart = e => {
@@ -1040,6 +999,34 @@ const toggleSheet = () => {
   sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 0 : 1
 }
 
+/* Tmap 스크립트 로더 */
+function loadTmapScript() {
+  return new Promise((resolve, reject) => {
+    if (window.Tmapv3) return resolve()
+    const exist = document.querySelector('script[data-tmap="v3"]')
+    if (exist) {
+      exist.addEventListener('load', resolve)
+      exist.addEventListener('error', reject)
+      return
+    }
+    const script = document.createElement('script')
+    script.src = `https://apis.openapi.sk.com/tmap/vectorjs?version=1&appKey=${TMAP_APP_KEY}`
+    script.dataset.tmap = 'v3'
+    script.onload = resolve
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
+}
+function waitTmapReady(retry = 10) {
+  return new Promise((resolve, reject) => {
+    const tick = () => {
+      if (window.Tmapv3 && typeof window.Tmapv3.Map === 'function') return resolve()
+      if (retry-- <= 0) return reject(new Error('Tmapv3 초기화 지연'))
+      setTimeout(tick, 100)
+    }
+    tick()
+  })
+}
 
 /* 반경 또는 진료과 변경 시 재검색 */
 watch(searchRadius, (newRadius) => {
@@ -1054,48 +1041,19 @@ watch(selectedDepartments, () => {
   }
 }, { deep: true })
 
-
 onMounted(() => {
-  // ✅ Tmap v2는 2단계 로드 필요
-  const loadTmapV2 = async () => {
-    // 1단계: 메인 스크립트
-    await loadTmapScript();
-    console.log("✅ 1단계 스크립트 로드 완료");
-    
-    // 2단계: 실제 라이브러리 (tmapjs2.min.js)
-    return new Promise((resolve, reject) => {
-      const script2 = document.createElement("script");
-      // ✅ 실제 라이브러리 직접 로드
-      script2.src = "https://topopentile1.tmap.co.kr/scriptSDKV2/tmapjs2.min.js?version=20231206";
-      script2.onload = () => {
-        console.log("✅ 2단계 스크립트 로드 완료");
-        console.log("📍 window.Tmapv2:", window.Tmapv2);
-        console.log("📍 Tmapv2.Map:", window.Tmapv2?.Map);
-        resolve();
-      };
-      script2.onerror = reject;
-      document.head.appendChild(script2);
-    });
-  };
+  sheetHeightRatio.value = 0.3
+  loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
+    console.error('Tmap 로딩 실패:', e)
+    alert('지도를 불러오지 못했습니다. 네트워크/Tmap 콘솔 설정을 확인해주세요.')
+  })
+})
 
-  loadTmapV2()
-    .then(() => {
-      // 약간의 지연 추가 (스크립트 초기화 대기)
-      return new Promise(resolve => setTimeout(resolve, 100));
-    })
-    .then(() => setupMap())
-    .catch((err) => {
-      console.error("❌ 지도 로드 실패:", err);
-    });
-});
-
-// 컴포넌트 언마운트
 onBeforeUnmount(() => {
-  if (debounceTimeout) clearTimeout(debounceTimeout);
-  if (cancelToken) cancelToken.cancel("컴포넌트 언마운트");
-  
-  // 마커 정리
-  markers.value.forEach((m) => m.setMap(null));
-  markers.value = [];
-});
+  clearMarkers()
+  clearRouteData()
+  if (map.value) map.value.destroy()
+})
 </script>
+
+<!-- 커스텀 CSS 없음: Bootstrap/Icons 유틸만 사용 -->
