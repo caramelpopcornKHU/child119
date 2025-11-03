@@ -6,9 +6,6 @@
     <div id="map_div" class="position-fixed top-0 start-0 w-100" style="height:100dvh; z-index:0; pointer-events:auto;">
     </div>
 
-
-
-
     <!-- 증상확인 -->
     <div class="position-fixed start-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
       <div class="pe-auto">
@@ -95,7 +92,6 @@
       <!-- 리스트 스크롤 영역 -->
       <div class="overflow-auto px-3" ref="listRef" style="pointer-events:auto;">
 
-
         <!-- 응급실 목록 -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id">
           <div class="card-body" @click="onPickFromList(h)">
@@ -112,7 +108,6 @@
               </span>
             </div>
 
-
             <!-- ✅ 병원 데이터의 message 필드를 이용해 소아가능 / 불가능 자동 표시 -->
             <div class="mb-2" v-if="h.message">
               <span class="badge me-1" :class="h.message.includes('가능')
@@ -121,7 +116,6 @@
                 {{ h.message }}
               </span>
             </div>
-
 
             <!-- ✅ state 상태 표시 -->
             <div class="mb-2" v-if="h.state !== undefined && h.state !== null">
@@ -142,8 +136,6 @@
               </span>
             </div>
 
-
-
             <div class="text-muted small d-flex align-items-center mb-3">
               <span><i class="bi bi-clock me-1"></i> {{ h.etaMin }}분</span>
               <span class="mx-2">|</span>
@@ -160,11 +152,6 @@
             </div>
           </div>
         </div>
-
-
-
-
-
 
         <div v-if="loadingHospitals" class="text-center text-muted py-4">
           <div class="spinner-border spinner-border-sm me-2" role="status">
@@ -256,11 +243,6 @@ const addTmapListener = (target, type, handler) => {
   }
   console.warn('[addTmapListener] ❌ 이벤트 등록 실패:', target, type)
 }
-
-
-
-
-
 
 // <script setup> 맨 위 근처
 const isDesktop = matchMedia('(pointer:fine)').matches
@@ -369,12 +351,8 @@ function onPickFromList(h) {
   })
 }
 
-
-
 let routeLine = null; // 현재 경로 Polyline 저장용
-
 let top3Active = false               // ✅ 현재 Top3 경로가 떠있는지 여부
-
 let autoPickedOnce = false; // ✅ 자동 테스트 1회 제한 플래그
 
 // ✅ 리스트 DOM 참조 추가
@@ -434,49 +412,6 @@ function bringHospitalToTopById(hospitalId) {
   console.log('[bringTop] done. first=', hospitals.value[0]?.hpid || hospitals.value[0]?.id)
 }
 
-// async function callHospital(hpid) {
-//   try {
-//     const cleanedHpid = hpid.replace('emergency.', '');
-//     const hospitalData = await getEmergencyHospitalByHPID(cleanedHpid); 
-
-//     console.log("클라이언트가 받은 hospitalData:", hospitalData);
-
-//     if (hospitalData && hospitalData.length > 0) {
-//         const hospitalInfo = hospitalData[0];
-//         const emergencyTel = hospitalInfo.dutyTel3; // 응급실 전화번호
-//         const emerHospitalTel = hospitalInfo.dutyTel1; // 병원 대표 전화번호
-
-//         let message = '';
-//         let returnTel = null;
-
-//         // 1. 응급실 연락처(dutyTel3)가 유효한지 확인 (null, undefined, 또는 빈 문자열이 아닌지)
-//         if (emergencyTel && emergencyTel.trim()) {
-//             message = `응급실 연락처: ${emergencyTel}`;
-//             returnTel = emergencyTel;
-//         } 
-//         // 2. 응급실 연락처가 없으면, 병원 대표 연락처(dutyTel1)를 확인
-//         else if (emerHospitalTel && emerHospitalTel.trim()) {
-//             message = `응급실 전화번호가 등록되지 않았습니다.\n병원 대표 연락처: ${emerHospitalTel}`;
-//             returnTel = emerHospitalTel;
-//         }
-//         // 3. 둘 다 없는 경우
-//         else {
-//             message = '등록된 응급실 및 병원 대표 연락처가 없습니다.';
-//         }
-
-//         alert(message);
-//         return returnTel;
-//     } else {
-//         // 병원 코드는 유효하지만, 데이터가 아예 조회되지 않은 경우 (totalCount: 0)
-//         alert('요청하신 병원 정보(데이터)를 찾을 수 없습니다.');
-//         return null;
-//     }
-
-//   } catch (err) {
-//       console.error(`callHospital error -> ${err}`);
-//       alert(`병원 정보 처리 중 오류 발생: ${err.message || '알 수 없는 오류'}`);
-//   }
-// }
 
 async function callHospital(hpid) {
   try {
@@ -531,15 +466,12 @@ async function callHospital(hpid) {
   }
 }
 
-
 function clearRoute() {
   if (routeLine) {
     routeLine.setMap(null);
     routeLine = null;
   }
 }
-
-
 
 async function drawRouteTo(destLat, destLon) {
   if (!map.value) return
@@ -551,8 +483,6 @@ async function drawRouteTo(destLat, destLon) {
   // ✅ 먼저 기존(특히 Top3) 경로 싹 정리
   clearAllRoutes()
   top3Active = false
-
-
   const startX = +cur.value.lon
   const startY = +cur.value.lat
   const endX = +destLon
@@ -629,7 +559,6 @@ async function drawRouteTo(destLat, destLon) {
     alert('경로 요청 중 오류가 발생했습니다.')
   }
 }
-
 
 
 /** 가까운 3곳 경로 모두 표시 */
@@ -713,7 +642,6 @@ async function drawRoutesToTop3() {
       }
 
       if (!paths.length) continue
-
       const poly = new window.Tmapv3.Polyline({
         path: paths,
         strokeColor: colors[i % colors.length],
@@ -737,8 +665,6 @@ async function drawRoutesToTop3() {
   })
   map.value.fitBounds(b)
 }
-
-
 
 // 선택된 병원(모달/경로 공용)
 const selectedHospital = ref(null)
@@ -768,7 +694,6 @@ function openRouteModal(hospital) {
     }
   }
 }
-
 
 
 // ✅ 내 위치/마커 상태
@@ -874,8 +799,6 @@ function refreshLocation() {
   )
 }
 
-
-
 const router = useRouter()
 
 function goToemergencyDetail(hpid) {
@@ -883,16 +806,11 @@ function goToemergencyDetail(hpid) {
     name: 'emergencyDetail',
     params: { hpid: hpid }, // URL엔 필수 키만
   })
-
 }
-
 
 
 /* 정렬 상태 (토글용) */
 const distanceAsc = ref(true)
-
-
-
 
 /* 실제 렌더링 목록: 항상 WFS에서 가져온 hospitals 사용 */
 const listHospitals = computed(() => {
@@ -911,11 +829,6 @@ const listHospitals = computed(() => {
     tel: h.tel || ''
   }))
 })
-
-
-
-
-
 
 /* 거리순 정렬: hospitals가 있으면 hospitals를, 아니면 데모를 정렬 */
 function sortByDistance() {
@@ -936,13 +849,7 @@ function sortByTime() {
   const eta = (h) => ((h.distance ?? Infinity) / 1000) / 0.4
   hospitals.value.sort((a, b) => eta(a) - eta(b))
 
-
 }
-
-
-
-
-
 
 const symptomOptions = ['발열', '감기', '기침', '호흡곤란', '구토', '설사', '복통', '발진', '화상', '경련']
 const selectedSymptoms = ref([])
@@ -990,8 +897,6 @@ const keywordWithSymptoms = computed(() => {
   return sym ? `소아응급실 ${sym}` : keywordBase.value
 })
 const displayKeyword = computed(() => useSymptomsMode.value ? keywordWithSymptoms.value : keywordBase.value)
-
-
 
 const toRad = (d) => d * Math.PI / 180
 function haversineMeter(lat1, lon1, lat2, lon2) {
@@ -1129,41 +1034,18 @@ function drawMarkers(items) {
 
   if (items.length) map.value.fitBounds(bounds)
 
-  // ✅ 루프와 fitBounds 이후에 (그리고 필요 시 one-time 플래그 사용)
-  // if (!autoPickedOnce && markers[0]) {
-  //   // autoPickedOnce = true
-  //   // console.log('[auto-pick test] first marker')
-  //   // const p = markers[0].getPosition?.()
-  //   // const mLat = p._lat ?? p.lat?.() ?? p.lat
-  //   // const mLon = p._lng ?? p.lng?.() ?? p.lng
-  //   // drawRouteTo(mLat, mLon)
-
-  //   console.log('[auto-pick test] top 3 routes')
-  //   drawRoutesToTop3()
-
-  // }
-
-
-
-
   if (!autoPickedOnce && markers[0]) {
     autoPickedOnce = true
     console.log('[auto-pick] show top3 routes once')
     drawRoutesToTop3()
   }
 
-
-
-
-
 }
 
 
 async function searchER(radiusMeters, useSymptoms) {
 
-
   if (!cur.value.lat || !cur.value.lon) { alert('현재 위치 확인 후 다시 시도해주세요.'); return }
-
   const sanitizedRadius = Math.max(0, Number(radiusMeters) || 0)
   loadingHospitals.value = true
   searchAttempted.value = true
@@ -1215,9 +1097,6 @@ async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
 
     const message = coalesce(p.message, p.MSG, p.msg, '') // ✅ 여기에 소아가능여부 속성 추가
     const state = Number(p.state ?? -1) // ✅ state 추가
-
-
-
     const name = coalesce(p.name, p.hospname, p.yadmNm, `병원 ${i + 1}`)
     const address = coalesce(p.addr, p.address, '')
     const tel = coalesce(p.tel, p.phone, '')
@@ -1225,7 +1104,6 @@ async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
     const distance = (Number.isFinite(lat) && Number.isFinite(lon))
       ? haversineMeter(centerLat, centerLon, lat, lon)
       : Infinity
-
 
     const toInt = (v) => {
       if (v === null || v === undefined) return null
@@ -1236,19 +1114,12 @@ async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
     const bedAvail = toInt(p.bed_avail ?? p.bedAvail ?? p.bedavail)
     const bedTotal = toInt(p.bed_total ?? p.bedTotal ?? p.bedtotal)
 
-
     return {
       id: f.id || `wfs-${i}`, hpid: p.hpid, name, address, tel, hours, lat, lon, distance, message, state, bedAvail,
       bedTotal
     }
   })
 }
-
-
-
-
-
-
 
 function onConfirmSymptoms() { searchER(3000, true) }
 
@@ -1321,8 +1192,6 @@ const initTmap = () => {
     }
   })
 
-
-
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       pos => {
@@ -1359,6 +1228,7 @@ const onTouchStart = e => {
   isDragging.value = true
   dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }
 }
+
 const onTouchMove = e => {
   if (!isDragging.value) return
   const deltaY = e.touches[0].clientY - dragStart.value.y
@@ -1366,12 +1236,12 @@ const onTouchMove = e => {
   let newRatio = dragStart.value.ratio + deltaRatio
   sheetHeightRatio.value = Math.max(0, Math.min(1, newRatio))
 }
+
 const onTouchEnd = () => {
   isDragging.value = false
   sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0
 }
 const toggleSheet = () => { sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 0 : 1 }
-
 
 /* Tmap 스크립트 로더 */
 function loadTmapScript() {
@@ -1387,6 +1257,7 @@ function loadTmapScript() {
     document.head.appendChild(script)
   })
 }
+
 function waitTmapReady(retry = 10) {
   return new Promise((resolve, reject) => {
     const tick = () => {
@@ -1397,7 +1268,6 @@ function waitTmapReady(retry = 10) {
     tick()
   })
 }
-
 
 function bedLabel(h) {
   const a = h.bedAvail
@@ -1420,15 +1290,6 @@ function bedBadgeClass(h) {
   return 'bg-danger-subtle text-danger-emphasis'                        // 없음
 }
 
-
-
-
-
-
-
-
-
-
 onMounted(() => {
   sheetHeightRatio.value = 0; loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
     console.error('Tmap 로딩 실패:', e)
@@ -1436,9 +1297,6 @@ onMounted(() => {
   })
 })
 onBeforeUnmount(() => { clearMarkers(); if (map.value) map.value.destroy() })
-
-
-
 
 onMounted(() => {
   const grip = document.querySelector('.sheet-grip')
@@ -1448,11 +1306,6 @@ onMounted(() => {
     grip.addEventListener('touchend', onGripTouchEnd, { passive: true })
   }
 })
-
-
-
-
-
 
 const onGripTouchStart = (e) => {
   isDragging.value = true
@@ -1468,30 +1321,12 @@ const onGripTouchMove = (e) => {
   sheetHeightRatio.value = Math.min(1, Math.max(0, dragStart.value.ratio + dR))
 }
 
-
-
-
 const onGripTouchEnd = () => {
   isDragging.value = false
   sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 </script>
-
-
-
 
 <style scoped>
 /* 리스트 위에 살짝 여유(선택) */
@@ -1528,12 +1363,6 @@ const onGripTouchEnd = () => {
   background-color: #e2ebff;
   box-shadow: 0 3px 10px rgba(0, 0, 0, .15);
 }
-
-
-
-
-
-
 
 /* 스크롤 영역: iOS/WebView 부드러운 스크롤 */
 .sheet-scroll {
