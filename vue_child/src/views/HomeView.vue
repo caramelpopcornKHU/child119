@@ -93,12 +93,12 @@
       </div>
 
       <!-- 리스트 스크롤 영역 -->
-      <div class="overflow-auto px-3 ">
+      <div class="overflow-auto px-3" ref="listRef" style="pointer-events:auto;">
 
 
         <!-- 응급실 목록 -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id">
-          <div class="card-body" @click="goToemergencyDetail(h.id)">
+          <div class="card-body" @click="onPickFromList(h)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
               <!-- ✅ 병상 현황: 'avail/total' -->
@@ -235,10 +235,32 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, onActivated } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, onActivated, nextTick } from 'vue';
 import { getEmergencyHospitalByHPID } from '@/utils/api'
 
 import { useRouter } from 'vue-router';
+
+// 🔧 Tmap 이벤트 리스너 유틸 함수
+const addTmapListener = (target, type, handler) => {
+  if (!target) return
+  if (typeof target.on === 'function') {
+    console.log('[addTmapListener] use target.on:', type)
+    target.on(type, handler)
+    return
+  }
+  const E = window.Tmapv3?.Event || window.Tmapv3?.event
+  if (E?.addListener) {
+    console.log('[addTmapListener] fallback Event.addListener:', type)
+    E.addListener(target, type, handler)
+    return
+  }
+  console.warn('[addTmapListener] ❌ 이벤트 등록 실패:', target, type)
+}
+
+
+
+
+
 
 // <script setup> 맨 위 근처
 const isDesktop = matchMedia('(pointer:fine)').matches
@@ -296,14 +318,121 @@ const createMarkerIcon = (bedAvail, bedTotal, isHover = false) => {
   `)
 }
 
+/** 리스트 카드 클릭 시 */
+function onPickFromList(h) {
+  if (!map.value) return
+
+  console.groupCollapsed(`[LIST CLICK] ${h.name}`)
+  console.log('🏥 ID:', h.hpid || h.id)
+  console.log('📍 좌표:', h.lat, h.lon)
+  console.groupEnd()
+
+  // ✅ Top3 경로가 떠있으면 제거
+  if (top3Active) {
+    clearAllRoutes()
+    top3Active = false
+  }
+
+  // 병원 위치로 지도 포커싱
+  const pos = new window.Tmapv3.LatLng(h.lat, h.lon)
+  map.value.setCenter(pos)
+  map.value.setZoom(17)
+
+  // 경로 그리기
+  try {
+    drawRouteTo(h.lat, h.lon)
+  } catch (e) {
+    console.warn('❌ drawRouteTo failed:', e)
+  }
+
+  // 해당 마커의 인포윈도우 열기
+  markers.forEach(m => m.__info?.setMap?.(null))
+  const matchingMarker = markers.find(m => {
+    const p = m.getPosition?.()
+    const mLat = p?._lat ?? p?.lat?.() ?? p?.lat
+    const mLon = p?._lng ?? p?.lng?.() ?? p?.lng
+    return Math.abs(mLat - h.lat) < 1e-6 && Math.abs(mLon - h.lon) < 1e-6
+  })
+
+  if (matchingMarker) {
+    matchingMarker.__info?.setMap?.(map.value)
+  }
+
+  // ✅ 바텀시트는 이미 펼쳐진 상태 유지 (리스트 클릭이므로)
+  // 스크롤만 맨 위로
+  nextTick(() => {
+    try {
+      listRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch {
+      if (listRef.value) listRef.value.scrollTop = 0
+    }
+  })
+}
 
 
 
 let routeLine = null; // 현재 경로 Polyline 저장용
 
+let top3Active = false               // ✅ 현재 Top3 경로가 떠있는지 여부
+
 let autoPickedOnce = false; // ✅ 자동 테스트 1회 제한 플래그
 
+// ✅ 리스트 DOM 참조 추가
+const listRef = ref(null)
 
+let lastApiCallTime = 0; // ✅ API 요청 속도 제한용
+const API_CALL_INTERVAL = 500; // ✅ 최소 API 호출 간격 (ms)
+
+// ✅ API 요청 전에 필요한 만큼 대기
+async function waitForApiRateLimit() {
+  const now = Date.now();
+  const timeSinceLastCall = now - lastApiCallTime;
+  if (timeSinceLastCall < API_CALL_INTERVAL) {
+    await new Promise(resolve => setTimeout(resolve, API_CALL_INTERVAL - timeSinceLastCall));
+  }
+  lastApiCallTime = Date.now();
+}
+
+// ✅ 모든 경로(단일/복수) 한 번에 지우기
+function clearAllRoutes() {
+  if (!routeLine) return
+  if (Array.isArray(routeLine)) {
+    routeLine.forEach(r => r && r.setMap && r.setMap(null))
+  } else {
+    routeLine.setMap && routeLine.setMap(null)
+  }
+  routeLine = null
+}
+
+/** 특정 병원을 목록 맨 위로 올리고 시트 펼치기 + 스크롤 상단으로 */
+function bringHospitalToTopById(hospitalId) {
+  console.log('[bringTop] in:', hospitalId, 'list size=', hospitals.value.length)
+  if (!hospitalId) return
+  const idx = hospitals.value.findIndex(x => x.id === hospitalId || x.hpid === hospitalId)
+  if (idx > 0) {
+    const [item] = hospitals.value.splice(idx, 1)
+    hospitals.value.unshift(item)
+  }
+  // 시트 펼치기
+  sheetHeightRatio.value = 1
+  // 스크롤 맨 위로
+  nextTick(() => {
+    try {
+      listRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
+      // ✅ 첫 번째 카드에 하이라이트 애니메이션 주기
+      setTimeout(() => {
+        const firstCard = listRef.value?.querySelector('.card');
+        if (firstCard) {
+          firstCard.classList.add('highlight');
+          setTimeout(() => firstCard.classList.remove('highlight'), 1200);
+        }
+      }, 450);
+    } catch {
+      if (listRef.value) listRef.value.scrollTop = 0
+    }
+  })
+  console.log('[bringTop] done. first=', hospitals.value[0]?.hpid || hospitals.value[0]?.id)
+}
 
 // async function callHospital(hpid) {
 //   try {
@@ -419,13 +548,20 @@ async function drawRouteTo(destLat, destLon) {
     return
   }
 
+  // ✅ 먼저 기존(특히 Top3) 경로 싹 정리
+  clearAllRoutes()
+  top3Active = false
+
+
   const startX = +cur.value.lon
   const startY = +cur.value.lat
   const endX = +destLon
   const endY = +destLat
 
   try {
-    clearRoute()
+    // ✅ API 요청 속도 제한 대기
+    await waitForApiRateLimit();
+
     const url = `https://apis.openapi.sk.com/tmap/routes?version=1&format=json&appKey=${TMAP_APP_KEY}` // ✅ 쿼리에도 appKey
     console.log('[routes] req', { startX, startY, endX, endY, url })
 
@@ -449,7 +585,11 @@ async function drawRouteTo(destLat, destLon) {
     console.log('[routes] status', res.status, res.ok, data)
 
     if (!res.ok) {
-      alert(`경로 실패 (${res.status})`)
+      if (res.status === 429) {
+        alert('API 요청이 너무 많습니다.\n잠시 후 다시 시도해주세요.')
+      } else {
+        alert(`경로 실패 (${res.status})`)
+      }
       return
     }
 
@@ -498,6 +638,9 @@ async function drawRoutesToTop3() {
     alert('출발 위치가 없습니다. (위치 권한 필요)')
     return
   }
+  // ✅ 먼저 기존(특히 Top3) 경로 싹 정리
+  clearAllRoutes()
+
 
   // 기존 경로 지우기
   if (routeLine) {
@@ -528,7 +671,11 @@ async function drawRoutesToTop3() {
     const endY = +dest.lat
 
     try {
+      // ✅ API 요청 속도 제한 대기
+      await waitForApiRateLimit();
+
       const url = `https://apis.openapi.sk.com/tmap/routes?version=1&format=json&appKey=${TMAP_APP_KEY}`
+
       const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -543,6 +690,12 @@ async function drawRoutesToTop3() {
           searchOption: '0'
         })
       })
+
+      // ✅ 429 에러 처리
+      if (res.status === 429) {
+        console.warn(`경로 ${i + 1}: API 요청 제한 (429). 건너뜀.`)
+        continue
+      }
 
       const data = await res.json()
       const features = Array.isArray(data.features) ? data.features : []
@@ -576,7 +729,7 @@ async function drawRoutesToTop3() {
 
   // Polyline 저장 (나중에 clearRoute()에서 제거용)
   routeLine = polylines
-
+  top3Active = true
   // 모든 경로가 그려졌으면 지도 범위 맞춤
   const b = new window.Tmapv3.LatLngBounds()
   hospitals.value.slice(0, 3).forEach(h => {
@@ -900,26 +1053,70 @@ function drawMarkers(items) {
       offset: new window.Tmapv3.Point(0, -10)
     })
 
-    // 클릭 → 인포윈도우 + 경로
+    // 마커에 병원 id 저장 (지도 클릭에서도 사용)
+    marker.__hospitalId = h.hpid || h.id
+
+    /** 마커 클릭 핸들러 */
     const handlePick = () => {
-      console.log('[marker] picked:', h.name, h.lat, h.lon)
-      markers.forEach(m => m.__info?.setMap?.(null))
-      info.setMap(map.value)
-      drawRouteTo(h.lat, h.lon) // ✅ GeoServer 좌표 사용
+      console.groupCollapsed(`🎯 [MARKER CLICK] ${h.name}`);
+      console.log('🏥 병원 ID:', h.hpid || h.id);
+      console.log('📍 좌표:', h.lat, h.lon);
+      console.log('🛏️ 병상:', `${h.bedAvail}/${h.bedTotal}`);
+      console.groupEnd();
+
+      // 1️⃣ 모든 인포윈도우 닫기
+      markers.forEach(m => m.__info?.setMap?.(null));
+
+      // 2️⃣ 선택한 마커의 인포윈도우 열기
+      info.setMap(map.value);
+
+      // 3️⃣ 리스트에서 해당 병원을 맨 위로 이동 + 하이라이트
+      const targetId = h.hpid || h.id;
+      if (targetId) {
+        bringHospitalToTopById(targetId);
+      }
+
+      // 4️⃣ 바텀시트 완전히 펼치기 (마커 클릭이므로)
+      sheetHeightRatio.value = 1;
+      console.log('📊 바텀시트 펼침:', sheetHeightRatio.value);
+
+      // 5️⃣ Top3 경로가 있다면 제거
+      if (top3Active) {
+        clearAllRoutes()
+        top3Active = false
+      }
+
+      // 6️⃣ 선택한 병원까지의 경로 그리기
+      try {
+        drawRouteTo(h.lat, h.lon);
+      } catch (e) {
+        console.warn('❌ drawRouteTo failed:', e);
+      }
     }
 
-    // 클릭/터치 (중복/과다 금지)
-    window.Tmapv3.event.addListener(marker, 'click', handlePick)
-    window.Tmapv3.event.addListener(marker, 'touchend', handlePick)
+    // ✅ 강화된 이벤트 등록
+    console.log('✅ marker added to map?', marker.getMap());
+    if (typeof marker.on === 'function') {
+      marker.on('click', (e) => {
+        console.log('🔥 marker.on(click) fired for', h.name, e)
+        handlePick()
+      })
+    } else {
+      console.warn('marker.on 이 없음!', marker)
+    }
+
+    addTmapListener(marker, 'mousedown', handlePick);   // 데스크탑 보강
+    addTmapListener(marker, 'touchstart', handlePick);  // 모바일 보강
+    addTmapListener(marker, 'touchend', handlePick);
 
     // 호버(포인터 있는 환경에서만)
     if (isDesktop) {
-      window.Tmapv3.event.addListener(marker, 'mouseover', () => {
+      addTmapListener(marker, 'mouseover', () => {
         marker.setIcon?.(marker.__customIconHover)
         marker.setZIndex?.(1000)
         const el = document.getElementById('map_div'); if (el) el.style.cursor = 'pointer'
       })
-      window.Tmapv3.event.addListener(marker, 'mouseout', () => {
+      addTmapListener(marker, 'mouseout', () => {
         marker.setIcon?.(marker.__customIcon)
         marker.setZIndex?.(0)
         const el = document.getElementById('map_div'); if (el) el.style.cursor = ''
@@ -933,19 +1130,27 @@ function drawMarkers(items) {
   if (items.length) map.value.fitBounds(bounds)
 
   // ✅ 루프와 fitBounds 이후에 (그리고 필요 시 one-time 플래그 사용)
+  // if (!autoPickedOnce && markers[0]) {
+  //   // autoPickedOnce = true
+  //   // console.log('[auto-pick test] first marker')
+  //   // const p = markers[0].getPosition?.()
+  //   // const mLat = p._lat ?? p.lat?.() ?? p.lat
+  //   // const mLon = p._lng ?? p.lng?.() ?? p.lng
+  //   // drawRouteTo(mLat, mLon)
+
+  //   console.log('[auto-pick test] top 3 routes')
+  //   drawRoutesToTop3()
+
+  // }
+
+
+
+
   if (!autoPickedOnce && markers[0]) {
-    // autoPickedOnce = true
-    // console.log('[auto-pick test] first marker')
-    // const p = markers[0].getPosition?.()
-    // const mLat = p._lat ?? p.lat?.() ?? p.lat
-    // const mLon = p._lng ?? p.lng?.() ?? p.lng
-    // drawRouteTo(mLat, mLon)
-
-    console.log('[auto-pick test] top 3 routes')
+    autoPickedOnce = true
+    console.log('[auto-pick] show top3 routes once')
     drawRoutesToTop3()
-
   }
-
 
 
 
@@ -1056,35 +1261,63 @@ const initTmap = () => {
     width: '100%', height: '100%', zoom: 16
   })
 
-  // 지도 클릭 → 가장 가까운 마커를 선택으로 간주 (모바일/웹뷰에서 클릭 누락 보완)
-  window.Tmapv3.event.addListener(map.value, 'click', (evt) => {
+  /** 지도 클릭 → 가장 가까운 마커를 선택 (모바일/웹뷰 클릭 누락 보완) */
+  addTmapListener(map.value, 'click', (evt) => {
     if (!evt || !evt.latLng) return
+
     const lat = evt.latLng._lat ?? evt.latLng.lat?.() ?? evt.latLng.lat
     const lon = evt.latLng._lng ?? evt.latLng.lng?.() ?? evt.latLng.lng
 
+    // 줌 레벨에 따른 감지 임계값 (미터)
     const z = map.value.getZoom?.() ?? 16
     const threshold = z >= 17 ? 20 : z >= 15 ? 35 : 60
 
-    let best = null, bestDist = Infinity
+    // 가장 가까운 마커 찾기
+    let bestMarker = null
+    let bestDistance = Infinity
+
     markers.forEach(m => {
-      const p = m.getPosition?.(); if (!p) return
+      const p = m.getPosition?.()
+      if (!p) return
+
       const mLat = p._lat ?? p.lat?.() ?? p.lat
       const mLon = p._lng ?? p.lng?.() ?? p.lng
-      const d = haversineMeter(lat, lon, mLat, mLon)
-      if (d < bestDist) { bestDist = d; best = m }
+      const distance = haversineMeter(lat, lon, mLat, mLon)
+
+      if (distance < bestDistance) {
+        bestDistance = distance
+        bestMarker = m
+      }
     })
 
-    if (best && bestDist <= threshold) {
-      // ✅ 먼저 다 닫고
-      markers.forEach(m => m.__info?.setMap?.(null))
-      // ✅ 다시 열고
-      best.__info?.setMap?.(map.value)
+    // 임계값 내에 마커가 있으면 선택
+    if (bestMarker && bestDistance <= threshold) {
+      console.groupCollapsed(`🗺️ [MAP CLICK] 가장 가까운 마커 선택`)
+      console.log('📏 거리:', bestDistance.toFixed(1), 'm')
+      console.log('🏥 병원 ID:', bestMarker.__hospitalId)
+      console.groupEnd()
 
-      const p = best.getPosition?.()
+      // 1️⃣ 모든 인포윈도우 닫기
+      markers.forEach(m => m.__info?.setMap?.(null))
+
+      // 2️⃣ 선택한 마커의 인포윈도우 열기
+      bestMarker.__info?.setMap?.(map.value)
+
+      // 3️⃣ 경로 그리기
+      const p = bestMarker.getPosition?.()
       const mLat = p._lat ?? p.lat?.() ?? p.lat
       const mLon = p._lng ?? p.lng?.() ?? p.lng
-      console.log('[map click -> nearest marker]', mLat, mLon) // 디버그
-      drawRouteTo(mLat, mLon)
+
+      try {
+        drawRouteTo(mLat, mLon)
+      } catch (e) {
+        console.warn('❌ drawRouteTo failed:', e)
+      }
+
+      // 4️⃣ 리스트 맨 위로 올리기 + 바텀시트 펼치기
+      if (bestMarker.__hospitalId) {
+        bringHospitalToTopById(bestMarker.__hospitalId)
+      }
     }
   })
 
@@ -1313,5 +1546,25 @@ const onGripTouchEnd = () => {
 /* 그립: 제스처는 우리가 처리 (스크롤로 해석되지 않도록) */
 .sheet-grip {
   touch-action: none;
+}
+
+/* 카드 하이라이트 애니메이션 */
+.card.highlight {
+  animation: highlightFade 1.2s ease-out;
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 12px rgba(13, 110, 253, 0.4);
+  background-color: #f0f6ff;
+}
+
+@keyframes highlightFade {
+  0% {
+    background-color: #cfe2ff;
+    box-shadow: 0 0 16px rgba(13, 110, 253, 0.5);
+  }
+
+  100% {
+    background-color: #fff;
+    box-shadow: none;
+  }
 }
 </style>
