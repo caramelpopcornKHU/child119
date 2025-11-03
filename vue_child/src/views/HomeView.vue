@@ -3,8 +3,12 @@
     style="height: calc(100vh - 140px); ">
 
     <!-- 지도 DIV에 pointer-events 보강 -->
-    <div id="map_div" class="position-fixed top-0 start-0 w-100" style="height:100dvh; z-index:0; pointer-events:auto;">
-    </div>
+    <div id="map_div"
+     class="position-fixed top-0 start-0 w-100"
+     style="height:100dvh; z-index:0; pointer-events:auto;">
+</div>
+
+
 
 
 
@@ -36,14 +40,15 @@
   <!-- 바텀시트 -->
   <div class="position-fixed start-0 end-0 bg-white padding-bottom  rounded-top-4 shadow-lg " :style="sheetStyle"
     ref="bottomSheet" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd"
-    style="z-index: 2; padding-bottom: 150px;">
+    style="z-index:2; pointer-events:auto;">
 
     <!-- 그립 -->
-    <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
+    <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;  pointer-events:auto;" >
       <div class="bg-secondary-subtle rounded-pill w-25" style="height:5px;"></div>
     </div>
-    <!-- 핸들 -->
-    <div class="py-3 d-flex justify-content-center" @click="toggleSheet"></div>
+   <!-- 핸들 -->
+<div class="py-3 d-flex justify-content-center" style="pointer-events:none;"></div>
+
 
     <!-- 내용 -->
     <div class="d-flex flex-column" style="height: 100%;">
@@ -93,12 +98,12 @@
       </div>
 
       <!-- 리스트 스크롤 영역 -->
-      <div class="overflow-auto px-3 ">
+      <div class="overflow-auto px-3 " ref="listRef"  style="pointer-events:auto;">
 
 
         <!-- 응급실 목록 -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id">
-          <div class="card-body" @click="goToemergencyDetail(h.id)">
+          <div class="card-body" @click="goToemergencyDetail(h.hpid || h.id)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
               <!-- ✅ 병상 현황: 'avail/total' -->
@@ -151,7 +156,7 @@
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
-              <button class="btn btn-outline-primary w-100" @click.stop="callHospital(h.id)">
+              <button class="btn btn-outline-primary w-100" @click.stop="callHospital(h.hpid || h.id)">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
               <button class="btn btn-primary w-100" @click.stop="openRouteModal(h)">
@@ -235,65 +240,56 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, onActivated } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, onActivated, nextTick } from 'vue';
 import { getEmergencyHospitalByHPID } from '@/utils/api'
 
 import { useRouter } from 'vue-router';
 
+
+// 🔧 맨 위 utils로 추가 (이걸로 완전히 교체)
+// 맨 위 utils
+const addTmapListener = (target, type, handler) => {
+  if (!target) return
+  if (typeof target.on === 'function') {
+    console.log('[addTmapListener] use target.on:', type)
+    target.on(type, handler)
+    return
+  }
+  const E = window.Tmapv3?.Event || window.Tmapv3?.event
+  if (E?.addListener) {
+    console.log('[addTmapListener] fallback Event.addListener:', type)
+    E.addListener(target, type, handler)
+    return
+  }
+  console.warn('[addTmapListener] ❌ 이벤트 등록 실패:', target, type)
+}
+
+
+
+
+
+
 // <script setup> 맨 위 근처
 const isDesktop = matchMedia('(pointer:fine)').matches
 
-// 침대 아이콘으로 변경 - 이미지와 동일한 디자인 (2/7 형식)
-const createMarkerIcon = (bedAvail, bedTotal, isHover = false) => {
-  const size = isHover ? 75 : 70
 
-  // 병상 가용률 계산
-  let bedColor = '#dc3545' // 기본 빨강 (0개 또는 정보 없음)
-  let bedText = '0/0'
-  let mainBgColor = '#16a085' // 기본 초록색 배경
+const markerIcon = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <path d="M12 2C8.1 2 5 5.1 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.9-3.1-7-7-7z" fill="#2f80ed"/>
+    <circle cx="12" cy="9" r="3" fill="white"/>
+  </svg>`)
 
-  if (Number.isFinite(bedAvail) && Number.isFinite(bedTotal) && bedTotal > 0) {
-    bedText = `${bedAvail}/${bedTotal}` // 2/7 형식
+const markerIconHover = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none">
+    <path d="M12 2C8.1 2 5 5.1 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.9-3.1-7-7-7z" fill="#0d6efd"/>
+    <circle cx="12" cy="9" r="3.4" fill="white"/>
+  </svg>`)
 
-    if (bedAvail > 0) {
-      bedColor = '#28a745' // 초록 (가용 병상 있음)
-      mainBgColor = '#16a085' // 진한 초록
-    } else {
-      bedColor = '#dc3545' // 빨강 (가용 병상 0개)
-      mainBgColor = '#e74c3c' // 배경도 빨강으로
-    }
-  } else {
-    // 정보 없을 때는 회색
-    mainBgColor = '#95a5a6'
-    bedColor = '#7f8c8d'
-  }
 
-  // 테두리 효과 (hover)
-  const strokeWidth = isHover ? '4' : '3'
-  const shadowOpacity = isHover ? '0.4' : '0.25'
 
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 80 90">
-      <!-- 그림자 효과 -->
-      <ellipse cx="40" cy="82" rx="18" ry="4" fill="black" opacity="${shadowOpacity}"/>
-
-      <!-- 메인 원형 배경 (초록색) -->
-      <circle cx="40" cy="35" r="28" fill="${mainBgColor}" stroke="white" stroke-width="${strokeWidth}"/>
-
-      <!-- 침대 아이콘 (흰색) - 크게 -->
-      <g transform="translate(40, 35)">
-        <path transform="translate(-14, -12) scale(1.2)" fill="white"
-          d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3"/>
-      </g>
-
-      <!-- 하단 숫자 배지 (빨강 또는 초록) -->
-      <circle cx="40" cy="68" r="16" fill="${bedColor}" stroke="white" stroke-width="2.5"/>
-
-      <!-- 병상 숫자 텍스트 (2/7 형식) -->
-      <text x="40" y="72.5" text-anchor="middle" dominant-baseline="central"
-            fill="white" font-size="12" font-weight="bold" font-family="Arial, sans-serif">${bedText}</text>
-    </svg>
-  `)
+function whenMapReady() {
+  // Tmap v3는 map 'load' 이벤트 보장이 없어서 대기 불필요
+  return Promise.resolve();
 }
 
 
@@ -304,54 +300,43 @@ let routeLine = null; // 현재 경로 Polyline 저장용
 let autoPickedOnce = false; // ✅ 자동 테스트 1회 제한 플래그
 
 
+// ...
+const listRef = ref(null) // ← 리스트 DOM 참조
 
-// async function callHospital(hpid) {
-//   try {
-//     const cleanedHpid = hpid.replace('emergency.', '');
-//     const hospitalData = await getEmergencyHospitalByHPID(cleanedHpid); 
+/** 특정 병원을 목록 맨 위로 올리고 시트 펼치기 + 스크롤 상단으로 */
+function bringHospitalToTopById(hospitalId) {
+  console.log('[bringTop] in:', hospitalId, 'list size=', hospitals.value.length)
+  if (!hospitalId) return
+  const idx = hospitals.value.findIndex(x => x.id === hospitalId || x.hpid === hospitalId)
+  if (idx > 0) {
+    const [item] = hospitals.value.splice(idx, 1)
+    hospitals.value.unshift(item)
+  }
+  // 시트 펼치기
+  sheetHeightRatio.value = 1
+  // 스크롤 맨 위로
+  nextTick(() => {
+    try {
+      listRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
+     // ✅ 첫 번째 카드에 하이라이트 애니메이션 주기
+ setTimeout(() => {
+   const firstCard = listRef.value?.querySelector('.card');
+   if (firstCard) {
+     firstCard.classList.add('highlight');
+     setTimeout(() => firstCard.classList.remove('highlight'), 1200);
+   }
+ }, 450);
+    } catch {
+      if (listRef.value) listRef.value.scrollTop = 0
+    }
+  })
+  console.log('[bringTop] done. first=', hospitals.value[0]?.hpid || hospitals.value[0]?.id)
+}
 
-//     console.log("클라이언트가 받은 hospitalData:", hospitalData);
-
-//     if (hospitalData && hospitalData.length > 0) {
-//         const hospitalInfo = hospitalData[0];
-//         const emergencyTel = hospitalInfo.dutyTel3; // 응급실 전화번호
-//         const emerHospitalTel = hospitalInfo.dutyTel1; // 병원 대표 전화번호
-
-//         let message = '';
-//         let returnTel = null;
-
-//         // 1. 응급실 연락처(dutyTel3)가 유효한지 확인 (null, undefined, 또는 빈 문자열이 아닌지)
-//         if (emergencyTel && emergencyTel.trim()) {
-//             message = `응급실 연락처: ${emergencyTel}`;
-//             returnTel = emergencyTel;
-//         } 
-//         // 2. 응급실 연락처가 없으면, 병원 대표 연락처(dutyTel1)를 확인
-//         else if (emerHospitalTel && emerHospitalTel.trim()) {
-//             message = `응급실 전화번호가 등록되지 않았습니다.\n병원 대표 연락처: ${emerHospitalTel}`;
-//             returnTel = emerHospitalTel;
-//         }
-//         // 3. 둘 다 없는 경우
-//         else {
-//             message = '등록된 응급실 및 병원 대표 연락처가 없습니다.';
-//         }
-
-//         alert(message);
-//         return returnTel;
-//     } else {
-//         // 병원 코드는 유효하지만, 데이터가 아예 조회되지 않은 경우 (totalCount: 0)
-//         alert('요청하신 병원 정보(데이터)를 찾을 수 없습니다.');
-//         return null;
-//     }
-
-//   } catch (err) {
-//       console.error(`callHospital error -> ${err}`);
-//       alert(`병원 정보 처리 중 오류 발생: ${err.message || '알 수 없는 오류'}`);
-//   }
-// }
 
 async function callHospital(hpid) {
   try {
-    const cleanedHpid = hpid.replace('emergency.', '');
+    const cleanedHpid = String(hpid || '').replace(/^.*emergency\./, '');
     // getEmergencyHospitalByHPID는 API 호출 함수라고 가정합니다.
     const hospitalData = await getEmergencyHospitalByHPID(cleanedHpid);
 
@@ -404,15 +389,18 @@ async function callHospital(hpid) {
 
 
 function clearRoute() {
-  if (routeLine) {
-    routeLine.setMap(null);
-    routeLine = null;
-  }
+ if (!routeLine) return
+  if (Array.isArray(routeLine)) routeLine.forEach(r => r?.setMap?.(null))
+  else routeLine?.setMap?.(null)
+  routeLine = null
 }
 
 
 
 async function drawRouteTo(destLat, destLon) {
+
+ // await whenMapReady()
+
   if (!map.value) return
   if (!cur.value.lat || !cur.value.lon) {
     alert('출발 위치가 설정되지 않았습니다. (HTTPS 위치 권한 필요)')
@@ -494,6 +482,8 @@ async function drawRouteTo(destLat, destLon) {
 
 /** 가까운 3곳 경로 모두 표시 */
 async function drawRoutesToTop3() {
+
+  
   if (!map.value || !cur.value.lat || !cur.value.lon) {
     alert('출발 위치가 없습니다. (위치 권한 필요)')
     return
@@ -566,7 +556,8 @@ async function drawRoutesToTop3() {
         strokeColor: colors[i % colors.length],
         strokeWeight: 6,
         strokeOpacity: 0.9,
-        map: map.value
+        map: map.value,
+        zIndex: 1
       })
       polylines.push(poly)
     } catch (e) {
@@ -818,7 +809,7 @@ const MIN_SHEET_HEIGHT = 220
 
 const sheetY = computed(() => (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT) * (1 - sheetHeightRatio.value))
 const sheetStyle = computed(() => {
-  const interactive = sheetHeightRatio.value > 0.12 // ⬅️ 0.12로 상향
+  const interactive = sheetHeightRatio.value < 0.5 
   return {
     transition: isDragging.value ? 'none' : 'transform 0.3s ease-out',
     transform: `translateY(${sheetY.value}px)`,
@@ -826,6 +817,7 @@ const sheetStyle = computed(() => {
     bottom: '0px',
     top: 'auto',
     //pointerEvents: interactive ? 'auto' : 'none',
+   
     willChange: 'transform'
   }
 })
@@ -851,7 +843,11 @@ function haversineMeter(lat1, lon1, lat2, lon2) {
 
 function clearMarkers() { markers.forEach(m => m.setMap(null)); markers = [] }
 
+
+console.log('🧭 map ready?', !!map.value, map.value);
+
 function drawMarkers(items) {
+  
   if (!map.value) return
   clearMarkers()
   const bounds = new window.Tmapv3.LatLngBounds()
@@ -859,21 +855,17 @@ function drawMarkers(items) {
   items.forEach(h => {
     const pos = new window.Tmapv3.LatLng(h.lat, h.lon)
     bounds.extend(pos)
+    
 
-    // 🔹 병상 정보를 반영한 커스텀 침대 아이콘으로 마커 생성
-    const customIcon = createMarkerIcon(h.bedAvail, h.bedTotal, false)
-    const customIconHover = createMarkerIcon(h.bedAvail, h.bedTotal, true)
-
+    // 🔹 커스텀 아이콘으로 마커 생성
     let marker = new window.Tmapv3.Marker({
       position: pos,
       map: map.value,
-      icon: customIcon,      // 실시간 병상 정보 반영 아이콘
-      title: h.name || ''    // 접근성/툴팁
+      icon: markerIcon,      // 기본 아이콘
+      title: h.name || '',    // 접근성/툴팁
+      zIndex: 10,
     })
-
-    // hover용 아이콘 저장
-    marker.__customIcon = customIcon
-    marker.__customIconHover = customIconHover
+    console.log('marker made:', h.name, h.hpid || h.id);
 
     // (선택) 인포윈도우는 그대로
     const html = `
@@ -900,27 +892,58 @@ function drawMarkers(items) {
       offset: new window.Tmapv3.Point(0, -10)
     })
 
-    // 클릭 → 인포윈도우 + 경로
-    const handlePick = () => {
-      console.log('[marker] picked:', h.name, h.lat, h.lon)
-      markers.forEach(m => m.__info?.setMap?.(null))
-      info.setMap(map.value)
-      drawRouteTo(h.lat, h.lon) // ✅ GeoServer 좌표 사용
-    }
+    // 마커에 병원 id 저장 (지도 클릭에서도 사용)
+    marker.__hospitalId = h.hpid || h.id
 
-    // 클릭/터치 (중복/과다 금지)
-    window.Tmapv3.event.addListener(marker, 'click', handlePick)
-    window.Tmapv3.event.addListener(marker, 'touchend', handlePick)
+
+    // 클릭 → 인포윈도우 + 경로
+   const handlePick = () => {
+    console.groupCollapsed(`[MARKER CLICK] ${h.name}`);
+    console.log('🏥 ID:', h.hpid || h.id);
+    console.log('📍 좌표:', h.lat, h.lon);
+    console.log('🧩 Marker object:', marker);
+    console.groupEnd();
+
+    markers.forEach(m => m.__info?.setMap?.(null));
+    info.setMap(map.value);
+
+    const targetId = h.hpid || h.id;
+    if (targetId) bringHospitalToTopById(targetId);
+    sheetHeightRatio.value = 1;
+
+    try {
+      drawRouteTo(h.lat, h.lon);
+    } catch (e) {
+      console.warn('❌ drawRouteTo failed:', e);
+    }
+  };
+
+
+
+console.log('✅ marker added to map?', marker.getMap());
+if (typeof marker.on === 'function') {
+  marker.on('click', (e) => {
+    console.log('🔥 marker.on(click) fired for', h.name, e)
+    handlePick()
+  })
+} else {
+  console.warn('marker.on 이 없음!', marker)
+}
+
+addTmapListener(marker, 'mousedown', handlePick);   // 데스크탑 보강
+addTmapListener(marker, 'touchstart', handlePick);  // 모바일 보강
+addTmapListener(marker, 'touchend', handlePick);
+
 
     // 호버(포인터 있는 환경에서만)
-    if (isDesktop) {
-      window.Tmapv3.event.addListener(marker, 'mouseover', () => {
-        marker.setIcon?.(marker.__customIconHover)
+   if (isDesktop) {
+   addTmapListener(marker, 'mouseover', () => {
+        marker.setIcon?.(markerIconHover)
         marker.setZIndex?.(1000)
         const el = document.getElementById('map_div'); if (el) el.style.cursor = 'pointer'
       })
-      window.Tmapv3.event.addListener(marker, 'mouseout', () => {
-        marker.setIcon?.(marker.__customIcon)
+      addTmapListener(marker, 'mouseout', () => {
+        marker.setIcon?.(markerIcon)
         marker.setZIndex?.(0)
         const el = document.getElementById('map_div'); if (el) el.style.cursor = ''
       })
@@ -1056,8 +1079,9 @@ const initTmap = () => {
     width: '100%', height: '100%', zoom: 16
   })
 
+
   // 지도 클릭 → 가장 가까운 마커를 선택으로 간주 (모바일/웹뷰에서 클릭 누락 보완)
-  window.Tmapv3.event.addListener(map.value, 'click', (evt) => {
+    addTmapListener(map.value, 'click', (evt) => {
     if (!evt || !evt.latLng) return
     const lat = evt.latLng._lat ?? evt.latLng.lat?.() ?? evt.latLng.lat
     const lon = evt.latLng._lng ?? evt.latLng.lng?.() ?? evt.latLng.lng
@@ -1085,6 +1109,9 @@ const initTmap = () => {
       const mLon = p._lng ?? p.lng?.() ?? p.lng
       console.log('[map click -> nearest marker]', mLat, mLon) // 디버그
       drawRouteTo(mLat, mLon)
+
+       // ✅ 리스트 맨 위로 올림
+    if (best.__hospitalId) bringHospitalToTopById(best.__hospitalId)
     }
   })
 
@@ -1296,6 +1323,7 @@ const onGripTouchEnd = () => {
   box-shadow: 0 3px 10px rgba(0, 0, 0, .15);
 }
 
+#map_div, #map_div canvas { pointer-events: auto !important; }
 
 
 
@@ -1314,4 +1342,24 @@ const onGripTouchEnd = () => {
 .sheet-grip {
   touch-action: none;
 }
+
+
+
+.card.highlight {
+  animation: highlightFade 1.2s ease-out;
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 12px rgba(13, 110, 253, 0.4);
+  background-color: #f0f6ff;
+}
+@keyframes highlightFade {
+  0% {
+    background-color: #cfe2ff;
+    box-shadow: 0 0 16px rgba(13, 110, 253, 0.5);
+  }
+  100% {
+    background-color: #fff;
+    box-shadow: none;
+  }
+}
+
 </style>
