@@ -243,18 +243,58 @@ import { useRouter } from 'vue-router';
 // <script setup> 맨 위 근처
 const isDesktop = matchMedia('(pointer:fine)').matches
 
+// 침대 아이콘으로 변경 - 이미지와 동일한 디자인 (2/7 형식)
+const createMarkerIcon = (bedAvail, bedTotal, isHover = false) => {
+  const size = isHover ? 75 : 70
 
-const markerIcon = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none">
-    <path d="M12 2C8.1 2 5 5.1 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.9-3.1-7-7-7z" fill="#2f80ed"/>
-    <circle cx="12" cy="9" r="3" fill="white"/>
-  </svg>`)
+  // 병상 가용률 계산
+  let bedColor = '#dc3545' // 기본 빨강 (0개 또는 정보 없음)
+  let bedText = '0/0'
+  let mainBgColor = '#16a085' // 기본 초록색 배경
 
-const markerIconHover = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none">
-    <path d="M12 2C8.1 2 5 5.1 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.9-3.1-7-7-7z" fill="#0d6efd"/>
-    <circle cx="12" cy="9" r="3.4" fill="white"/>
-  </svg>`)
+  if (Number.isFinite(bedAvail) && Number.isFinite(bedTotal) && bedTotal > 0) {
+    bedText = `${bedAvail}/${bedTotal}` // 2/7 형식
+
+    if (bedAvail > 0) {
+      bedColor = '#28a745' // 초록 (가용 병상 있음)
+      mainBgColor = '#16a085' // 진한 초록
+    } else {
+      bedColor = '#dc3545' // 빨강 (가용 병상 0개)
+      mainBgColor = '#e74c3c' // 배경도 빨강으로
+    }
+  } else {
+    // 정보 없을 때는 회색
+    mainBgColor = '#95a5a6'
+    bedColor = '#7f8c8d'
+  }
+
+  // 테두리 효과 (hover)
+  const strokeWidth = isHover ? '4' : '3'
+  const shadowOpacity = isHover ? '0.4' : '0.25'
+
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 80 90">
+      <!-- 그림자 효과 -->
+      <ellipse cx="40" cy="82" rx="18" ry="4" fill="black" opacity="${shadowOpacity}"/>
+
+      <!-- 메인 원형 배경 (초록색) -->
+      <circle cx="40" cy="35" r="28" fill="${mainBgColor}" stroke="white" stroke-width="${strokeWidth}"/>
+
+      <!-- 침대 아이콘 (흰색) - 크게 -->
+      <g transform="translate(40, 35)">
+        <path transform="translate(-14, -12) scale(1.2)" fill="white"
+          d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3"/>
+      </g>
+
+      <!-- 하단 숫자 배지 (빨강 또는 초록) -->
+      <circle cx="40" cy="68" r="16" fill="${bedColor}" stroke="white" stroke-width="2.5"/>
+
+      <!-- 병상 숫자 텍스트 (2/7 형식) -->
+      <text x="40" y="72.5" text-anchor="middle" dominant-baseline="central"
+            fill="white" font-size="12" font-weight="bold" font-family="Arial, sans-serif">${bedText}</text>
+    </svg>
+  `)
+}
 
 
 
@@ -820,13 +860,20 @@ function drawMarkers(items) {
     const pos = new window.Tmapv3.LatLng(h.lat, h.lon)
     bounds.extend(pos)
 
-    // 🔹 커스텀 아이콘으로 마커 생성
+    // 🔹 병상 정보를 반영한 커스텀 침대 아이콘으로 마커 생성
+    const customIcon = createMarkerIcon(h.bedAvail, h.bedTotal, false)
+    const customIconHover = createMarkerIcon(h.bedAvail, h.bedTotal, true)
+
     let marker = new window.Tmapv3.Marker({
       position: pos,
       map: map.value,
-      icon: markerIcon,      // 기본 아이콘
+      icon: customIcon,      // 실시간 병상 정보 반영 아이콘
       title: h.name || ''    // 접근성/툴팁
     })
+
+    // hover용 아이콘 저장
+    marker.__customIcon = customIcon
+    marker.__customIconHover = customIconHover
 
     // (선택) 인포윈도우는 그대로
     const html = `
@@ -868,12 +915,12 @@ function drawMarkers(items) {
     // 호버(포인터 있는 환경에서만)
     if (isDesktop) {
       window.Tmapv3.event.addListener(marker, 'mouseover', () => {
-        marker.setIcon?.(markerIconHover)
+        marker.setIcon?.(marker.__customIconHover)
         marker.setZIndex?.(1000)
         const el = document.getElementById('map_div'); if (el) el.style.cursor = 'pointer'
       })
       window.Tmapv3.event.addListener(marker, 'mouseout', () => {
-        marker.setIcon?.(markerIcon)
+        marker.setIcon?.(marker.__customIcon)
         marker.setZIndex?.(0)
         const el = document.getElementById('map_div'); if (el) el.style.cursor = ''
       })
