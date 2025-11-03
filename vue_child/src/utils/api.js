@@ -32,7 +32,25 @@ export async function getEmergencyHospitalByHPID(HPID, pageNo = 1, numOfRows = 1
         _type: "json", // json 응답
       },
     });
-    return res.data.response.body.items.item || [];
+   const body = res.data?.response?.body;
+    
+    if (body?.items === "") {
+        // totalCount가 0이고 items가 빈 문자열인 경우
+        console.warn(`HPID ${HPID}에 대한 병원 정보가 없습니다 (totalCount: 0).`);
+        return [];
+    }
+    // items가 객체이고, 그 안에 item이 배열 또는 단일 객체일 경우 처리
+    const itemData = body?.items?.item;
+
+    if (!itemData) {
+        return [];
+    }
+    // item이 배열이 아닌 단일 객체로 온 경우 (데이터 1개일 때 자주 발생) 배열로 감싸서 반환
+    return Array.isArray(itemData) ? itemData : [itemData];
+
+    // return res.data.response.body.items.item || []; //만약을 위해 남겨둔 기존 코드
+
+    
   } catch (e) {
     console.error("공공데이터 응급실 조회 실패", e);
     throw e;
