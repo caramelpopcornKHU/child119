@@ -94,7 +94,7 @@
 
         <!-- 응급실 목록 -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id">
-          <div class="card-body" @click="onPickFromList(h)">
+          <div class="card-body" @click="goToemergencyDetail(h.hpid || h.id)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
               <!-- ✅ 병상 현황: 'avail/total' -->
