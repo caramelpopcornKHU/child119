@@ -23,9 +23,11 @@
     </div>
     <!-- 내 위치 새로고침 버튼 -->
     <div class="position-fixed end-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
-      <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="refreshLocation()" style="width: 48px; height: 48px; padding: 0;">
+      <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="refreshLocation()"
+        style="width: 48px; height: 48px; padding: 0;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4s-1.79-4-4-4m8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7s7 3.13 7 7s-3.13 7-7 7" />
+          <path fill="currentColor"
+            d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4s-1.79-4-4-4m8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7s7 3.13 7 7s-3.13 7-7 7" />
         </svg>
       </button>
     </div>
@@ -100,14 +102,11 @@
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
               <!-- ✅ 병상 현황: 'avail/total' -->
-              <span
-                v-if="h.bedAvail !== null || h.bedTotal !== null"
-                class="badge rounded-pill"
-                :class="bedBadgeClass(h)"
-              >
+              <span v-if="h.bedAvail !== null || h.bedTotal !== null" class="badge rounded-pill"
+                :class="bedBadgeClass(h)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="15" viewBox="0 0 24 24" class="me-1">
                   <path fill="currentColor"
-                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3"/>
+                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
                 </svg>
                 {{ bedLabel(h) }}
               </span>
@@ -137,8 +136,8 @@
                     : h.state === 1
                       ? '조건부가능'
                       : h.state === 2
-                ? '진료가능'
-                : '정보없음'
+                        ? '진료가능'
+                        : '정보없음'
                 }}
               </span>
             </div>
@@ -152,7 +151,7 @@
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
-              <button class="btn btn-outline-primary w-100" @click.stop>
+              <button class="btn btn-outline-primary w-100" @click.stop="callHospital(h.id)">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
               <button class="btn btn-primary w-100" @click.stop="openRouteModal(h)">
@@ -237,7 +236,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, onActivated } from 'vue';
-
+import { getEmergencyHospitalByHPID } from '@/utils/api'
 
 import { useRouter } from 'vue-router';
 
@@ -266,7 +265,102 @@ let autoPickedOnce = false; // ✅ 자동 테스트 1회 제한 플래그
 
 
 
+// async function callHospital(hpid) {
+//   try {
+//     const cleanedHpid = hpid.replace('emergency.', '');
+//     const hospitalData = await getEmergencyHospitalByHPID(cleanedHpid); 
 
+//     console.log("클라이언트가 받은 hospitalData:", hospitalData);
+
+//     if (hospitalData && hospitalData.length > 0) {
+//         const hospitalInfo = hospitalData[0];
+//         const emergencyTel = hospitalInfo.dutyTel3; // 응급실 전화번호
+//         const emerHospitalTel = hospitalInfo.dutyTel1; // 병원 대표 전화번호
+
+//         let message = '';
+//         let returnTel = null;
+
+//         // 1. 응급실 연락처(dutyTel3)가 유효한지 확인 (null, undefined, 또는 빈 문자열이 아닌지)
+//         if (emergencyTel && emergencyTel.trim()) {
+//             message = `응급실 연락처: ${emergencyTel}`;
+//             returnTel = emergencyTel;
+//         } 
+//         // 2. 응급실 연락처가 없으면, 병원 대표 연락처(dutyTel1)를 확인
+//         else if (emerHospitalTel && emerHospitalTel.trim()) {
+//             message = `응급실 전화번호가 등록되지 않았습니다.\n병원 대표 연락처: ${emerHospitalTel}`;
+//             returnTel = emerHospitalTel;
+//         }
+//         // 3. 둘 다 없는 경우
+//         else {
+//             message = '등록된 응급실 및 병원 대표 연락처가 없습니다.';
+//         }
+
+//         alert(message);
+//         return returnTel;
+//     } else {
+//         // 병원 코드는 유효하지만, 데이터가 아예 조회되지 않은 경우 (totalCount: 0)
+//         alert('요청하신 병원 정보(데이터)를 찾을 수 없습니다.');
+//         return null;
+//     }
+
+//   } catch (err) {
+//       console.error(`callHospital error -> ${err}`);
+//       alert(`병원 정보 처리 중 오류 발생: ${err.message || '알 수 없는 오류'}`);
+//   }
+// }
+
+async function callHospital(hpid) {
+  try {
+    const cleanedHpid = hpid.replace('emergency.', '');
+    // getEmergencyHospitalByHPID는 API 호출 함수라고 가정합니다.
+    const hospitalData = await getEmergencyHospitalByHPID(cleanedHpid);
+
+    console.log("클라이언트가 받은 hospitalData:", hospitalData);
+
+    if (hospitalData && hospitalData.length > 0) {
+      const hospitalInfo = hospitalData[0];
+      // 응급실 전화번호
+      const emergencyTel = hospitalInfo.dutyTel3;
+      // 병원 대표 전화번호
+      const emerHospitalTel = hospitalInfo.dutyTel1;
+
+      let message = '';
+      let finalTel = null; // 최종적으로 사용할 전화번호
+
+      // 1. 응급실 연락처(dutyTel3)가 유효한지 확인
+      if (emergencyTel && emergencyTel.trim()) {
+        message = `응급실(${emergencyTel})로 연결합니다.`;
+        finalTel = emergencyTel;
+      }
+      // 2. 응급실 연락처가 없으면, 병원 대표 연락처(dutyTel1)를 확인
+      else if (emerHospitalTel && emerHospitalTel.trim()) {
+        message = `응급실 전화번호가 등록되지 않아\n병원 대표번호(${emerHospitalTel})로 연결합니다.`;
+        finalTel = emerHospitalTel;
+      }
+      // 3. 둘 다 없는 경우
+      else {
+        message = '등록된 응급실 및 병원 대표 연락처가 없습니다.';
+      }
+
+      if (finalTel) {
+        // 실제 전화 걸기 로직 실행
+        window.location.href = `tel:${finalTel.replace(/[^0-9]/g, '')}`;
+
+      } else {
+        // 전화번호가 없는 경우 사용자에게 알림
+        alert(message);
+      }
+
+      // 함수에서는 더 이상 값 반환을 하지 않아도 됩니다. (필요 시 return finalTel;)
+    } else {
+      alert('요청하신 병원 정보(데이터)를 찾을 수 없습니다.');
+    }
+
+  } catch (err) {
+    console.error(`callHospital error -> ${err}`);
+    alert(`병원 정보 처리 중 오류 발생: ${err.message || '알 수 없는 오류'}`);
+  }
+}
 
 
 function clearRoute() {
@@ -555,19 +649,19 @@ function refreshLocation() {
       // ✅ 현재 좌표 갱신
       cur.value = { lat, lon }
 
-    // ✅ 경로 모드가 아닐 때만 병원 재검색 (이 컴포넌트의 WFS 검색 사용)
-    if (!isRouteMode.value) {
-      // 직전 반경이 있으면 그걸 쓰고, 없으면 기본 5000m
-      const radius = lastRadius.value > 0 ? lastRadius.value : searchRadius.value
-      searchER(radius, false)
-}
+      // ✅ 경로 모드가 아닐 때만 병원 재검색 (이 컴포넌트의 WFS 검색 사용)
+      if (!isRouteMode.value) {
+        // 직전 반경이 있으면 그걸 쓰고, 없으면 기본 5000m
+        const radius = lastRadius.value > 0 ? lastRadius.value : searchRadius.value
+        searchER(radius, false)
+      }
 
     },
     err => {
       console.error('Geolocation 오류 코드:', err.code, '메시지:', err.message)
       let errorMsg = '현재 위치를 가져올 수 없습니다.\n'
 
-      switch(err.code) {
+      switch (err.code) {
         case 1: // PERMISSION_DENIED
           errorMsg += '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.'
           break
@@ -617,7 +711,7 @@ const listHospitals = computed(() => {
     message: h.message,
     state: h.state,
     bedAvail: h.bedAvail,   // ✅ 추가
-    bedTotal: h.bedTotal, 
+    bedTotal: h.bedTotal,
     distanceKm: (h.distance ?? 0) / 1000,
     etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
     lat: h.lat, lon: h.lon,     // (선택) 모달/길찾기 즉시 사용
@@ -889,11 +983,12 @@ async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
 
     const bedAvail = toInt(p.bed_avail ?? p.bedAvail ?? p.bedavail)
     const bedTotal = toInt(p.bed_total ?? p.bedTotal ?? p.bedtotal)
-  
 
-    return { id: f.id || `wfs-${i}`, hpid: p.hpid, name, address, tel, hours, lat, lon, distance, message, state ,bedAvail,
-            bedTotal  
-            }
+
+    return {
+      id: f.id || `wfs-${i}`, hpid: p.hpid, name, address, tel, hours, lat, lon, distance, message, state, bedAvail,
+      bedTotal
+    }
   })
 }
 
@@ -1041,7 +1136,7 @@ function bedBadgeClass(h) {
   }
   const ratio = a / t
   if (ratio >= 0.5) return 'bg-success-subtle text-success-emphasis'   // 여유
-  if (ratio > 0)   return 'bg-warning-subtle text-warning-emphasis'    // 부족
+  if (ratio > 0) return 'bg-warning-subtle text-warning-emphasis'    // 부족
   return 'bg-danger-subtle text-danger-emphasis'                        // 없음
 }
 
