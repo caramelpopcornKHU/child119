@@ -2,10 +2,9 @@
   <div class="d-flex justify-content-center align-items-center position-relative mt-1"
     style="height: calc(100vh - 140px); ">
 
-   <!-- 지도 DIV에 pointer-events 보강 -->
-<div id="map_div"
-     class="position-fixed top-0 start-0 w-100"
-     style="height:100dvh; z-index:0; pointer-events:auto;"></div>
+    <!-- 지도 DIV에 pointer-events 보강 -->
+    <div id="map_div" class="position-fixed top-0 start-0 w-100" style="height:100dvh; z-index:0; pointer-events:auto;">
+    </div>
 
 
 
@@ -21,21 +20,30 @@
           </svg> 증상 확인
         </button>
       </div>
-
-
-
     </div>
+    <!-- 내 위치 새로고침 버튼 -->
+    <div class="position-fixed end-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
+      <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="refreshLocation()"
+        style="width: 48px; height: 48px; padding: 0;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path fill="currentColor"
+            d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4s-1.79-4-4-4m8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7s7 3.13 7 7s-3.13 7-7 7" />
+        </svg>
+      </button>
+    </div>
+
   </div>
   <!-- 바텀시트 -->
-  <div class="position-fixed start-0 end-0 bg-white padding-bottom  rounded-top-4 shadow-lg " :style="sheetStyle" ref="bottomSheet"
-    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2; padding-bottom: 150px;">
-    
+  <div class="position-fixed start-0 end-0 bg-white padding-bottom  rounded-top-4 shadow-lg " :style="sheetStyle"
+    ref="bottomSheet" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd"
+    style="z-index: 2; padding-bottom: 150px;">
+
     <!-- 그립 -->
     <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
       <div class="bg-secondary-subtle rounded-pill w-25" style="height:5px;"></div>
     </div>
-  <!-- 핸들 -->
-    <div class="py-3 d-flex justify-content-center" @click="toggleSheet" ></div>
+    <!-- 핸들 -->
+    <div class="py-3 d-flex justify-content-center" @click="toggleSheet"></div>
 
     <!-- 내용 -->
     <div class="d-flex flex-column" style="height: 100%;">
@@ -54,86 +62,85 @@
       </div>
 
       <!-- 타이틀 -->
-<div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2">
+      <div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2">
 
-  
-  <!-- 왼쪽 -->
-  <div class="d-flex align-items-center gap-2">
-    <h5 class="fw-bold mb-0">응급실 리스트</h5>
-    
-    <span v-if="hospitals.length > 0" class="badge bg-white text-black">{{ hospitals.length }}개</span>
-  </div>
 
-  <!-- 오른쪽: 버튼 그룹 -->
-  <div class="d-flex gap-2">
-    <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByDistance">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
-        <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
-          d="m24 42l-9-13h18zm0-36l-9 13h18z" />
-      </svg>
-      <span class="fw-bold">거리순</span>
-    </button>
+        <!-- 왼쪽 -->
+        <div class="d-flex align-items-center gap-2">
+          <h5 class="fw-bold mb-0">응급실 리스트</h5>
 
-    <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByTime">
-      <svg xmlns="http://www.w3.org/2000/svg" 
-      width="24" height="24" viewBox="0 0 24 24">
-      <path fill="currentColor" d="M12 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8a8 8 0 0 0-8 8a8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10a10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7z"/>
-      </svg>
-      시간순
-    </button>
-  </div>
-</div>
+          <span v-if="hospitals.length > 0" class="badge bg-white text-black">{{ hospitals.length }}개</span>
+        </div>
+
+        <!-- 오른쪽: 버튼 그룹 -->
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByDistance">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
+                d="m24 42l-9-13h18zm0-36l-9 13h18z" />
+            </svg>
+            <span class="fw-bold">거리순</span>
+          </button>
+
+          <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByTime">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+              <path fill="currentColor"
+                d="M12 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8a8 8 0 0 0-8 8a8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10a10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7z" />
+            </svg>
+            시간순
+          </button>
+        </div>
+      </div>
 
       <!-- 리스트 스크롤 영역 -->
       <div class="overflow-auto px-3 ">
-        
+
 
         <!-- 응급실 목록 -->
         <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id">
-         <div class="card-body" @click="goToemergencyDetail(h.id)">
+          <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
-              <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>              
-              <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="15px" viewBox="0 0 24 24">
-                  <path fill="#008A64"
+              <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
+              <!-- ✅ 병상 현황: 'avail/total' -->
+              <span v-if="h.bedAvail !== null || h.bedTotal !== null" class="badge rounded-pill"
+                :class="bedBadgeClass(h)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="15" viewBox="0 0 24 24" class="me-1">
+                  <path fill="currentColor"
                     d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
-                </svg> 2/7
+                </svg>
+                {{ bedLabel(h) }}
               </span>
             </div>
 
-           <!-- ✅ 병원 데이터의 message 필드를 이용해 소아가능 / 불가능 자동 표시 -->
-<div class="mb-2" v-if="h.message">
-  <span
-    class="badge me-1"
-    :class="h.message.includes('가능')
-      ? 'bg-success-subtle text-success-emphasis'
-      : 'bg-secondary-subtle text-secondary-emphasis'">
-    {{ h.message }}
-  </span>
-</div>
+
+            <!-- ✅ 병원 데이터의 message 필드를 이용해 소아가능 / 불가능 자동 표시 -->
+            <div class="mb-2" v-if="h.message">
+              <span class="badge me-1" :class="h.message.includes('가능')
+                ? 'bg-success-subtle text-success-emphasis'
+                : 'bg-secondary-subtle text-secondary-emphasis'">
+                {{ h.message }}
+              </span>
+            </div>
 
 
-<!-- ✅ state 상태 표시 -->
-<div class="mb-2" v-if="h.state !== undefined && h.state !== null">
-  <span
-    class="badge me-1"
-    :class="{
-      'bg-danger-subtle text-danger-emphasis': h.state === 0,
-      'bg-warning-subtle text-warning-emphasis': h.state === 1,
-      'bg-success-subtle text-success-emphasis': h.state === 2
-    }"
-  >
-    {{
-      h.state === 0
-        ? '진료불가능'
-        : h.state === 1
-        ? '조건부가능'
-        : h.state === 2
-        ? '진료가능'
-        : '정보없음'
-    }}
-  </span>
-</div>
+            <!-- ✅ state 상태 표시 -->
+            <div class="mb-2" v-if="h.state !== undefined && h.state !== null">
+              <span class="badge me-1" :class="{
+                'bg-danger-subtle text-danger-emphasis': h.state === 0,
+                'bg-warning-subtle text-warning-emphasis': h.state === 1,
+                'bg-success-subtle text-success-emphasis': h.state === 2
+              }">
+                {{
+                  h.state === 0
+                    ? '진료불가능'
+                    : h.state === 1
+                      ? '조건부가능'
+                      : h.state === 2
+                        ? '진료가능'
+                        : '정보없음'
+                }}
+              </span>
+            </div>
 
 
 
@@ -144,7 +151,7 @@
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
-              <button class="btn btn-outline-primary w-100" @click.stop>
+              <button class="btn btn-outline-primary w-100" @click.stop="callHospital(h.id)">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
               <button class="btn btn-primary w-100" @click.stop="openRouteModal(h)">
@@ -199,7 +206,7 @@
             </div>
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-search"></i>
-              
+
             </div>
           </div>
 
@@ -228,28 +235,164 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-
+import { ref, computed, onMounted, onBeforeUnmount, onActivated } from 'vue';
+import { getEmergencyHospitalByHPID } from '@/utils/api'
 
 import { useRouter } from 'vue-router';
 
 // <script setup> 맨 위 근처
 const isDesktop = matchMedia('(pointer:fine)').matches
 
+// 마커 아이콘 생성 함수 (리팩토링 버전)
+const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, isHover = false) => {
+    
+    // ✅ 인자 안전성 강화 (undefined/null을 빈 문자열로 변환)
+    const name = hospitalName || '';
+    const message = emergencyMessage || '';
 
-const markerIcon = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none">
-    <path d="M12 2C8.1 2 5 5.1 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.9-3.1-7-7-7z" fill="#2f80ed"/>
-    <circle cx="12" cy="9" r="3" fill="white"/>
-  </svg>`)
+    // 이미지 기반으로 측정한 SVG 전체 영역 크기
+    const svgWidth = 100;
+    const svgHeight = 100; 
 
-const markerIconHover = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none">
-    <path d="M12 2C8.1 2 5 5.1 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.9-3.1-7-7-7z" fill="#0d6efd"/>
-    <circle cx="12" cy="9" r="3.4" fill="white"/>
-  </svg>`)
+    // 흰색 둥근 직사각형 배경 설정
+    const rectWidth = 100;
+    const rectHeight = 90; 
+    const rectX = (svgWidth - rectWidth) / 2; 
+    const rectY = 0;
+    const borderRadius = 10;
+
+    // 원형 배지 설정
+    const cirRadius = rectHeight/2*0.6 ; 
+    const cirCenterX = svgWidth / 2;
+    const cirCenterY = rectY + cirRadius + rectHeight/2*0.1; // 원형 배지 Y 중심
+
+    // 메세지 텍스트 설정
+    const messageFontSize = 16;
+    const messageY = rectY + rectHeight - 20; 
+
+    // ✅ 응급실 메시지 뱃지/텍스트 설정
+    const infoFontSize = 12; // 뱃지 내 텍스트 크기
+    const badgeHeight = 24; // 이미지에 맞게 높이 증가 (20 -> 24)
+    const badgeWidth = 10; // 뱃지 고정 너비 (텍스트에 맞게 조정)
+    const badgeX = (svgWidth - badgeWidth) / 2; // 중앙 정렬
+
+    // 💡 메시지 뱃지 Y 좌표 (원형 배지 아래에 밀착)
+    const messageCenterY = cirCenterY + cirRadius + 20; // 원형 배지 바닥 + 20px 간격으로 분리
+    const badgeBgY = messageCenterY - (badgeHeight / 2); // 뱃지 배경의 시작 Y
 
 
+    // 원형 배지 내부 폰트 및 아이콘 크기
+    const bedTextFontSize = 18; 
+    const iconSizePx = 24;      
+    const iconBaseSize = 24;    
+    const iconScale = iconSizePx / iconBaseSize; 
+
+    // 원형 배지 내부 간격 및 중앙 정렬 계산
+    const gap = 2; 
+    const iconRenderedHeight = iconBaseSize * iconScale; 
+    const textRenderedHeight = bedTextFontSize;          
+    const contentTotalHeight = iconRenderedHeight + gap + textRenderedHeight; 
+    const iconCenterYOffset = -((contentTotalHeight / 2) - (iconRenderedHeight / 2)); 
+    const textCenterYOffset = iconCenterYOffset + iconRenderedHeight + gap; 
+
+    // 병상 정보 및 색상 로직
+    let bedText = '';
+    let badgeBgColor = '#16a085'; 
+    let badgeTextColor = 'white';
+
+    if (Number.isFinite(bedAvail) && Number.isFinite(bedTotal) && bedTotal > 0) {
+        bedText = `${bedAvail}/${bedTotal}`;
+        if (bedAvail <= 0) {
+            badgeBgColor = '#e74c3c'; 
+        } else {
+            badgeBgColor = '#16a085'; 
+        }
+    } else {
+        badgeBgColor = '#95a5a6'; 
+        bedText = '?/?';
+    }
+
+    const strokeWidth = isHover ? '4' : '3';
+    const shadowOpacity = isHover ? '0.4' : '0.25';
+    
+    // 마커 핀 설정
+    const pinSvgPath = "M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7";
+    const pinColor = "#00000"; // 녹색
+    const pinWidth = 24; 
+    const pinHeight = 24; 
+    const pinScaleFactor = 1.3; 
+    const scaledPinWidth = pinWidth * pinScaleFactor; 
+    const scaledPinHeight = pinHeight * pinScaleFactor; 
+    const pinY = rectY + rectHeight - 10; 
+
+    // 응급실 메시지 렌더링을 위한 색상과 텍스트 처리
+    let messageColor = '#333'; 
+    
+    // 이미지에 맞게 옅은 녹색 배경과 진한 텍스트로 조정
+    if (message.includes('가능')) {
+        badgeMessageBg = '#e6f7e6'; // 옅은 녹색 (이미지처럼 밝은 배경)
+        
+    } else if (message.includes('불가능')) {
+        badgeMessageBg = '#f8d7da'; // 옅은 빨간색
+        
+    }
+
+
+    // SVG 문자열 조립
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight + scaledPinHeight - 20}" viewBox="0 0 ${svgWidth} ${svgHeight + scaledPinHeight - 20}">
+            
+
+            <rect 
+                x="${rectX}" y="${rectY}" 
+                width="${rectWidth}" height="${rectHeight}" 
+                rx="${borderRadius}" ry="${borderRadius}" 
+                fill="white" 
+                stroke="#ddd" 
+                stroke-width="1.5"/>
+
+            <circle 
+                cx="${cirCenterX}" cy="${cirCenterY}" 
+                r="${cirRadius - (strokeWidth/2)}" 
+                fill="${badgeBgColor}" 
+                stroke="white" 
+                stroke-width="${strokeWidth}"/>
+            
+            <g transform="translate(${cirCenterX}, ${cirCenterY})">
+                <path transform="translate(${-iconBaseSize / 2 * iconScale}, ${-iconBaseSize / 2 * iconScale}) translate(0, ${iconCenterYOffset})" fill="white"
+                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3"/>
+                
+                <text x="0" y="${textCenterYOffset}" text-anchor="middle" dominant-baseline="central"
+                    fill="${badgeTextColor}" font-size="${bedTextFontSize}" font-weight="500" font-family="pretendard">
+                    ${bedText}
+                </text>
+            </g>
+            
+            ${message ? `
+                <rect 
+                    x="${badgeX}" y="${badgeBgY}" 
+                    width="${dynamicBadgeWidth}" height="${badgeHeight}" 
+                    rx="12" ry="12" 
+                    fill="${badgeMessageBg}"/>
+
+                <text x="${badgeX}" y="${messageCenterY}" text-anchor="middle" dominant-baseline="central"
+                    fill="${messageColor}" font-weight="500" font-family="pretendard">
+                    ${message}
+                </text>
+            ` : ''}
+
+            <text x="${svgWidth / 2}" y="${messageY}" text-anchor="middle" dominant-baseline="central"
+                fill="#333" font-size="${messageFontSize}" font-weight="500" font-family="pretendard">
+                ${name || ''}
+            </text>
+
+            <g transform="translate(${svgWidth / 2 - scaledPinWidth / 2}, ${pinY}) scale(${pinScaleFactor})">
+                <path fill="${pinColor}" d="${pinSvgPath}"/>
+            </g>
+
+        </svg>
+    `);
+};
 
 
 let routeLine = null; // 현재 경로 Polyline 저장용
@@ -258,190 +401,108 @@ let autoPickedOnce = false; // ✅ 자동 테스트 1회 제한 플래그
 
 
 
+// async function callHospital(hpid) {
+//   try {
+//     const cleanedHpid = hpid.replace('emergency.', '');
+//     const hospitalData = await getEmergencyHospitalByHPID(cleanedHpid); 
 
+//     console.log("클라이언트가 받은 hospitalData:", hospitalData);
 
+//     if (hospitalData && hospitalData.length > 0) {
+//         const hospitalInfo = hospitalData[0];
+//         const emergencyTel = hospitalInfo.dutyTel3; // 응급실 전화번호
+//         const emerHospitalTel = hospitalInfo.dutyTel1; // 병원 대표 전화번호
 
-function clearRoute() {
-  if (routeLine) {
-    routeLine.setMap(null);
-    routeLine = null;
-  }
-}
+//         let message = '';
+//         let returnTel = null;
 
+//         // 1. 응급실 연락처(dutyTel3)가 유효한지 확인 (null, undefined, 또는 빈 문자열이 아닌지)
+//         if (emergencyTel && emergencyTel.trim()) {
+//             message = `응급실 연락처: ${emergencyTel}`;
+//             returnTel = emergencyTel;
+//         } 
+//         // 2. 응급실 연락처가 없으면, 병원 대표 연락처(dutyTel1)를 확인
+//         else if (emerHospitalTel && emerHospitalTel.trim()) {
+//             message = `응급실 전화번호가 등록되지 않았습니다.\n병원 대표 연락처: ${emerHospitalTel}`;
+//             returnTel = emerHospitalTel;
+//         }
+//         // 3. 둘 다 없는 경우
+//         else {
+//             message = '등록된 응급실 및 병원 대표 연락처가 없습니다.';
+//         }
 
+//         alert(message);
+//         return returnTel;
+//     } else {
+//         // 병원 코드는 유효하지만, 데이터가 아예 조회되지 않은 경우 (totalCount: 0)
+//         alert('요청하신 병원 정보(데이터)를 찾을 수 없습니다.');
+//         return null;
+//     }
 
-async function drawRouteTo(destLat, destLon) {
-  if (!map.value) return
-  if (!cur.value.lat || !cur.value.lon) {
-    alert('출발 위치가 설정되지 않았습니다. (HTTPS 위치 권한 필요)')
-    return
-  }
+//   } catch (err) {
+//       console.error(`callHospital error -> ${err}`);
+//       alert(`병원 정보 처리 중 오류 발생: ${err.message || '알 수 없는 오류'}`);
+//   }
+// }
 
-  const startX = +cur.value.lon
-  const startY = +cur.value.lat
-  const endX   = +destLon
-  const endY   = +destLat
-
+async function callHospital(hpid) {
   try {
-    clearRoute()
-    const url = `https://apis.openapi.sk.com/tmap/routes?version=1&format=json&appKey=${TMAP_APP_KEY}` // ✅ 쿼리에도 appKey
-    console.log('[routes] req', { startX, startY, endX, endY, url })
+    const cleanedHpid = hpid.replace('emergency.', '');
+    // getEmergencyHospitalByHPID는 API 호출 함수라고 가정합니다.
+    const hospitalData = await getEmergencyHospitalByHPID(cleanedHpid);
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',      // ✅ 추가
-        'appKey': TMAP_APP_KEY             // ✅ 헤더도 유지
-      },
-      body: JSON.stringify({
-        startX, startY, endX, endY,
-        reqCoordType: 'WGS84GEO',
-        resCoordType: 'WGS84GEO',
-        searchOption: '0',
-      }),
-    })
+    console.log("클라이언트가 받은 hospitalData:", hospitalData);
 
-    let data = {}
-    try { data = await res.json() } catch { /* noop */ }
-    console.log('[routes] status', res.status, res.ok, data)
+    if (hospitalData && hospitalData.length > 0) {
+      const hospitalInfo = hospitalData[0];
+      // 응급실 전화번호
+      const emergencyTel = hospitalInfo.dutyTel3;
+      // 병원 대표 전화번호
+      const emerHospitalTel = hospitalInfo.dutyTel1;
 
-    if (!res.ok) {
-      alert(`경로 실패 (${res.status})`)
-      return
-    }
+      let message = '';
+      let finalTel = null; // 최종적으로 사용할 전화번호
 
-    const features = Array.isArray(data.features) ? data.features : []
-    const paths = []
-    for (const f of features) {
-      const g = f.geometry
-      if (!g) continue
-      if (g.type === 'LineString') {
-        paths.push(...g.coordinates.map(([x,y]) => new window.Tmapv3.LatLng(y, x)))
-      } else if (g.type === 'MultiLineString') {
-        g.coordinates.forEach(seg => {
-          paths.push(...seg.map(([x,y]) => new window.Tmapv3.LatLng(y, x)))
-        })
+      // 1. 응급실 연락처(dutyTel3)가 유효한지 확인
+      if (emergencyTel && emergencyTel.trim()) {
+        message = `응급실(${emergencyTel})로 연결합니다.`;
+        finalTel = emergencyTel;
       }
+      // 2. 응급실 연락처가 없으면, 병원 대표 연락처(dutyTel1)를 확인
+      else if (emerHospitalTel && emerHospitalTel.trim()) {
+        message = `응급실 전화번호가 등록되지 않아\n병원 대표번호(${emerHospitalTel})로 연결합니다.`;
+        finalTel = emerHospitalTel;
+      }
+      // 3. 둘 다 없는 경우
+      else {
+        message = '등록된 응급실 및 병원 대표 연락처가 없습니다.';
+      }
+
+      if (finalTel) {
+        // 실제 전화 걸기 로직 실행
+        window.location.href = `tel:${finalTel.replace(/[^0-9]/g, '')}`;
+
+      } else {
+        // 전화번호가 없는 경우 사용자에게 알림
+        alert(message);
+      }
+
+      // 함수에서는 더 이상 값 반환을 하지 않아도 됩니다. (필요 시 return finalTel;)
+    } else {
+      alert('요청하신 병원 정보(데이터)를 찾을 수 없습니다.');
     }
 
-    if (!paths.length) {
-      console.warn('[routes] empty features', data)
-      alert('표시할 경로가 없습니다.')
-      return
-    }
-
-    routeLine = new window.Tmapv3.Polyline({
-      path: paths,
-      strokeColor: '#0d6efd',
-      strokeWeight: 6,
-      strokeOpacity: 0.9,
-      map: map.value,
-    })
-
-    const b = new window.Tmapv3.LatLngBounds()
-    paths.forEach(p => b.extend(p))
-    map.value.fitBounds(b)
-  } catch (e) {
-    console.error('경로 그리기 실패:', e)
-    alert('경로 요청 중 오류가 발생했습니다.')
+  } catch (err) {
+    console.error(`callHospital error -> ${err}`);
+    alert(`병원 정보 처리 중 오류 발생: ${err.message || '알 수 없는 오류'}`);
   }
 }
 
 
 
-/** 가까운 3곳 경로 모두 표시 */
-async function drawRoutesToTop3() {
-  if (!map.value || !cur.value.lat || !cur.value.lon) {
-    alert('출발 위치가 없습니다. (위치 권한 필요)')
-    return
-  }
 
-  // 기존 경로 지우기
-  if (routeLine) {
-    if (Array.isArray(routeLine)) routeLine.forEach(r => r.setMap(null))
-    else routeLine.setMap(null)
-  }
 
-  // 상위 3개 병원만 선택
-  const top3 = hospitals.value
-    .filter(h => Number.isFinite(h.distance))
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, 3)
 
-  if (top3.length === 0) {
-    alert('표시할 병원이 없습니다.')
-    return
-  }
-
-  const colors = ['#0d6efd', '#198754', '#ffc107'] // 파랑/초록/노랑
-
-  const startX = +cur.value.lon
-  const startY = +cur.value.lat
-  const polylines = []
-
-  for (let i = 0; i < top3.length; i++) {
-    const dest = top3[i]
-    const endX = +dest.lon
-    const endY = +dest.lat
-
-    try {
-      const url = `https://apis.openapi.sk.com/tmap/routes?version=1&format=json&appKey=${TMAP_APP_KEY}`
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'appKey': TMAP_APP_KEY
-        },
-        body: JSON.stringify({
-          startX, startY, endX, endY,
-          reqCoordType: 'WGS84GEO',
-          resCoordType: 'WGS84GEO',
-          searchOption: '0'
-        })
-      })
-
-      const data = await res.json()
-      const features = Array.isArray(data.features) ? data.features : []
-
-      const paths = []
-      for (const f of features) {
-        const g = f.geometry
-        if (!g) continue
-        if (g.type === 'LineString')
-          paths.push(...g.coordinates.map(([x, y]) => new window.Tmapv3.LatLng(y, x)))
-        else if (g.type === 'MultiLineString')
-          g.coordinates.forEach(seg =>
-            paths.push(...seg.map(([x, y]) => new window.Tmapv3.LatLng(y, x)))
-          )
-      }
-
-      if (!paths.length) continue
-
-      const poly = new window.Tmapv3.Polyline({
-        path: paths,
-        strokeColor: colors[i % colors.length],
-        strokeWeight: 6,
-        strokeOpacity: 0.9,
-        map: map.value
-      })
-      polylines.push(poly)
-    } catch (e) {
-      console.error(`경로 ${i + 1} 실패:`, e)
-    }
-  }
-
-  // Polyline 저장 (나중에 clearRoute()에서 제거용)
-  routeLine = polylines
-
-  // 모든 경로가 그려졌으면 지도 범위 맞춤
-  const b = new window.Tmapv3.LatLngBounds()
-  hospitals.value.slice(0, 3).forEach(h => {
-    if (h.lat && h.lon) b.extend(new window.Tmapv3.LatLng(h.lat, h.lon))
-  })
-  map.value.fitBounds(b)
-}
 
 
 
@@ -476,14 +537,118 @@ function openRouteModal(hospital) {
 
 
 
+// ✅ 내 위치/마커 상태
+const currentLocationMarker = ref(null)
+const currentLocationInfoWindow = ref(null)
+const userLocation = ref({ lat: null, lon: null })
+
+// ✅ 경로 모드 여부 (지금은 경로 모드가 따로 없으니 false 유지)
+const isRouteMode = ref(false)
+
+// ✅ 새로고침 시 재검색 반경(m). 초기에 5000m, 이후엔 마지막 반경 유지
+const searchRadius = ref(5000)
+
+
+
+/* 내 위치 새로고침 */
+function refreshLocation() {
+  if (!map.value) {
+    alert('지도를 불러오는 중입니다. 잠시 후 다시 시도해주세요.')
+    return
+  }
+
+  if (!navigator.geolocation) {
+    alert('이 브라우저에서는 위치 정보를 지원하지 않습니다.')
+    return
+  }
+
+  // 위치 정보 옵션 설정
+  const geoOptions = {
+    enableHighAccuracy: true,  // 높은 정확도 요청
+    timeout: 10000,            // 10초 타임아웃
+    maximumAge: 0              // 캐시된 위치 사용 안함
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude
+      const lon = pos.coords.longitude
+      console.log('위치 정보 새로고침 성공:', { lat, lon })
+
+      const currentPos = new window.Tmapv3.LatLng(lat, lon)
+      userLocation.value = { lat, lon }
+      cur.value = { lat, lon }            // ✅ 검색에 쓰는 기준점도 업데이트
+
+      // 기존 내 위치 마커와 정보창 제거
+      if (currentLocationMarker.value) {
+        currentLocationMarker.value.setMap(null)
+      }
+      if (currentLocationInfoWindow.value) {
+        currentLocationInfoWindow.value.setMap(null)
+      }
+
+      // 새로운 내 위치 마커 생성
+      currentLocationMarker.value = new window.Tmapv3.Marker({
+        position: currentPos,
+        map: map.value
+      })
+
+      currentLocationInfoWindow.value = new window.Tmapv3.InfoWindow({
+        position: currentPos,
+        content: "<div class='p-1 bg-white border rounded-2'>현재 위치</div>",
+        offset: new window.Tmapv3.Point(0, -30),
+        type: 2,
+        map: map.value
+      })
+
+      // 지도 중심 이동
+      map.value.setCenter(currentPos)
+      map.value.setZoom(17)
+
+      // ✅ 현재 좌표 갱신
+      cur.value = { lat, lon }
+
+      // ✅ 경로 모드가 아닐 때만 병원 재검색 (이 컴포넌트의 WFS 검색 사용)
+      if (!isRouteMode.value) {
+        // 직전 반경이 있으면 그걸 쓰고, 없으면 기본 5000m
+        const radius = lastRadius.value > 0 ? lastRadius.value : searchRadius.value
+        searchER(radius, false)
+      }
+
+    },
+    err => {
+      console.error('Geolocation 오류 코드:', err.code, '메시지:', err.message)
+      let errorMsg = '현재 위치를 가져올 수 없습니다.\n'
+
+      switch (err.code) {
+        case 1: // PERMISSION_DENIED
+          errorMsg += '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.'
+          break
+        case 2: // POSITION_UNAVAILABLE
+          errorMsg += '위치 정보를 사용할 수 없습니다.'
+          break
+        case 3: // TIMEOUT
+          errorMsg += '위치 정보 요청 시간이 초과되었습니다.'
+          break
+        default:
+          errorMsg += 'HTTPS 환경인지 확인해주세요.'
+      }
+
+      alert(errorMsg)
+    },
+    geoOptions
+  )
+}
+
+
 
 const router = useRouter()
 
 function goToemergencyDetail(hpid) {
   router.push({
-  name: 'emergencyDetail',
-  params: { hpid: hpid }, // URL엔 필수 키만
-})
+    name: 'emergencyDetail',
+    params: { hpid: hpid }, // URL엔 필수 키만
+  })
 
 }
 
@@ -504,6 +669,8 @@ const listHospitals = computed(() => {
     name: h.name,
     message: h.message,
     state: h.state,
+    bedAvail: h.bedAvail,   // ✅ 추가
+    bedTotal: h.bedTotal,
     distanceKm: (h.distance ?? 0) / 1000,
     etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
     lat: h.lat, lon: h.lon,     // (선택) 모달/길찾기 즉시 사용
@@ -518,13 +685,13 @@ const listHospitals = computed(() => {
 
 /* 거리순 정렬: hospitals가 있으면 hospitals를, 아니면 데모를 정렬 */
 function sortByDistance() {
-  
+
   hospitals.value.sort((a, b) => {
     const A = a.distance ?? Infinity
     const B = b.distance ?? Infinity
     return distanceAsc.value ? A - B : B - A
   })
-  
+
 }
 
 
@@ -612,13 +779,20 @@ function drawMarkers(items) {
     const pos = new window.Tmapv3.LatLng(h.lat, h.lon)
     bounds.extend(pos)
 
-    // 🔹 커스텀 아이콘으로 마커 생성
+    // 🔹 병상 정보를 반영한 커스텀 침대 아이콘으로 마커 생성
+    const customIcon = createMarkerIcon(h.bedAvail, h.bedTotal, h.message, false)
+    const customIconHover = createMarkerIcon(h.bedAvail, h.bedTotal, true)
+
     let marker = new window.Tmapv3.Marker({
       position: pos,
       map: map.value,
-      icon: markerIcon,      // 기본 아이콘
+      icon: customIcon,      // 실시간 병상 정보 반영 아이콘
       title: h.name || ''    // 접근성/툴팁
     })
+
+    // hover용 아이콘 저장
+    marker.__customIcon = customIcon
+    marker.__customIconHover = customIconHover
 
     // (선택) 인포윈도우는 그대로
     const html = `
@@ -646,30 +820,30 @@ function drawMarkers(items) {
     })
 
     // 클릭 → 인포윈도우 + 경로
-  const handlePick = () => {
-  console.log('[marker] picked:', h.name, h.lat, h.lon)
-  markers.forEach(m => m.__info?.setMap?.(null))
-  info.setMap(map.value)
-  drawRouteTo(h.lat, h.lon) // ✅ GeoServer 좌표 사용
-}
+    const handlePick = () => {
+      console.log('[marker] picked:', h.name, h.lat, h.lon)
+      markers.forEach(m => m.__info?.setMap?.(null))
+      info.setMap(map.value)
+      drawRouteTo(h.lat, h.lon) // ✅ GeoServer 좌표 사용
+    }
 
-// 클릭/터치 (중복/과다 금지)
-window.Tmapv3.event.addListener(marker, 'click', handlePick)
-window.Tmapv3.event.addListener(marker, 'touchend', handlePick)
+    // 클릭/터치 (중복/과다 금지)
+    window.Tmapv3.event.addListener(marker, 'click', handlePick)
+    window.Tmapv3.event.addListener(marker, 'touchend', handlePick)
 
-// 호버(포인터 있는 환경에서만)
-if (isDesktop) {
-  window.Tmapv3.event.addListener(marker, 'mouseover', () => {
-    marker.setIcon?.(markerIconHover)
-    marker.setZIndex?.(1000)
-    const el = document.getElementById('map_div'); if (el) el.style.cursor = 'pointer'
-  })
-  window.Tmapv3.event.addListener(marker, 'mouseout', () => {
-    marker.setIcon?.(markerIcon)
-    marker.setZIndex?.(0)
-    const el = document.getElementById('map_div'); if (el) el.style.cursor = ''
-  })
-}
+    // 호버(포인터 있는 환경에서만)
+    if (isDesktop) {
+      window.Tmapv3.event.addListener(marker, 'mouseover', () => {
+        marker.setIcon?.(marker.__customIconHover)
+        marker.setZIndex?.(1000)
+        const el = document.getElementById('map_div'); if (el) el.style.cursor = 'pointer'
+      })
+      window.Tmapv3.event.addListener(marker, 'mouseout', () => {
+        marker.setIcon?.(marker.__customIcon)
+        marker.setZIndex?.(0)
+        const el = document.getElementById('map_div'); if (el) el.style.cursor = ''
+      })
+    }
 
     marker.__info = info
     markers.push(marker)
@@ -677,7 +851,7 @@ if (isDesktop) {
 
   if (items.length) map.value.fitBounds(bounds)
 
-// ✅ 루프와 fitBounds 이후에 (그리고 필요 시 one-time 플래그 사용)
+  // ✅ 루프와 fitBounds 이후에 (그리고 필요 시 one-time 플래그 사용)
   if (!autoPickedOnce && markers[0]) {
     // autoPickedOnce = true
     // console.log('[auto-pick test] first marker')
@@ -688,7 +862,7 @@ if (isDesktop) {
 
     console.log('[auto-pick test] top 3 routes')
     drawRoutesToTop3()
-    
+
   }
 
 
@@ -700,9 +874,9 @@ if (isDesktop) {
 
 
 async function searchER(radiusMeters, useSymptoms) {
-  
 
-if (!cur.value.lat || !cur.value.lon) { alert('현재 위치 확인 후 다시 시도해주세요.'); return }
+
+  if (!cur.value.lat || !cur.value.lon) { alert('현재 위치 확인 후 다시 시도해주세요.'); return }
 
   const sanitizedRadius = Math.max(0, Number(radiusMeters) || 0)
   loadingHospitals.value = true
@@ -715,9 +889,9 @@ if (!cur.value.lat || !cur.value.lon) { alert('현재 위치 확인 후 다시 �
     const list = await fetchHospitalsFromWFS(cur.value.lon, cur.value.lat, sanitizedRadius)
     hospitals.value = list.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
     drawMarkers(hospitals.value)
-    
+
     // 사용자 요청(증상 검색)일 때만 자동 펼침
-   if (useSymptoms && hospitals.value.length) sheetHeightRatio.value = 1
+    if (useSymptoms && hospitals.value.length) sheetHeightRatio.value = 1
 
   } catch (e) {
     console.error('WFS 검색 실패:', e)
@@ -725,7 +899,7 @@ if (!cur.value.lat || !cur.value.lon) { alert('현재 위치 확인 후 다시 �
   } finally {
     loadingHospitals.value = false
   }
- }
+}
 
 /** GeoServer WFS에서 DWithin으로 병원 받아오기 */
 /** GeoServer WFS에서 DWithin으로 병원 받아오기 */
@@ -766,7 +940,21 @@ async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
       ? haversineMeter(centerLat, centerLon, lat, lon)
       : Infinity
 
-    return { id: f.id || `wfs-${i}`, hpid: p.hpid, name, address, tel, hours, lat, lon, distance, message, state }
+
+    const toInt = (v) => {
+      if (v === null || v === undefined) return null
+      const n = parseInt(String(v).trim(), 10)
+      return Number.isFinite(n) ? n : null
+    }
+
+    const bedAvail = toInt(p.bed_avail ?? p.bedAvail ?? p.bedavail)
+    const bedTotal = toInt(p.bed_total ?? p.bedTotal ?? p.bedtotal)
+
+
+    return {
+      id: f.id || `wfs-${i}`, hpid: p.hpid, name, address, tel, hours, lat, lon, distance, message, state, bedAvail,
+      bedTotal
+    }
   })
 }
 
@@ -788,36 +976,36 @@ const initTmap = () => {
   })
 
   // 지도 클릭 → 가장 가까운 마커를 선택으로 간주 (모바일/웹뷰에서 클릭 누락 보완)
-window.Tmapv3.event.addListener(map.value, 'click', (evt) => {
-  if (!evt || !evt.latLng) return
-  const lat = evt.latLng._lat ?? evt.latLng.lat?.() ?? evt.latLng.lat
-  const lon = evt.latLng._lng ?? evt.latLng.lng?.() ?? evt.latLng.lng
+  window.Tmapv3.event.addListener(map.value, 'click', (evt) => {
+    if (!evt || !evt.latLng) return
+    const lat = evt.latLng._lat ?? evt.latLng.lat?.() ?? evt.latLng.lat
+    const lon = evt.latLng._lng ?? evt.latLng.lng?.() ?? evt.latLng.lng
 
-  const z = map.value.getZoom?.() ?? 16
-  const threshold = z >= 17 ? 20 : z >= 15 ? 35 : 60
+    const z = map.value.getZoom?.() ?? 16
+    const threshold = z >= 17 ? 20 : z >= 15 ? 35 : 60
 
-  let best = null, bestDist = Infinity
-  markers.forEach(m => {
-    const p = m.getPosition?.(); if (!p) return
-    const mLat = p._lat ?? p.lat?.() ?? p.lat
-    const mLon = p._lng ?? p.lng?.() ?? p.lng
-    const d = haversineMeter(lat, lon, mLat, mLon)
-    if (d < bestDist) { bestDist = d; best = m }
+    let best = null, bestDist = Infinity
+    markers.forEach(m => {
+      const p = m.getPosition?.(); if (!p) return
+      const mLat = p._lat ?? p.lat?.() ?? p.lat
+      const mLon = p._lng ?? p.lng?.() ?? p.lng
+      const d = haversineMeter(lat, lon, mLat, mLon)
+      if (d < bestDist) { bestDist = d; best = m }
+    })
+
+    if (best && bestDist <= threshold) {
+      // ✅ 먼저 다 닫고
+      markers.forEach(m => m.__info?.setMap?.(null))
+      // ✅ 다시 열고
+      best.__info?.setMap?.(map.value)
+
+      const p = best.getPosition?.()
+      const mLat = p._lat ?? p.lat?.() ?? p.lat
+      const mLon = p._lng ?? p.lng?.() ?? p.lng
+      console.log('[map click -> nearest marker]', mLat, mLon) // 디버그
+      drawRouteTo(mLat, mLon)
+    }
   })
-
-  if (best && bestDist <= threshold) {
-    // ✅ 먼저 다 닫고
-    markers.forEach(m => m.__info?.setMap?.(null))
-    // ✅ 다시 열고
-    best.__info?.setMap?.(map.value)
-
-    const p = best.getPosition?.()
-    const mLat = p._lat ?? p.lat?.() ?? p.lat
-    const mLon = p._lng ?? p.lng?.() ?? p.lng
-    console.log('[map click -> nearest marker]', mLat, mLon) // 디버그
-    drawRouteTo(mLat, mLon)
-  }
-})
 
 
 
@@ -850,27 +1038,6 @@ window.Tmapv3.event.addListener(map.value, 'click', (evt) => {
     searchER(5000, false)
   }
 }
-
-import { getTmapRoute } from '@/utils/api';
-
-async function getETA(destLat, destLon) {
-  if (!cur.value.lat || !cur.value.lon) {
-    alert('출발 위치가 설정되지 않았습니다. (HTTPS 위치 권한 필요)')
-    return
-  }
-  const startX = +cur.value.lon
-  const startY = +cur.value.lat
-  const endX   = +destLon
-  const endY   = +destLat
-
-  try {
-    const res = await getTmapRoute(startX, startY, endX, endY)
-  }catch (err) {
-
-  }
-
-}
-
 
 /* 바텀시트 제스처 */
 /* 터치 핸들러 */
@@ -916,6 +1083,37 @@ function waitTmapReady(retry = 10) {
     tick()
   })
 }
+
+
+function bedLabel(h) {
+  const a = h.bedAvail
+  const t = h.bedTotal
+  const showA = (a === null || a === undefined) ? '?' : a
+  const showT = (t === null || t === undefined) ? '?' : t
+  return `${showA}/${showT}`
+}
+
+function bedBadgeClass(h) {
+  // 가용률에 따라 색상 분기 (선택 로직)
+  const a = h.bedAvail
+  const t = h.bedTotal
+  if (!Number.isFinite(a) || !Number.isFinite(t) || t <= 0) {
+    return 'bg-secondary-subtle text-secondary-emphasis' // 정보 부족
+  }
+  const ratio = a / t
+  if (ratio >= 0.5) return 'bg-success-subtle text-success-emphasis'   // 여유
+  if (ratio > 0) return 'bg-warning-subtle text-warning-emphasis'    // 부족
+  return 'bg-danger-subtle text-danger-emphasis'                        // 없음
+}
+
+
+
+
+
+
+
+
+
 
 onMounted(() => {
   sheetHeightRatio.value = 0; loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
@@ -971,6 +1169,11 @@ const onGripTouchEnd = () => {
 
 
 
+
+
+
+
+
 </script>
 
 
@@ -978,7 +1181,9 @@ const onGripTouchEnd = () => {
 
 <style scoped>
 /* 리스트 위에 살짝 여유(선택) */
-.er-list { padding-top: 4px; }
+.er-list {
+  padding-top: 4px;
+}
 
 /* 카드 기본/호버/클릭 */
 .card {
@@ -995,17 +1200,19 @@ const onGripTouchEnd = () => {
 
 /* 호버: 아래쪽으로만 커짐 */
 .card:hover {
-  transform: scale(1.02);              /* ↑ translateY(-) 제거 */
+  transform: scale(1.02);
+  /* ↑ translateY(-) 제거 */
   background-color: #f0f6ff;
   border-color: #0d6efd;
-  box-shadow: 0 6px 20px rgba(13,110,253,.15);
+  box-shadow: 0 6px 20px rgba(13, 110, 253, .15);
 }
 
 /* 클릭(눌림) */
 .card:active {
-  transform: scale(0.98);              /* 위아래 이동 없이 눌림만 */
+  transform: scale(0.98);
+  /* 위아래 이동 없이 눌림만 */
   background-color: #e2ebff;
-  box-shadow: 0 3px 10px rgba(0,0,0,.15);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .15);
 }
 
 
@@ -1026,5 +1233,4 @@ const onGripTouchEnd = () => {
 .sheet-grip {
   touch-action: none;
 }
-
 </style>
