@@ -31,7 +31,7 @@
         const messages = document.getElementById('messages');
         
         // WebSocket 연결 생성 (주소는 실제 서버 주소에 맞게 변경)
-        const ws = new WebSocket("ws://172.168.10.12:8088/ws/chat");
+        const ws = new WebSocket("wss://child119-251868777139.asia-northeast3.run.app/ws/chat");
 
         // 연결이 성공적으로 열렸을 때
         ws.onopen = function() {
