@@ -133,6 +133,11 @@ const router = createRouter({
       name: "HomeView_nono",
       component: () => import("../views/HomeView_nono.vue"),
     },
+    {
+      path: "/navi",
+      name: "navi",
+      component: () => import("../views/navi.vue"),
+    },
   ],
 });
 

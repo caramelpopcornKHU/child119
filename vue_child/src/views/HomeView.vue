@@ -770,27 +770,34 @@ const selectedHospital = ref(null)
 /* 길찾기 모달 열기 */
 function openRouteModal(hospital) {
   selectedHospital.value = hospital
-
-  // Bootstrap 5 Modal API 사용
-  const modalEl = document.getElementById('routeModal')
-  if (modalEl) {
-    // Bootstrap이 로드되어 있는지 확인
-    if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
-      const modal = new window.bootstrap.Modal(modalEl)
-      modal.show()
-    } else {
-      // Bootstrap이 없으면 직접 모달 표시 (fallback)
-      modalEl.classList.add('show')
-      modalEl.style.display = 'block'
-      document.body.classList.add('modal-open')
-
-      // 백드롭 추가
-      const backdrop = document.createElement('div')
-      backdrop.className = 'modal-backdrop fade show'
-      backdrop.id = 'route-modal-backdrop'
-      document.body.appendChild(backdrop)
+  router.push({
+    path: '/navi',
+    params : {
+      hpid: hospital.hpid || hospital.id,
+      lat: hospital.lat,
+      lon: hospital.lon
     }
-  }
+  });
+  // Bootstrap 5 Modal API 사용
+  // const modalEl = document.getElementById('routeModal')
+  // if (modalEl) {
+  //   // Bootstrap이 로드되어 있는지 확인
+  //   if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
+  //     const modal = new window.bootstrap.Modal(modalEl)
+  //     modal.show()
+  //   } else {
+  //     // Bootstrap이 없으면 직접 모달 표시 (fallback)
+  //     modalEl.classList.add('show')
+  //     modalEl.style.display = 'block'
+  //     document.body.classList.add('modal-open')
+
+  //     // 백드롭 추가
+  //     const backdrop = document.createElement('div')
+  //     backdrop.className = 'modal-backdrop fade show'
+  //     backdrop.id = 'route-modal-backdrop'
+  //     document.body.appendChild(backdrop)
+  //   }
+  // }
 }
 
 
