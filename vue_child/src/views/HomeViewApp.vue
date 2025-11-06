@@ -41,6 +41,9 @@
     <!-- 핸들 -->
     <div class="py-3 d-flex justify-content-center" @click="toggleSheet"></div>
 
+
+
+    
     <!-- 내용 -->
     <div class="d-flex flex-column" style="height: 100%;">
       <!-- 상단 라인 -->
