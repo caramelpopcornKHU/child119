@@ -1,0 +1,52 @@
+소아청소년과 테이블
+
+create table children_hospital(
+	hpid varchar primary key,
+	duty_name text,
+	duty_div_nam text,
+	duty_etc text,
+	duty_addr text,
+	duty_tel1 text,
+	duty_tel3 text,
+	duty_time1s varchar(4),
+	duty_time2s varchar(4),
+	duty_time3s varchar(4),
+	duty_time4s varchar(4),
+	duty_time5s varchar(4),
+	duty_time6s varchar(4),
+	duty_time7s varchar(4),
+	duty_time8s varchar(4),
+	duty_time1c varchar(4),
+	duty_time2c varchar(4),
+	duty_time3c varchar(4),
+	duty_time4c varchar(4),
+	duty_time5c varchar(4),
+	duty_time6c varchar(4),
+	duty_time7c varchar(4),
+	duty_time8c varchar(4),
+	duty_eryn varchar(4),
+	duty_inf text,
+	dgid_id_name text,
+	inst_expln text,
+	wgs84Lon decimal(10,7),
+	wgs84Lat decimal(10,7)
+	
+)
+
+
+지오메트리 칼럼 추가
+
+ALTER TABLE public.children_hospital
+ADD COLUMN geom geometry(Point, 4326);
+
+지오메트리 데이터 채우기
+
+UPDATE public.children_hospital
+SET geom = ST_SetSRID(ST_MakePoint(wgs84lon, wgs84lat), 4326)
+WHERE wgs84lon IS NOT NULL AND wgs84lat IS NOT NULL;
+
+공간 인덱싱
+
+CREATE INDEX idx_children_hospital_geom
+ON public.children_hospital
+USING GIST (geom);
