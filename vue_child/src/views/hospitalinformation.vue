@@ -36,10 +36,10 @@
   <div class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg " :style="sheetStyle" ref="bottomSheet"
     @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2; padding-bottom: 150px;">
     <!-- 그립 -->
-    <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
+    <div class="pt-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
       <div class="bg-secondary-subtle rounded-pill w-25" style="height:5px;"></div>
     </div>
-    <div class="py-3 d-flex justify-content-center" @click="toggleSheet" ></div>
+    <div class="d-flex justify-content-center" @click="toggleSheet" ></div>
 
     <!-- 내용 -->
     <div class="d-flex flex-column" style="height: 100%;">
