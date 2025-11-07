@@ -2,44 +2,59 @@
   <div class="d-flex justify-content-center align-items-center position-relative mt-1"
     style="height: calc(100vh - 140px); ">
 
-    <!-- 지도 -->
-    <div id="map_div" class="position-fixed top-0 start-0 w-100" style="height:100dvh; z-index:0;  pointer-events:auto;"></div>
+    <!-- 지도 :: start -->
+    <div id="map_div" class="position-fixed top-0 start-0 w-100"
+      style="height:100dvh; z-index:0;  pointer-events:auto;"></div>
+    <!-- 지도 :: end -->
 
-    <!-- 진료과 선택 -->
+    <!-- 상단 조회 버튼 :: start -->
     <div class="position-fixed start-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
       <div class="pe-auto">
         <button type="button" class="btn btn-light border rounded-pill px-3 shadow-sm text-bold" data-bs-toggle="modal"
           data-bs-target="#departmentModal">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M18 14h2v-3h3V9h-3V6h-2v3h-3v2h3zM10 4c0-.6.4-1 1-1h1V1h-1c-1.7 0-3 1.3-3 3v1H4v2h11V5h-5zm-1 8H7c0-1.1.9-2 2-2zm3.5 7c.83 0 1.5-.67 1.5-1.5S13.33 16 12.5 16s-1.5.67-1.5 1.5s.67 1.5 1.5 1.5M5 22h14c1.1 0 2-.9 2-2v-9H3v9c0 1.1.9 2 2 2" />
+            <path fill="currentColor"
+              d="M18 14h2v-3h3V9h-3V6h-2v3h-3v2h3zM10 4c0-.6.4-1 1-1h1V1h-1c-1.7 0-3 1.3-3 3v1H4v2h11V5h-5zm-1 8H7c0-1.1.9-2 2-2zm3.5 7c.83 0 1.5-.67 1.5-1.5S13.33 16 12.5 16s-1.5.67-1.5 1.5s.67 1.5 1.5 1.5M5 22h14c1.1 0 2-.9 2-2v-9H3v9c0 1.1.9 2 2 2" />
           </svg> 진료과
+        </button>
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold" title="달빛어린이병원" @click="showMoonlight()">
+          🌙 달빛어린이병원
+        </button>
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold" title="소아과" @click="showPediatric()">
+          🧒 소아청소년과
+        </button>
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold" title="약국" @click="showPharmacy()">
+          <i class="bi bi-capsule"></i> 약국
+        </button>
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold" title="AED" @click="showAED()">
+          ⚡ AED
         </button>
       </div>
     </div>
+    <!-- 상단 조회 버튼 :: end -->
 
-    <!-- 내 위치 새로고침 버튼 -->
-    <div class="position-fixed start-0 end-0 bg-white rounded-top-4 shadow-lg" 
-     :style="sheetStyle" 
-     ref="bottomSheet"
-     @touchstart="onTouchStart" 
-     @touchmove="onTouchMove" 
-     @touchend="onTouchEnd" 
-     style="z-index: 2; padding-bottom: 150px; pointer-events: auto;">
-      <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="refreshLocation" style="width: 48px; height: 48px; padding: 0;">
+    <!-- 내 위치 새로고침 버튼 :: start -->
+    <div class="position-fixed end-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
+      <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="refreshLocation()"
+        style="width: 48px; height: 48px; padding: 0;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4s-1.79-4-4-4m8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7s7 3.13 7 7s-3.13 7-7 7" />
+          <path fill="currentColor"
+            d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4s-1.79-4-4-4m8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7s7 3.13 7 7s-3.13 7-7 7" />
         </svg>
       </button>
     </div>
-    </div>
+    <!-- 내 위치 새로고침 버튼 :: end -->
+
+  </div>
   <!-- 바텀시트 -->
   <div class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg " :style="sheetStyle" ref="bottomSheet"
-    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" style="z-index: 2; padding-bottom: 150px;">
+    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd"
+    style="z-index: 2; padding-bottom: 150px;">
     <!-- 그립 -->
     <div class="pt-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
       <div class="bg-secondary-subtle rounded-pill w-25" style="height:5px;"></div>
     </div>
-    <div class="d-flex justify-content-center" @click="toggleSheet" ></div>
+    <div class="d-flex justify-content-center" @click="toggleSheet"></div>
 
     <!-- 내용 -->
     <div class="d-flex flex-column" style="height: 100%;">
@@ -48,8 +63,10 @@
       <div v-if="isRouteMode" class="p-3 border-bottom bg-primary bg-gradient text-white flex-shrink-0">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="fw-bold mb-0 text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-              <path fill="currentColor" d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+              style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+              <path fill="currentColor"
+                d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
             </svg>{{ selectedHospital?.properties?.hospital_name || '경로 안내' }}
           </h6>
           <button type="button" class="btn-close btn-close-white" @click="exitRouteMode" aria-label="닫기"></button>
@@ -60,40 +77,50 @@
           <div class="row g-2 small">
             <div class="col-6">
               <div class="text-muted mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor" d="M10 18v-2h4v2zm-3 4v-2h10v2zm9-15.65L12.35 3H18m1 0h-7l-2 2H6l2 2L4 16v2h16v-2l-4-9z" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                  style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                  <path fill="currentColor"
+                    d="M10 18v-2h4v2zm-3 4v-2h10v2zm9-15.65L12.35 3H18m1 0h-7l-2 2H6l2 2L4 16v2h16v-2l-4-9z" />
                 </svg>총 거리
               </div>
               <div class="fw-bold fs-6">{{ routeDetails.distance }}</div>
             </div>
             <div class="col-6">
               <div class="text-muted mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor" d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m4.2 14.2L11 13V7h1.5v5.2l4.5 2.7z" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                  style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                  <path fill="currentColor"
+                    d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m4.2 14.2L11 13V7h1.5v5.2l4.5 2.7z" />
                 </svg>소요 시간
               </div>
               <div class="fw-bold fs-6">{{ routeDetails.time }}</div>
             </div>
             <div class="col-6" v-if="transportType === 'car' && routeDetails.fare">
               <div class="text-muted mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor" d="M20 8h-3V6c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v10h2v2h2v-2h12v2h2v-2h2V10c0-1.1-.9-2-2-2M9 6h6v2H9zm11 12H4v-6h16z" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                  style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                  <path fill="currentColor"
+                    d="M20 8h-3V6c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v10h2v2h2v-2h12v2h2v-2h2V10c0-1.1-.9-2-2-2M9 6h6v2H9zm11 12H4v-6h16z" />
                 </svg>통행 요금
               </div>
               <div class="fw-bold fs-6">{{ routeDetails.fare }}</div>
             </div>
             <div class="col-6" v-if="transportType === 'car' && routeDetails.taxiFare">
               <div class="text-muted mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor" d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8zM6.85 6h10.29l1.08 3.11H5.77zM19 16H5v-4.66l.12-.34h13.77l.11.34z" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                  style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                  <path fill="currentColor"
+                    d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8zM6.85 6h10.29l1.08 3.11H5.77zM19 16H5v-4.66l.12-.34h13.77l.11.34z" />
                 </svg>예상 택시 요금
               </div>
               <div class="fw-bold fs-6">{{ routeDetails.taxiFare }}</div>
             </div>
             <div class="col-6" v-if="transportType === 'walk' && routeDetails.walkTime">
               <div class="text-muted mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor" d="M14.12 10H19V8.2h-3.62l-2.94-3.12C12.08 4.71 11.63 4.5 11.15 4.5c-.22 0-.42.03-.62.09l-3.94 1.88c-.46.22-.79.66-.79 1.17v4.18c0 .53.71 1.04 1.27 1.04c.55 0 1-.45 1-1V8.91l1.83-.88l-1.62 7.88l-2.98-.83c-.41-.11-.82-.07-1.18.11L2 16.25c-.48.23-.78.72-.78 1.25c0 .75.61 1.36 1.36 1.36c.21 0 .41-.05.59-.13L5.1 17.5l3.08.86c.5.14 1 .04 1.42-.25l2.12-1.51l.69 3.4c.1.5.55.86 1.05.86c.07 0 .13-.01.19-.02c.57-.12.94-.67.82-1.24l-.89-4.38zM13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2s-2 .9-2 2s.9 2 2 2" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                  style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                  <path fill="currentColor"
+                    d="M14.12 10H19V8.2h-3.62l-2.94-3.12C12.08 4.71 11.63 4.5 11.15 4.5c-.22 0-.42.03-.62.09l-3.94 1.88c-.46.22-.79.66-.79 1.17v4.18c0 .53.71 1.04 1.27 1.04c.55 0 1-.45 1-1V8.91l1.83-.88l-1.62 7.88l-2.98-.83c-.41-.11-.82-.07-1.18.11L2 16.25c-.48.23-.78.72-.78 1.25c0 .75.61 1.36 1.36 1.36c.21 0 .41-.05.59-.13L5.1 17.5l3.08.86c.5.14 1 .04 1.42-.25l2.12-1.51l.69 3.4c.1.5.55.86 1.05.86c.07 0 .13-.01.19-.02c.57-.12.94-.67.82-1.24l-.89-4.38zM13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2s-2 .9-2 2s.9 2 2 2" />
                 </svg>도보 시간
               </div>
               <div class="fw-bold fs-6">{{ routeDetails.walkTime }}</div>
@@ -124,23 +151,23 @@
         </div>
 
         <!-- 오른쪽: 버튼 그룹 -->
-          <div class="d-flex gap-2">
-    <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByDistance">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
-        <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
-          d="m24 42l-9-13h18zm0-36l-9 13h18z" />
-      </svg>
-      <span class="fw-bold">거리순</span>
-    </button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByDistance">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
+                d="m24 42l-9-13h18zm0-36l-9 13h18z" />
+            </svg>
+            <span class="fw-bold">거리순</span>
+          </button>
 
-    <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByTime">
-      <svg xmlns="http://www.w3.org/2000/svg" 
-      width="24" height="24" viewBox="0 0 24 24">
-      <path fill="currentColor" d="M12 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8a8 8 0 0 0-8 8a8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10a10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7z"/>
-      </svg>
-      시간순
-    </button>
-  </div>
+          <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByTime">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+              <path fill="currentColor"
+                d="M12 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8a8 8 0 0 0-8 8a8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10a10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7z" />
+            </svg>
+            시간순
+          </button>
+        </div>
       </div>
 
       <!-- 리스트 스크롤 영역 -->
@@ -149,19 +176,18 @@
         <div class="card shadow-sm mb-3" v-for="hospital in hospitals" :key="hospital.id">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
-              <h6 class="card-title fw-bold mb-1">{{ hospital.properties.hospital_name || '병원명 없음' }}</h6>
-              <span v-if="hospital.properties.hospital_type"
+              <h6 class="card-title fw-bold mb-1">{{ hospital.name || '병원명 없음' }}</h6>
+              <span v-if="hospital.type"
                 class="badge bg-success-subtle text-success-emphasis rounded-pill">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="15px" viewBox="0 0 24 24">
-                  <path fill="#008A64" d="M2 22V11h7V6h6v11h7v5H2M8 8V6h2v2H8m0 2v2h2v-2H8m6-4v2h2V6h-2m0 4v2h2v-2h-2m0 4v2h2v-2h-2" />
-                </svg> {{ hospital.properties.hospital_type }}
+                  <path fill="#008A64"
+                    d="M2 22V11h7V6h6v11h7v5H2M8 8V6h2v2H8m0 2v2h2v-2H8m6-4v2h2V6h-2m0 4v2h2v-2h-2m0 4v2h2v-2h-2" />
+                </svg> {{ hospital.type }}
               </span>
             </div>
 
-            <div class="mb-2" v-if="hospital.properties.dept_name">
-              <span
-                v-for="(dept, index) in hospital.properties.dept_name.split(',').map(d => d.trim())"
-                :key="index"
+            <div class="mb-2" v-if="hospital.dept_name">
+              <span v-for="(dept, index) in hospital.dept_name.split(',').map(d => d.trim())" :key="index"
                 class="badge rounded-pill me-1 mb-1"
                 :class="[getDepartmentColor(dept).bg, getDepartmentColor(dept).text]"
                 :style="getDepartmentColor(dept).style || ''">
@@ -176,9 +202,8 @@
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
-              <button class="btn btn-outline-primary w-100" v-if="hospital.properties.hospital_tel"
-               @click.stop="callHospital(hospital.properties.hospital_tel)"
-                style="pointer-events: auto; z-index: 10;">
+              <button class="btn btn-outline-primary w-100" v-if="hospital.tel"
+                @click.stop="callHospital(hospital.tel)" style="pointer-events: auto; z-index: 10;">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
               <button class="btn btn-primary w-100" @click.stop="openRouteModal(hospital)"
@@ -190,8 +215,10 @@
         </div>
 
         <div v-if="hospitals.length === 0" class="text-center text-muted py-4">
-          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" style="display: block; margin: 0 auto 8px;">
-            <path fill="currentColor" d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5l-1.5 1.5l-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16A6.5 6.5 0 0 1 3 9.5A6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14S14 12 14 9.5S12 5 9.5 5" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+            style="display: block; margin: 0 auto 8px;">
+            <path fill="currentColor"
+              d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5l-1.5 1.5l-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16A6.5 6.5 0 0 1 3 9.5A6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14S14 12 14 9.5S12 5 9.5 5" />
           </svg>
           <p class="mb-1">주변에 병원 정보가 없습니다.</p>
           <small class="text-muted">진료과를 변경하거나 다시 시도해주세요.</small>
@@ -206,7 +233,8 @@
       <div class="modal-content border-0 shadow">
         <div class="modal-header">
           <h5 class="modal-title" id="departmentModalLabel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+              style="display: inline-block; vertical-align: middle; margin-right: 4px;">
               <path fill="currentColor" d="M19 14h-6v6h-2v-6H5v-2h6V6h2v6h6z" />
             </svg> 진료과 선택
           </h5>
@@ -222,8 +250,10 @@
           </div>
 
           <div v-if="selectedDepartments.length" class="mt-3 text-muted small">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-              <path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m-2 15l-5-5l1.41-1.41L10 14.17l7.59-7.59L19 8z" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+              <path fill="currentColor"
+                d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m-2 15l-5-5l1.41-1.41L10 14.17l7.59-7.59L19 8z" />
             </svg> {{ selectedDepartments.length }}개 진료과 선택됨
           </div>
         </div>
@@ -231,8 +261,10 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
           <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-              <path fill="currentColor" d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5l-1.5 1.5l-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16A6.5 6.5 0 0 1 3 9.5A6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14S14 12 14 9.5S12 5 9.5 5" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+              <path fill="currentColor"
+                d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5l-1.5 1.5l-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16A6.5 6.5 0 0 1 3 9.5A6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14S14 12 14 9.5S12 5 9.5 5" />
             </svg> 검색
           </button>
         </div>
@@ -246,8 +278,10 @@
       <div class="modal-content border-0 shadow">
         <div class="modal-header bg-primary text-white">
           <h5 class="modal-title" id="routeModalLabel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
-              <path fill="currentColor" d="M17.5 4C15 4 13 6 13 8.5c0 2.89 4.5 9.5 4.5 9.5S22 11.39 22 8.5C22 6 20 4 17.5 4m0 7c-1.1 0-2-.9-2-2s.9-2 2-2s2 .9 2 2s-.9 2-2 2M3 9c-1.11 0-2 .89-2 2v7c0 1.11.89 2 2 2h1v1a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-1h5v-2H3zm7 3H3v-2h7z" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+              style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+              <path fill="currentColor"
+                d="M17.5 4C15 4 13 6 13 8.5c0 2.89 4.5 9.5 4.5 9.5S22 11.39 22 8.5C22 6 20 4 17.5 4m0 7c-1.1 0-2-.9-2-2s.9-2 2-2s2 .9 2 2s-.9 2-2 2M3 9c-1.11 0-2 .89-2 2v7c0 1.11.89 2 2 2h1v1a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-1h5v-2H3zm7 3H3v-2h7z" />
             </svg>경로 안내
           </h5>
           <button type="button" class="btn-close btn-close-white" @click="closeRouteModal" aria-label="닫기"></button>
@@ -256,13 +290,17 @@
         <div class="modal-body">
           <div v-if="selectedHospital" class="alert alert-light border mb-3">
             <div class="fw-bold text-dark mb-1">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                <path fill="currentColor" d="M2 22V11h7V6h6v11h7v5H2M8 8V6h2v2H8m0 2v2h2v-2H8m6-4v2h2V6h-2m0 4v2h2v-2h-2m0 4v2h2v-2h-2" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                <path fill="currentColor"
+                  d="M2 22V11h7V6h6v11h7v5H2M8 8V6h2v2H8m0 2v2h2v-2H8m6-4v2h2V6h-2m0 4v2h2v-2h-2m0 4v2h2v-2h-2" />
               </svg>{{ selectedHospital.properties.hospital_name }}
             </div>
             <small class="text-muted">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                <path fill="currentColor" d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                <path fill="currentColor"
+                  d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
               </svg>{{ selectedHospital.distanceKm }}km
             </small>
           </div>
@@ -270,26 +308,35 @@
           <div class="mb-3">
             <label class="form-label fw-bold">이동 수단 선택</label>
             <div class="btn-group w-100" role="group">
-              <input type="radio" class="btn-check" name="transportType" id="transport-car" value="car" v-model="transportType" checked>
+              <input type="radio" class="btn-check" name="transportType" id="transport-car" value="car"
+                v-model="transportType" checked>
               <label class="btn btn-outline-primary" for="transport-car">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" style="display: block; margin: 0 auto 4px;">
-                  <path fill="currentColor" d="M5 11l1.5-4.5h11L19 11m-1.5 5a1.5 1.5 0 0 1-1.5-1.5a1.5 1.5 0 0 1 1.5-1.5a1.5 1.5 0 0 1 1.5 1.5a1.5 1.5 0 0 1-1.5 1.5m-11 0A1.5 1.5 0 0 1 5 14.5A1.5 1.5 0 0 1 6.5 13A1.5 1.5 0 0 1 8 14.5A1.5 1.5 0 0 1 6.5 16M18.92 6c-.2-.58-.76-1-1.42-1h-11c-.66 0-1.21.42-1.42 1L3 12v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8z" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                  style="display: block; margin: 0 auto 4px;">
+                  <path fill="currentColor"
+                    d="M5 11l1.5-4.5h11L19 11m-1.5 5a1.5 1.5 0 0 1-1.5-1.5a1.5 1.5 0 0 1 1.5-1.5a1.5 1.5 0 0 1 1.5 1.5a1.5 1.5 0 0 1-1.5 1.5m-11 0A1.5 1.5 0 0 1 5 14.5A1.5 1.5 0 0 1 6.5 13A1.5 1.5 0 0 1 8 14.5A1.5 1.5 0 0 1 6.5 16M18.92 6c-.2-.58-.76-1-1.42-1h-11c-.66 0-1.21.42-1.42 1L3 12v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8z" />
                 </svg>
                 <small>자동차</small>
               </label>
 
-              <input type="radio" class="btn-check" name="transportType" id="transport-walk" value="walk" v-model="transportType">
+              <input type="radio" class="btn-check" name="transportType" id="transport-walk" value="walk"
+                v-model="transportType">
               <label class="btn btn-outline-primary" for="transport-walk">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" style="display: block; margin: 0 auto 4px;">
-                  <path fill="currentColor" d="M14.12 10H19V8.2h-3.62l-2.94-3.12C12.08 4.71 11.63 4.5 11.15 4.5c-.22 0-.42.03-.62.09l-3.94 1.88c-.46.22-.79.66-.79 1.17v4.18c0 .53.71 1.04 1.27 1.04c.55 0 1-.45 1-1V8.91l1.83-.88l-1.62 7.88l-2.98-.83c-.41-.11-.82-.07-1.18.11L2 16.25c-.48.23-.78.72-.78 1.25c0 .75.61 1.36 1.36 1.36c.21 0 .41-.05.59-.13L5.1 17.5l3.08.86c.5.14 1 .04 1.42-.25l2.12-1.51l.69 3.4c.1.5.55.86 1.05.86c.07 0 .13-.01.19-.02c.57-.12.94-.67.82-1.24l-.89-4.38zM13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2s-2 .9-2 2s.9 2 2 2" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                  style="display: block; margin: 0 auto 4px;">
+                  <path fill="currentColor"
+                    d="M14.12 10H19V8.2h-3.62l-2.94-3.12C12.08 4.71 11.63 4.5 11.15 4.5c-.22 0-.42.03-.62.09l-3.94 1.88c-.46.22-.79.66-.79 1.17v4.18c0 .53.71 1.04 1.27 1.04c.55 0 1-.45 1-1V8.91l1.83-.88l-1.62 7.88l-2.98-.83c-.41-.11-.82-.07-1.18.11L2 16.25c-.48.23-.78.72-.78 1.25c0 .75.61 1.36 1.36 1.36c.21 0 .41-.05.59-.13L5.1 17.5l3.08.86c.5.14 1 .04 1.42-.25l2.12-1.51l.69 3.4c.1.5.55.86 1.05.86c.07 0 .13-.01.19-.02c.57-.12.94-.67.82-1.24l-.89-4.38zM13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2s-2 .9-2 2s.9 2 2 2" />
                 </svg>
                 <small>도보</small>
               </label>
 
-              <input type="radio" class="btn-check" name="transportType" id="transport-transit" value="transit" v-model="transportType">
+              <input type="radio" class="btn-check" name="transportType" id="transport-transit" value="transit"
+                v-model="transportType">
               <label class="btn btn-outline-primary" for="transport-transit">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" style="display: block; margin: 0 auto 4px;">
-                  <path fill="currentColor" d="M18 11H6V6h12m-1.5 11a1.5 1.5 0 0 1-1.5-1.5a1.5 1.5 0 0 1 1.5-1.5a1.5 1.5 0 0 1 1.5 1.5a1.5 1.5 0 0 1-1.5 1.5m-9 0A1.5 1.5 0 0 1 6 15.5A1.5 1.5 0 0 1 7.5 14A1.5 1.5 0 0 1 9 15.5A1.5 1.5 0 0 1 7.5 17M12 2c-4 0-8 .5-8 4v10c0 1.5 1.5 3 3 3l-1 1v1h2l2-2h4l2 2h2v-1l-1-1c1.5 0 3-1.5 3-3V6c0-3.5-4-4-8-4" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                  style="display: block; margin: 0 auto 4px;">
+                  <path fill="currentColor"
+                    d="M18 11H6V6h12m-1.5 11a1.5 1.5 0 0 1-1.5-1.5a1.5 1.5 0 0 1 1.5-1.5a1.5 1.5 0 0 1 1.5 1.5a1.5 1.5 0 0 1-1.5 1.5m-9 0A1.5 1.5 0 0 1 6 15.5A1.5 1.5 0 0 1 7.5 14A1.5 1.5 0 0 1 9 15.5A1.5 1.5 0 0 1 7.5 17M12 2c-4 0-8 .5-8 4v10c0 1.5 1.5 3 3 3l-1 1v1h2l2-2h4l2 2h2v-1l-1-1c1.5 0 3-1.5 3-3V6c0-3.5-4-4-8-4" />
                 </svg>
                 <small>대중교통</small>
               </label>
@@ -300,8 +347,10 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" @click="closeRouteModal">취소</button>
           <button type="button" class="btn btn-primary" @click="findRoute">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-              <path fill="currentColor" d="M14.19 14.19c-1.14.59-3.11.51-4.24-.62c-1.14-1.13-1.21-3.1-.62-4.24l-2.86-2.86a10 10 0 0 0-2.81 6.98c0 6.2 6.19 10.18 6.19 10.18s6.19-3.98 6.19-10.18c0-1.2-.23-2.34-.66-3.41zM12 12a2 2 0 0 1-2-2a2 2 0 0 1 2-2a2 2 0 0 1 2 2a2 2 0 0 1-2 2m-3.41-7.83l1.42 1.41L8.59 7L7.17 5.59zM12 4V1l-4 4l4 4V6a4 4 0 0 1 4 4c0 .85-.25 1.64-.68 2.3l1.46 1.46A6 6 0 0 0 18 10a6 6 0 0 0-6-6" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+              <path fill="currentColor"
+                d="M14.19 14.19c-1.14.59-3.11.51-4.24-.62c-1.14-1.13-1.21-3.1-.62-4.24l-2.86-2.86a10 10 0 0 0-2.81 6.98c0 6.2 6.19 10.18 6.19 10.18s6.19-3.98 6.19-10.18c0-1.2-.23-2.34-.66-3.41zM12 12a2 2 0 0 1-2-2a2 2 0 0 1 2-2a2 2 0 0 1 2 2a2 2 0 0 1-2 2m-3.41-7.83l1.42 1.41L8.59 7L7.17 5.59zM12 4V1l-4 4l4 4V6a4 4 0 0 1 4 4c0 .85-.25 1.64-.68 2.3l1.46 1.46A6 6 0 0 0 18 10a6 6 0 0 0-6-6" />
             </svg>경로 탐색
           </button>
         </div>
@@ -311,7 +360,7 @@
 
 </template>
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import axios from 'axios'
 
 // TMAP API 키
@@ -362,7 +411,6 @@ function getDepartmentColor(deptName) {
       return value
     }
   }
-
   // 기본 색상
   return { bg: 'bg-secondary-subtle', text: 'text-secondary-emphasis', color: '#6c757d' }
 }
@@ -370,7 +418,7 @@ function getDepartmentColor(deptName) {
 /* 병원 데이터 상태 */
 const hospitals = ref([])
 const userLocation = ref(null)
-const searchRadius = ref(5) // 기본 5km 반경
+//const searchRadius = ref(5) // 기본 5km 반경
 
 /* 지도 상태 */
 const map = ref(null)
@@ -402,7 +450,7 @@ const sheetHeightRatio = ref(0)
 const dragStart = ref({ y: 0, ratio: 0 })
 
 const MAX_SHEET_HEIGHT = window.innerHeight * 0.7
-const MIN_SHEET_HEIGHT = 220
+const MIN_SHEET_HEIGHT = 180
 
 const sheetY = computed(() =>
   (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT) * (1 - sheetHeightRatio.value)
@@ -416,94 +464,194 @@ const sheetStyle = computed(() => ({
   top: 'auto'
 }))
 
-/* GeoServer에서 병원 데이터 가져오기 */
-const fetchHospitalsFromGeoServer = async (lat, lon, radiusKm) => {
+/** 상단 버튼 요소 별로 함수 호출 */
+/** 상단 버튼 요소별로 GeoServer Layer 조회 후 마커 표시 */
+async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
+  if (!map.value) {
+    alert("지도가 아직 준비되지 않았습니다.")
+    return
+  }
+
   try {
-    // EPSG:4326 (WGS84) 좌표계로 bbox 계산 (위도/경도)
-    // 1도 = 약 111km
-    const delta = radiusKm / 111
-    const bbox = [
-      lon - delta,
-      lat - delta,
-      lon + delta,
-      lat + delta
-    ].join(',')
+    // 1️⃣ 현재 지도 화면의 bbox 구하기
+    const bounds = map.value.getBounds()
+    const sw = bounds._sw
+    const ne = bounds._ne
+    const bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()].join(',')
 
-    // GeoServer WFS 요청 URL (sql2 레이어 사용, EPSG:4326 좌표계)
-    // 개발 환경에서는 프록시 사용, 프로덕션에서는 직접 접속
-    const baseUrl = import.meta.env.DEV ? '/geoserver' : 'https://api.child119.com/geoserver'
-    const url = `${baseUrl}/hospital/ows?` +
-      `service=WFS` +
-      `&version=1.1.0` +
-      `&request=GetFeature` +
-      `&typeName=hospital:sql2` + // hospital 저장소의 sql2 레이어
-      `&srsName=EPSG:4326` +
-      `&outputFormat=application/json` +
-      `&bbox=${bbox},EPSG:4326`
+    // 2️⃣ GeoServer 요청
+    const fullUrl = `${url}&bbox=${bbox},EPSG:4326`
+    console.log(`조회 URL: ${fullUrl}`)
 
-    console.log('GeoServer 요청 URL:', url)
-    const response = await axios.get(url)
+    const res = await fetch(fullUrl)
+    const geojson = await res.json()
 
-    console.log('GeoServer 전체 응답:', response)
-    console.log('응답 데이터:', response.data)
-    console.log('features 개수:', response.data?.features?.length)
+    // 3️⃣ 마커 초기화
+    clearMarkers()
 
-    if (response.data && response.data.features) {
-      console.log('GeoServer 응답 데이터:', response.data)
-      console.log('받아온 병원 개수:', response.data.features.length)
+    // 4️⃣ 마커 표시
+    geojson.features.forEach(f => {
+      const [lon, lat] = f.geometry.coordinates
+      const props = f.properties
 
-      // 거리 계산 및 필터링
-      let hospitalsWithDistance = response.data.features.map(feature => {
-        const coords = feature.geometry.coordinates
-        const distance = calculateDistance(lat, lon, coords[1], coords[0])
+      const marker = new Tmapv3.Marker({
+        position: new Tmapv3.LatLng(lat, lon),
+        icon: iconUrl,
+        map: map.value
+      })
 
-        return {
-          id: feature.id,
-          properties: feature.properties,
-          coordinates: coords,
-          distance: distance,
-          distanceKm: (distance / 1000).toFixed(1)
-        }
-      }).filter(h => h.distance <= radiusKm * 1000)
+      const info = new Tmapv3.InfoWindow({
+        position: new Tmapv3.LatLng(lat, lon),
+        content: `
+          <div class="p-2 bg-white border rounded-2 shadow-sm" style="min-width:160px;">
+            <strong>${props[nameKey] || "이름 없음"}</strong><br>
+            <small>${props[addrKey] || "주소 없음"}</small>
+          </div>`,
+        type: 2,
+        map: null
+      })
 
-      console.log('거리 필터링 후 병원 수:', hospitalsWithDistance.length)
-      console.log('선택된 진료과:', selectedDepartments.value)
+      marker.addListener("click", () => {
+        markers.forEach(m => m.info?.setMap(null))
+        info.setMap(map.value)
+      })
 
-      // 진료과 필터링 (선택된 진료과가 있을 경우)
-      if (selectedDepartments.value.length > 0) {
-        const beforeFilter = hospitalsWithDistance.length
-        hospitalsWithDistance = hospitalsWithDistance.filter(h => {
-          const deptName = h.properties.dept_name || ''
-          // 선택된 진료과 중 하나라도 dept_name에 포함되면 true (OR 조건)
-          return selectedDepartments.value.some(dept => deptName.includes(dept))
-        })
-        console.log(`진료과 필터링: ${beforeFilter}개 → ${hospitalsWithDistance.length}개`)
-      }
+      marker.info = info
+      markers.push(marker)
+    })
 
-      // 거리순 정렬
-      hospitalsWithDistance.sort((a, b) => a.distance - b.distance) 
-      //const finalHospitals = hospitalsWithDistance(0,10)
-      hospitals.value = hospitalsWithDistance
+    // 5️⃣ 바텀시트 리스트 데이터 업데이트
+    addToHospitalList(geojson.features, listType)
+    console.log("GeoServer 응답 샘플:", geojson.features[0])
 
-      console.log('최종 병원 수:', hospitalsWithDistance.length)
-      console.log('hospitals.value:', hospitals.value)
-
-      // 데이터가 있으면 바텀시트 자동으로 올리기
-      if (hospitalsWithDistance.length > 0) {
-        sheetHeightRatio.value = 0.5 // 중간 높이로 펼치기
-      }
-
-      // 지도에 마커 추가
-      addHospitalMarkers(hospitalsWithDistance)
-    }
-  } catch (error) {
-    console.error('병원 데이터 가져오기 실패:', error)
-    alert('병원 정보를 가져올 수 없습니다. GeoServer 연결을 확인해주세요.')
+    console.log(`✅ ${listType} ${geojson.features.length}개 표시 완료`)
+  } catch (err) {
+    console.error(`${listType} 조회 실패:`, err)
+    alert(`${listType} 데이터를 불러오는 중 오류가 발생했습니다.`)
   }
 }
 
+// ✅ 달빛어린이병원 조회 (GeoServer)
+function showMoonlight() {
+  showLayerInView({
+    url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital:moonlight_hospital&outputFormat=application/json",
+    iconUrl: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjZmZmYjAwIiBkPSJtMTcuNzUgNC4wOWwtMi41MyAxLjk0bC45MSAzLjA2bC0yLjYzLTEuODFsLTIuNjMgMS44MWwuOTEtMy4wNmwtMi41My0xLjk0TDEyLjQ0IDRsMS4wNi0zbDEuMDYgM3ptMy41IDYuOTFsLTEuNjQgMS4yNWwuNTkgMS45OGwtMS43LTEuMTdsLTEuNyAxLjE3bC41OS0xLjk4TDE1Ljc1IDExbDIuMDYtLjA1TDE4LjUgOWwuNjkgMS45NXptLTIuMjggNC45NWMuODMtLjA4IDEuNzIgMS4xIDEuMTkgMS44NWMtLjMyLjQ1LS42Ni44Ny0xLjA4IDEuMjdDMTUuMTcgMjMgOC44NCAyMyA0Ljk0IDE5LjA3Yy0zLjkxLTMuOS0zLjkxLTEwLjI0IDAtMTQuMTRjLjQtLjQuODItLjc2IDEuMjctMS4wOGMuNzUtLjUzIDEuOTMuMzYgMS44NSAxLjE5Yy0uMjcgMi44Ni42OSA1LjgzIDIuODkgOC4wMmE5Ljk2IDkuOTYgMCAwIDAgOC4wMiAyLjg5bS0xLjY0IDIuMDJhMTIuMDggMTIuMDggMCAwIDEtNy44LTMuNDdjLTIuMTctMi4xOS0zLjMzLTUtMy40OS03LjgyYy0yLjgxIDMuMTQtMi43IDcuOTYuMzEgMTAuOThjMy4wMiAzLjAxIDcuODQgMy4xMiAxMC45OC4zMSIvPjwvc3ZnPg==",
+    nameKey: "duty_name",
+    addrKey: "duty_addr",
+    listType: "달빛어린이병원"
+  })
+}
+
+// ✅ 소아청소년과 조회 (GeoServer)
+function showPediatric() {
+  showLayerInView({
+    url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital%3Achildren_hospital&outputFormat=application%2Fjson&maxFeature=50",
+    iconUrl: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjMjQyZWZkIiBkPSJNMTIgMmEzIDMgMCAwIDEgMyAzYTMgMyAwIDAgMS0zIDNhMyAzIDAgMCAxLTMtM2EzIDMgMCAwIDEgMy0zbTAgN2MxLjYzIDAgMy4xMi4zNSA0LjUgMS4wNWMxLjM0LjcxIDIgMS41NiAyIDIuNTZ2NS43N2MwIDEuMTItLjg2IDIuMDYtMi42MSAyLjgxVjE5YzAtLjk1LS44Ni0xLjYyLTIuNTgtMi4wM2MtLjU2LS4xMy0xLS4xOS0xLjMxLS4xOWMtLjg3IDAtMS43LjE3LTIuNDYuNTJjLS43Ny4zNC0xLjIzLjc4LTEuMzggMS4zMWMxLjM0LjUzIDIuNjIuOCAzLjg0LjhsMS0uMXYyLjYzTDEyIDIyYTkuNyA5LjcgMCAwIDEtMy44OS0uODFjLTEuNzUtLjc1LTIuNjEtMS42OS0yLjYxLTIuODF2LTUuNzdjMC0xIC42Ni0xLjg1IDItMi41NlE5LjU3IDkgMTIgOW0wIDJhMiAyIDAgMCAwLTIgMmEyIDIgMCAwIDAgMiAyYTIgMiAwIDAgMCAyLTJhMiAyIDAgMCAwLTItMiIvPjwvc3ZnPg==",
+    nameKey: "duty_name",
+    addrKey: "duty_addr",
+    listType: "소아청소년과"
+  })
+}
+
+// 🕐 약국 조회 (API 뜯어야함)
+async function showPharmacy() {
+}
+
+// ⚡ AED 조회 (공공데이터 API - 1000건씩만 추출)
+async function showAED() {
+  if (!map.value) {
+    alert("지도가 아직 준비되지 않았습니다.")
+    return
+  }
+  const key = "d43280d93d2b4881c7d82ace3929e20b5f2dfba72a77687d8ae7347d9f247d99"
+  const pageNo = 1
+  const numOfRows = 1000  // 필요에 따라 조정
+  const url = `https://apis.data.go.kr/B552657/AEDInfoInqireService/getAedLcinfoInqire?serviceKey=${key}&pageNo=${pageNo}&numOfRows=${numOfRows}`
+
+  try {
+    const res = await fetch(url)
+    const text = await res.text()
+    const parser = new DOMParser()
+    const xml = parser.parseFromString(text, "application/xml")
+    const items = xml.getElementsByTagName("item")
+
+    clearMarkers()
+
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i]
+      const latText = it.getElementsByTagName("wgs84Lat")[0]?.textContent
+      const lonText = it.getElementsByTagName("wgs84Lon")[0]?.textContent
+      const lat = latText ? parseFloat(latText) : NaN
+      const lon = lonText ? parseFloat(lonText) : NaN
+      const place = it.getElementsByTagName("buildPlace")[0]?.textContent || ""
+      const addr = it.getElementsByTagName("placeDetail")[0]?.textContent || ""
+
+      if (!isNaN(lat) && !isNaN(lon)) {
+        const marker = new Tmapv3.Marker({
+          position: new Tmapv3.LatLng(lat, lon),
+          icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjZjAwIiBkPSJNMTYuNSAyLjgzYy0xLjc0IDAtMy40MS44MS00LjUgMi4wN2MtMS4wOS0xLjI2LTIuNzYtMi4wNy00LjUtMi4wN2MtMy4wOCAwLTUuNSAyLjQxLTUuNSA1LjVjMCAzLjc3IDMuNCA2Ljg2IDguNTUgMTEuNTNMMTIgMjEuMTdsMS40NS0xLjMxQzE4LjYgMTUuMTkgMjIgMTIuMSAyMiA4LjMzYzAtMy4wOS0yLjQyLTUuNS01LjUtNS41bS00LjUgMTV2LTRIOWwzLTd2NGgzIi8+PC9zdmc+",
+          map: map.value
+        })
+
+        const info = new Tmapv3.InfoWindow({
+          position: new Tmapv3.LatLng(lat, lon),
+          content: `<div><strong>${place}</strong><br>${addr}</div>`,
+          type: 2,
+          map: null
+        })
+
+        marker.addListener("click", () => {
+          markers.forEach(m => m.info?.setMap(null))
+          info.setMap(map.value)
+        })
+        marker.info = info
+        markers.push(marker)
+      }
+    }
+
+    console.log(`✅ AED 위치정보 ${items.length}건 표시 완료`)
+
+  } catch (err) {
+    console.error("AED 위치정보 API 호출 실패:", err)
+    alert("AED 정보를 불러올 수 없습니다.")
+  }
+}
+
+/**
+ * API 응답을 hospitals 배열로 통일시켜주는 함수
+ */
+function addToHospitalList(list, type) {
+  hospitals.value = list.map((item) => {
+    const props = item.properties || {}
+    const [lon, lat] = item.geometry?.coordinates || [NaN, NaN]
+
+    return {
+      id: props.hpid || props.id || Math.random().toString(36).substring(2, 9),
+      hpid: props.hpid || null,
+      type, // 예: "소아청소년과"
+      name:
+        props.duty_name || props.hospital_name || props.name || props.dutyName || "이름 없음",
+      addr:
+        props.duty_addr || props.address || props.addr || props.dutyAddr || "주소 없음",
+      tel:
+        props.duty_tel1 || props.dutytel3 || props.hospital_tel || props.dutyTel1 || "",
+      lat,
+      lon,
+      distanceKm: userLocation.value
+        ? (calcDistance(userLocation.value.lat, userLocation.value.lon, lat, lon) / 1000).toFixed(1)
+        : null,
+      etaMin: userLocation.value
+        ? ((calcDistance(userLocation.value.lat, userLocation.value.lon, lat, lon) / 80).toFixed(0))
+        : null
+    }
+  })
+
+  console.log(`✅ ${type} ${hospitals.value.length}개 표시 완료`)
+  console.log("리스트 데이터 확인:", JSON.parse(JSON.stringify(hospitals.value)))
+}
+
 /* 두 지점 간 거리 계산 (Haversine 공식) - 미터 단위 */
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
+const calcDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371e3 // 지구 반지름 (미터)
   const φ1 = lat1 * Math.PI / 180
   const φ2 = lat2 * Math.PI / 180
@@ -518,10 +666,13 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   return R * c
 }
 
-let markers = []
+ let markers = []
 
 function clearMarkers() {
-  markers.forEach(m => m.setMap(null));
+  markers.forEach(m => {
+    if (m && m.setMap) m.setMap(null)
+    if (m.info) m.info.setMap(null)
+  })
   markers = []
 }
 
@@ -653,7 +804,7 @@ async function findRoute() {
         "searchOption": searchOption.value,
         "trafficInfo": trafficInfo.value
       }
-      
+
       const response = await axios.post(
         "https://apis.openapi.sk.com/tmap/routes?version=1&format=json",
         data,
@@ -743,8 +894,8 @@ async function findRoute() {
           })
 
           resultMarkerArr.value.push(marker)
-            // ✅ 추가: 라벨도 기록
-           resultInfoWindowArr.value.push(infoWindow)
+          // ✅ 추가: 라벨도 기록
+          resultInfoWindowArr.value.push(infoWindow)
 
         }
       }
@@ -794,11 +945,6 @@ function exitRouteMode() {
   isRouteMode.value = false
   selectedHospital.value = null
   clearRouteData()
-
-  // 병원 마커 다시 표시
-  if (userLocation.value) {
-    fetchHospitalsFromGeoServer(userLocation.value.lat, userLocation.value.lon, searchRadius.value)
-  }
 }
 
 /* 경로 정보 토글 */
@@ -863,17 +1009,12 @@ function refreshLocation() {
       // 지도 중심 이동
       map.value.setCenter(currentPos)
       map.value.setZoom(17)
-
-      // 경로 모드가 아닐 때만 병원 재검색
-      if (!isRouteMode.value) {
-        fetchHospitalsFromGeoServer(lat, lon, searchRadius.value)
-      }
     },
     err => {
       console.error('Geolocation 오류 코드:', err.code, '메시지:', err.message)
       let errorMsg = '현재 위치를 가져올 수 없습니다.\n'
 
-      switch(err.code) {
+      switch (err.code) {
         case 1: // PERMISSION_DENIED
           errorMsg += '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.'
           break
@@ -932,13 +1073,12 @@ const initTmap = () => {
 
         map.value.setCenter(currentPos)
         map.value.setZoom(17)
-        fetchHospitalsFromGeoServer(lat, lon, searchRadius.value)
       },
       err => {
         console.error('Geolocation 오류 코드:', err.code, '메시지:', err.message)
         let errorMsg = '현재 위치를 가져올 수 없습니다.\n'
 
-        switch(err.code) {
+        switch (err.code) {
           case 1: // PERMISSION_DENIED
             errorMsg += '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.'
             break
@@ -955,14 +1095,12 @@ const initTmap = () => {
         alert(errorMsg)
         console.log('기본 위치(서울시청)로 설정합니다.')
         userLocation.value = { lat: 37.5662952, lon: 126.9779451 }
-        fetchHospitalsFromGeoServer(37.5662952, 126.9779451, searchRadius.value)
       },
       geoOptions
     )
   } else {
     alert('이 브라우저에서는 위치 정보를 지원하지 않습니다.')
     userLocation.value = { lat: 37.5662952, lon: 126.9779451 }
-    fetchHospitalsFromGeoServer(37.5662952, 126.9779451, searchRadius.value)
   }
 }
 
@@ -972,7 +1110,7 @@ const onTouchStart = e => {
   if (target.closest('button') || target.closest('.btn') || target.closest('.card-body')) {
     return
   }
-  
+
   isDragging.value = true
   dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }
   e.preventDefault()
@@ -984,7 +1122,7 @@ const onTouchMove = e => {
   if (target.closest('button') || target.closest('.btn')) {
     return
   }
-  
+
   const dY = e.touches[0].clientY - dragStart.value.y
   const dR = -dY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT)
   sheetHeightRatio.value = Math.min(1, Math.max(0, dragStart.value.ratio + dR))
@@ -1028,21 +1166,8 @@ function waitTmapReady(retry = 10) {
   })
 }
 
-/* 반경 또는 진료과 변경 시 재검색 */
-watch(searchRadius, (newRadius) => {
-  if (userLocation.value && !isRouteMode.value) {
-    fetchHospitalsFromGeoServer(userLocation.value.lat, userLocation.value.lon, newRadius)
-  }
-})
-
-watch(selectedDepartments, () => {
-  if (userLocation.value && !isRouteMode.value) {
-    fetchHospitalsFromGeoServer(userLocation.value.lat, userLocation.value.lon, searchRadius.value)
-  }
-}, { deep: true })
-
 onMounted(() => {
-  sheetHeightRatio.value = 0.3
+  sheetHeightRatio.value = 0
   loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
     console.error('Tmap 로딩 실패:', e)
     alert('지도를 불러오지 못했습니다. 네트워크/Tmap 콘솔 설정을 확인해주세요.')
@@ -1054,6 +1179,8 @@ onBeforeUnmount(() => {
   clearRouteData()
   if (map.value) map.value.destroy()
 })
+
+
 </script>
 
 <!-- 커스텀 CSS 없음: Bootstrap/Icons 유틸만 사용 -->
