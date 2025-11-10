@@ -42,11 +42,23 @@
             {{ formatDate(item.createdAt) }}
             <span class="mx-2">|</span>
             조회수 {{ item.viewCountNumber || 0 }}
+            
           </div>
+           <div class="ms-3">
+    <button
+      type="button"
+      class="btn btn-outline-secondary btn-sm rounded-pill"
+      @click="goToEdit(item.id)"
+    >
+      수정
+    </button>
+  </div>
         </div>
+        
       </div>
+      
     </div>
-
+      
   </div>
 </template>
 
