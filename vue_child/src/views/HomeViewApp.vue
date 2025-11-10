@@ -224,11 +224,10 @@ import { useRouter } from 'vue-router';
 
 import {
   initVworldMap,
-  getVMap,
   clearMarkers,
   addMarkerEmergency,
   getCurrentBBox4326,
-  move
+  drawRoute
 } from '@/utils/vworldfunction';
 import { calculateDistance, getEmergencyFromWFSByBBox, getTmapRoute } from '@/utils/api';
 
@@ -448,43 +447,60 @@ const initMapAndCoords = async () => {
   try {
     // 2. 현재 위치 가져오기
     let centerCoords
+
+    let location = { lon: 126.978, lat: 37.5665 };
+
     try {
-      const location = await getCurrentLocation()
+      const userLocation = await getCurrentLocation()
+      location = userLocation; // 위치 획득 성공 시 값 업데이트
       centerCoords = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
     } catch {
       console.log(`위치 가져오기 실패, 기본 위치 사용`)
-      centerCoords = ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
+      // 실패 시, 위에서 설정한 기본 location 값(126.978, 37.5665)이 사용됨
+      centerCoords = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
     }
 
     // 3. 지도 초기화
     vmap = initVworldMap({
       containerId: 'vmap',
       defaultCenter: centerCoords,
-      defaultZoom: 15,
       autoFetch: false
     })
 
+    
+    
     if (!vmap) throw new Error('vmap 초기화 실패')
-
+    
     // 4. 리스너 함수 정의 
     moveEndListener = () => {
       console.log(`지도 이동/줌 감지`)
       if (debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {
-        loadWFSMarkers()
-      }, 300)
-    }
-
-    vmap.on('moveend', moveEndListener)
-
-    // 5. 초기 마커 로드
-    setTimeout(() => loadWFSMarkers(), 500)
-
-  } catch (error) {
-    console.error('초기화 실패:', error)
-    alert('지도를 초기화할 수 없습니다.')
-  }
+    loadWFSMarkers()
+  }, 300)
 }
+
+vmap.on('moveend', moveEndListener)
+
+// 5. 초기 마커 로드
+setTimeout(() => loadWFSMarkers(), 500)
+
+// 6-1. tmap api로 경로 불러오기
+const response = await getTmapRoute(location.lon, location.lat, 126.885082, 37.492379)
+// 6-2. 경로 그리기
+if(response && vmap) {
+  console.log(`경로 그리기 함수 실행`)
+  drawRoute(vmap, response)
+}
+
+} catch (error) {
+  console.error('초기화 실패:', error)
+  alert('지도를 초기화할 수 없습니다.')
+}
+}
+
+
+
 
 onMounted(async () => {
   await initMapAndCoords()

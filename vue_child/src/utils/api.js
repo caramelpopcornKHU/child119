@@ -32,25 +32,25 @@ export async function getEmergencyHospitalByHPID(HPID, pageNo = 1, numOfRows = 1
         _type: "json", // json 응답
       },
     });
-   const body = res.data?.response?.body;
-    
+    const body = res.data?.response?.body;
+
     if (body?.items === "") {
-        // totalCount가 0이고 items가 빈 문자열인 경우
-        console.warn(`HPID ${HPID}에 대한 병원 정보가 없습니다 (totalCount: 0).`);
-        return [];
+      // totalCount가 0이고 items가 빈 문자열인 경우
+      console.warn(`HPID ${HPID}에 대한 병원 정보가 없습니다 (totalCount: 0).`);
+      return [];
     }
     // items가 객체이고, 그 안에 item이 배열 또는 단일 객체일 경우 처리
     const itemData = body?.items?.item;
 
     if (!itemData) {
-        return [];
+      return [];
     }
     // item이 배열이 아닌 단일 객체로 온 경우 (데이터 1개일 때 자주 발생) 배열로 감싸서 반환
     return Array.isArray(itemData) ? itemData : [itemData];
 
     // return res.data.response.body.items.item || []; //만약을 위해 남겨둔 기존 코드
 
-    
+
   } catch (e) {
     console.error("공공데이터 응급실 조회 실패", e);
     throw e;
@@ -135,20 +135,20 @@ export async function getHospitalFromWFSByBBox(minX, minY, maxX, maxY, options) 
 }
 
 
-export async function getEmergencyFormWFSByFilter(hpid){
-   try{
-    const res = await WFSApi.get("",{
-      params:{
-      service: 'WFS',
-      version: '1.0.0',
-      request: 'GetFeature',
-      typeName: 'hospital:emergency',
-      outputFormat: 'application/json',
-      FeatureID:  hpid,
+export async function getEmergencyFormWFSByFilter(hpid) {
+  try {
+    const res = await WFSApi.get("", {
+      params: {
+        service: 'WFS',
+        version: '1.0.0',
+        request: 'GetFeature',
+        typeName: 'hospital:emergency',
+        outputFormat: 'application/json',
+        FeatureID: hpid,
       },
     })
     return res.data.features[0].properties
-  } catch(err) {
+  } catch (err) {
     console.error(`WFS 조회 실패 -> ${err}`)
   }
 
@@ -172,17 +172,17 @@ export function loadTmapScript() {
     const script1 = document.createElement("script")
     script1.type = "text/javascript"
     script1.src = `https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${TMAP_APP_KEY}`
-    
+
     script1.onload = () => {
       console.log('✅ 1단계: 메인 스크립트 로드 완료')
-      
+
       // 2단계: 실제 라이브러리 (tmapjs2.min.js)
       const script2 = document.createElement("script")
       script2.src = "https://topopentile1.tmap.co.kr/scriptSDKV2/tmapjs2.min.js?version=20231206"
-      
+
       script2.onload = () => {
         console.log('✅ 2단계: 라이브러리 로드 완료')
-        
+
         // 약간의 딜레이 후 확인
         setTimeout(() => {
           if (window.Tmapv2 && window.Tmapv2.Map && window.Tmapv2.LatLng) {
@@ -198,20 +198,20 @@ export function loadTmapScript() {
           }
         }, 200)
       }
-      
+
       script2.onerror = (err) => {
         console.error('❌ 2단계 스크립트 로드 실패:', err)
         reject(new Error('Tmap v2 라이브러리 로드 실패'))
       }
-      
+
       document.head.appendChild(script2)
     }
-    
+
     script1.onerror = (err) => {
       console.error('❌ 1단계 스크립트 로드 실패:', err)
       reject(new Error('Tmap v2 메인 스크립트 로드 실패'))
     }
-    
+
     document.head.appendChild(script1)
   })
 }
@@ -223,12 +223,12 @@ export function calculateDistance(lat1, lon1, lat2, lon2) {
   const φ2 = lat2 * Math.PI / 180
   const Δφ = (lat2 - lat1) * Math.PI / 180
   const Δλ = (lon2 - lon1) * Math.PI / 180
-  
-  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ/2) * Math.sin(Δλ/2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-  
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
   return R * c // 미터 단위
 }
 
@@ -293,18 +293,32 @@ export async function findWalkRoute(startLat, startLon, endLat, endLon, endName 
 /** ✅ Tmap 길찾기 API (출발지~도착지 경로 계산) */
 export async function getTmapRoute(startX, startY, endX, endY) {
   try {
-    const res = await tmapApi.post("/tmap/routes?version=1&format=json", {
-      startX,
-      startY,
-      endX,
-      endY,
-      reqCoordType: "WGS84GEO",
-      resCoordType: "EPSG4326",
-      searchOption: "0", // 기본(추천) 경로
-    });
+    const url = `https://apis.openapi.sk.com/tmap/routes?version=1&format=json&callback=result&appKey=${TMAP_APP_KEY}`
+
+    const body = {
+      "startX": startX,
+      "startY": startY,
+      "endX": endX,
+      "endY": endY,
+      "reqCoordType": "WGS84GEO",
+      "resCoordType": "EPSG3857",
+      "searchOption": 0,
+      "trafficInfo": "N"
+    }
+
+    const res = await axios.post(
+      url,
+      body,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    );
     return res.data;
   } catch (e) {
     console.error("🚨 Tmap 경로 조회 실패:", e);
     throw e;
   }
 }
+

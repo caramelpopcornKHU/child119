@@ -299,11 +299,72 @@ export function move(x, y, z = 15) {
   }
 }
 
-export default {
-  initVworldMap,
-  getVMap,
-  addMarkerEmergency,
-  clearMarkers,
-  getCurrentBBox4326,
-  move,
-};
+
+
+// 기존에 가진 레이어 삭제
+export async function removeRouteLayer(map) {
+  const layersToRemove = map.getLayers().getArray().filter(layer => 
+    layer.get('name') === 'tmap_route_layer'
+  );
+  
+  layersToRemove.forEach(layer => {
+    map.removeLayer(layer);
+    });
+    
+    console.log("✅ 기존 Tmap 경로 레이어 제거 완료.");
+  }
+  
+  // 경로 그리기
+  export async function drawRoute(map, geoJsonData) {
+    // 1. 기존 경로 레이어 제거를 먼저 수행합니다.
+    removeRouteLayer(map);
+    
+    // 2. GeoJSON 데이터를 OpenLayers 피처로 변환
+    const format = new ol.format.GeoJSON({
+      // Tmap 응답 좌표계 (EPSG:4326)를 지도 좌표계 (EPSG:3857)로 변환
+      defaultDataProjection: 'EPSG:3857', 
+      featureProjection: 'EPSG:3857'     
+    });
+    
+    const features = format.readFeatures(geoJsonData);
+    
+    // 3. 경로를 담을 Vector Source 생성
+    const vectorSource = new ol.source.Vector({
+      features: features
+    });
+    
+    // 4. 경로 스타일 정의
+    const routeStyle = new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: 'rgba(0, 0, 255, 0.7)', 
+        width: 6,
+      }),
+    });
+    
+    // 5. Vector Layer 생성 및 지도에 추가
+    const vectorLayer = new ol.layer.Vector({
+      source: vectorSource,
+      style: routeStyle,
+      name: 'tmap_route_layer' // 제거를 위한 이름 설정
+    });
+    
+    map.addLayer(vectorLayer);
+    console.log("✅ 새 Tmap 경로 레이어 추가 완료.");
+    
+    // 6. 경로 영역에 맞게 뷰 조정 (이 부분이 moveend 이벤트를 유발할 수 있습니다.)
+    map.getView().fit(vectorSource.getExtent(), {
+      padding: [50, 50, 50, 50],
+      duration: 1000,
+    });
+  }
+  
+  export default {
+    initVworldMap,
+    getVMap,
+    addMarkerEmergency,
+    clearMarkers,
+    getCurrentBBox4326,
+    move,
+    drawRoute,
+    removeRouteLayer
+  };
