@@ -259,6 +259,9 @@
 <script setup>
 import { reactive, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { db } from '@/firebase'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'  // ✅ 추가!
+
 
 const router = useRouter()
 
@@ -294,14 +297,45 @@ function goBack() {
   router.back()
 }
 
-function handleSubmit() {
-  // TODO: API 연동해서 서버에 저장
-  console.log('제출 데이터:', JSON.parse(JSON.stringify(form)))
+async function handleSubmit() {
+  try {
+    const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/
+    const match = form.url.match(regex)
+    const youtubeId = match ? match[1] : null
 
-  // 예시: 저장 후 목록 화면으로 이동
-  // router.push('/emergencyEduList')  // 실제 라우트 이름에 맞게 수정
-  alert('임시: 콘솔에 데이터가 출력되었습니다.')
+    if (!youtubeId) {
+      alert('유효한 유튜브 URL을 입력해주세요.')
+      return
+    }
+
+    const payload = {
+      title: form.title,
+      youtubeUrl: form.url,
+      youtubeId,
+      thumbnailUrl: `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`,
+      hashtags: form.hashtags,
+      symptomList: form.symptomList,
+      methodList: form.methodList,
+      reasonList: form.reasonList,
+      warning: form.warning,
+      viewCount: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }
+
+    // ✅ Firestore에 추가
+    await addDoc(collection(db, 'emergencyData'), payload)
+
+    alert('응급 교육 콘텐츠가 등록되었습니다.')
+
+    // ✅ 저장 후 목록 페이지로 이동 (emergency.vue)
+    router.push('/emergency') // ← 🔥 여기를 수정
+  } catch (error) {
+    console.error('저장 중 오류 발생:', error)
+    alert('저장 실패: 콘솔을 확인하세요.')
+  }
 }
+
 
 
 

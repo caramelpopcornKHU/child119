@@ -45,14 +45,14 @@
       전체 {{ filteredItems.length }}건이 등록되어 있습니다.
     </p>
 
-    <!-- 목록 -->
-    <div
+   <!-- 목록 -->
+<div
   v-for="item in filteredItems"
   :key="item.id"
   class="edu-item border-top d-flex justify-content-between align-items-center"
 >
-  <div class="py-3 flex-grow-1">
-    <div class="fw-semibold edu-title">
+  <div class="py-3 flex-grow-1" @click="goToDetail(item.id)" style="cursor: pointer;">
+    <div class="fw-semibold edu-title text-primary">
       {{ item.title }}
     </div>
     <div class="text-muted small mt-2">
@@ -67,12 +67,13 @@
     <button
       type="button"
       class="btn btn-outline-secondary btn-sm rounded-pill"
-      @click="goToEdit(item.id)"
+      @click.stop="goToEdit(item.id)"
     >
       수정
     </button>
   </div>
 </div>
+
 
   </div>
 </template>
@@ -101,6 +102,12 @@ const goToEdit = (id) => {
 const goToWrite = () => {
   router.push('/emergencyWrite')
 }
+
+// 게시물 상세 페이지로 이동
+const goToDetail = (id) => {
+  router.push({ name: 'emergencyorder', params: { id } })
+}
+
 
 // --------------------------------------------
 // ✅ Firestore에서 데이터 불러오기
