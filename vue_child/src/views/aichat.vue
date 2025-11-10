@@ -60,16 +60,26 @@
 
 
       <!-- 입력 폼 -->
-      <form class="d-flex p-2" @submit.prevent="sendMessage">
+       <form class="d-flex align-items-center p-2" @submit.prevent="sendMessage">
         <input
           v-model="input"
           type="text"
           class="form-control rounded-pill text-medium px-3"
           placeholder="메시지를 입력하세요..."
         />
+        <!-- 🎤 음성 인식 버튼 -->
         <button
-          class="d-flex btn btn-primary rounded-pill text-medium ms-2 px-4"
-          style="background-color: #0D6EFD; color: white; flex-wrap: wrap; white-space: nowrap;"
+          type="button"
+          class="btn btn-outline-secondary ms-2 rounded-circle"
+          @click="toggleVoiceRecognition"
+          style="width: 45px; height: 45px;"
+        >
+          <i :class="isListening ? 'bi bi-mic-mute-fill' : 'bi bi-mic-fill'"></i>
+        </button>
+
+        <!-- 전송 -->
+        <button
+          class="btn btn-primary rounded-pill text-medium ms-2 px-4"
           type="submit"
         >
           전송
@@ -89,6 +99,11 @@ const input = ref("");
 const messages = ref([]);
 const messagesContainer = ref(null);
 let socket = null;
+
+let recognition = null;
+const isListening = ref(false);
+const synth = window.speechSynthesis;
+
 
 // ✅ 팝업 상태
 const showPopup = ref(false);
@@ -112,9 +127,12 @@ onMounted(() => {
 
   socket.onopen = () => console.log("✅ WebSocket 연결 성공");
   socket.onmessage = async (event) => {
-    messages.value.push({ text: event.data, type: "ai" });
+    const aiText = event.data;
+    messages.value.push({ text: aiText, type: "ai" });
     await nextTick();
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+
+    speakText(aiText); 
   };
   socket.onclose = () => console.log("❌ WebSocket 연결 종료");
   socket.onerror = (error) => console.error("⚠️ WebSocket 오류:", error);
@@ -122,9 +140,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (socket && socket.readyState === WebSocket.OPEN) socket.close();
+  stopVoiceRecognition();
 });
 
-// ✅ 메시지 전송
+// ==================== ✉️ 메시지 전송 ====================
 const sendMessage = async () => {
   if (!input.value.trim() || !socket || socket.readyState !== WebSocket.OPEN) return;
 
@@ -134,6 +153,77 @@ const sendMessage = async () => {
   input.value = "";
   await nextTick();
   messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+};
+
+// ==================== 🎤 음성 인식 (STT) ====================
+const toggleVoiceRecognition = () => {
+  if (isListening.value) {
+    stopVoiceRecognition();
+  } else {
+    startVoiceRecognition();
+  }
+};
+
+const startVoiceRecognition = () => {
+  if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+    console.error("❌ 브라우저가 음성 인식을 지원하지 않습니다.");
+    return;
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = "ko-KR";
+  recognition.continuous = true;
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+    isListening.value = true;
+    console.log("🎙 음성 인식 시작");
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[event.results.length - 1][0].transcript.trim();
+    console.log("🎧 인식된 텍스트:", transcript);
+    input.value = transcript;
+    sendMessage(); // 바로 전송
+  };
+
+  recognition.onerror = (event) => {
+    console.error("⚠️ 음성 인식 오류:", event.error);
+  };
+
+  recognition.onend = () => {
+    isListening.value = false;
+    console.log("🛑 음성 인식 종료");
+  };
+
+  recognition.start();
+};
+
+const stopVoiceRecognition = () => {
+  if (recognition) {
+    recognition.stop();
+    recognition = null;
+    isListening.value = false;
+    console.log("🎙 음성 인식 완전 중지");
+  }
+};
+
+// ==================== 🗣️ 음성 합성 (TTS) ====================
+const speakText = (text) => {
+  if (!text || synth.speaking) return;
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "ko-KR";
+
+  const voices = synth.getVoices();
+  const koreanVoice =
+    voices.find(v => v.lang.includes("ko") && v.name.toLowerCase().includes("female")) ||
+    voices.find(v => v.lang.includes("ko")) ||
+    null;
+
+  if (koreanVoice) utter.voice = koreanVoice;
+  synth.speak(utter);
 };
 </script>
 <style scoped>
