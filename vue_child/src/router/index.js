@@ -143,6 +143,11 @@ const router = createRouter({
       name: "hospitalInformationApp",
       component: () => import("../views/hospitalInformationApp.vue"),
     },
+     {
+      path: "/emergencyjsb",
+      name: "emergencyjsb",
+      component: () => import("../views/emergencyjsb.vue"),
+    },
   ],
 });
 
