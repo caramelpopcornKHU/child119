@@ -149,14 +149,14 @@ const router = createRouter({
       component: () => import("../views/emergencyjsb.vue"),
     },
      {
-      path: "/emergencyWriteYH",
-      name: "emergencyWriteYH",
-      component: () => import("../views/emergencyWriteYH.vue"),
+      path: "/emergencyWrite",
+      name: "emergencyWrite",
+      component: () => import("../views/emergencyWrite.vue"),
     },
     {
-      path: "/emergencyEditYH/:id",
-      name: "emergencyEditYH",
-      component: () => import("../views/emergencyEditYH.vue"),
+      path: "/emergencyEdit/:id",
+      name: "emergencyEdit",
+      component: () => import("../views/emergencyEdit.vue"),
     },
     {
       path: "/emergencyadd",

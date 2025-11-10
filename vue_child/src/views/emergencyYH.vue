@@ -93,13 +93,13 @@ const loading = ref(true)
 
 // 수정화면으로 이동
 const goToEdit = (id) => {
-  router.push(`/emergencyEditYH/${id}`)
+  router.push(`/emergencyEdit/${id}`)
 }
 
 
 // 게시물 작성 페이지로 이동
 const goToWrite = () => {
-  router.push('/emergencyWriteYH')
+  router.push('/emergencyWrite')
 }
 
 // --------------------------------------------

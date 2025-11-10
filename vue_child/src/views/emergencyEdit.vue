@@ -264,7 +264,7 @@ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 
 const router = useRouter()
 const route = useRoute()
-const docId = route.params.id // /emergencyEditYH/:id 이런 라우트 기준
+const docId = route.params.id // /emergencyEdit/:id 이런 라우트 기준
 
 const form = reactive({
   title: '',
@@ -366,7 +366,7 @@ async function handleSubmit() {
     })
 
     alert('응급 교육 콘텐츠가 수정되었습니다.')
-    router.push('/emergencyYH')
+    router.push('/emergency')
   } catch (e) {
     console.error('응급 교육 콘텐츠 수정 실패:', e)
     alert('수정 중 오류가 발생했습니다. 콘솔을 확인해주세요.')
