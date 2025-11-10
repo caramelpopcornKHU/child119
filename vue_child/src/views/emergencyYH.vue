@@ -1,10 +1,8 @@
 <template>
-  <!-- 헤더/푸터는 이미 있다고 가정하고, 본문만 구성 -->
   <div class="edu-page container-fluid px-3 py-3">
-
     <!-- 상단 탭 -->
     <div class="d-flex justify-content-center mb-3">
-        <div></div> <!-- 왼쪽 여백용 -->
+      <div></div>
       <button
         type="button"
         class="btn btn-success rounded-pill px-3 fw-semibold"
@@ -24,7 +22,6 @@
           v-model="keyword"
         />
         <span class="input-group-text bg-transparent border-0 p-0">
-          <!-- 검색 아이콘 (부트스트랩 아이콘 없다는 가정으로 SVG 직접 사용) -->
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="22"
@@ -49,85 +46,109 @@
     </p>
 
     <!-- 목록 -->
-    <div class="edu-list">
-      <div
-        v-for="item in filteredItems"
-        :key="item.id"
-        class="edu-item border-top"
-      >
-        <div class="py-3">
-          <div class="fw-semibold edu-title">
-            {{ item.title }}
-          </div>
-          <div class="text-muted small mt-2">
-            {{ item.date }}
-            <span class="mx-2">|</span>
-            조회수 {{ item.views }}
-          </div>
-        </div>
-      </div>
+    <div
+  v-for="item in filteredItems"
+  :key="item.id"
+  class="edu-item border-top d-flex justify-content-between align-items-center"
+>
+  <div class="py-3 flex-grow-1">
+    <div class="fw-semibold edu-title">
+      {{ item.title }}
     </div>
+    <div class="text-muted small mt-2">
+      {{ formatDate(item.createdAt) }}
+      <span class="mx-2">|</span>
+      조회수 {{ item.viewCount || 0 }}
+    </div>
+  </div>
+
+  <!-- ✅ 수정 버튼 -->
+  <div class="ms-3">
+    <button
+      type="button"
+      class="btn btn-outline-secondary btn-sm rounded-pill"
+      @click="goToEdit(item.id)"
+    >
+      수정
+    </button>
+  </div>
+</div>
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'   // ✅ 추가됨
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { db } from '@/firebase'
+import { collection, getDocs, orderBy, query } from 'firebase/firestore'
 
-
-
+// --------------------------------------------
+// ✅ 기본 설정
+// --------------------------------------------
+const router = useRouter()
 const keyword = ref('')
-const router = useRouter()   // ✅ 라우터 객체 생성
+const items = ref([])
+const loading = ref(true)
 
-// ✅ 게시물 추가 버튼 클릭 시 이동 함수
+// 수정화면으로 이동
+const goToEdit = (id) => {
+  router.push(`/emergencyEditYH/${id}`)
+}
+
+
+// 게시물 작성 페이지로 이동
 const goToWrite = () => {
   router.push('/emergencyWriteYH')
 }
 
+// --------------------------------------------
+// ✅ Firestore에서 데이터 불러오기
+// --------------------------------------------
+onMounted(async () => {
+  try {
+    const q = query(collection(db, 'emergencyData'), orderBy('createdAt', 'desc'))
+    const snapshot = await getDocs(q)
 
-
-// 더미 데이터 (실제에선 API 연동해서 채우면 됨)
-const items = ref([
-  {
-    id: 1,
-    title: '[서울대병원tv] 아이 목에 뭐가 걸렸을 때, 이렇게 대처하세요! | 기도 막힘 응급처치법',
-    date: '2025.06.20',
-    views: 66
-  },
-  {
-    id: 2,
-    title: '[서울대병원tv] 필수 예방접종! 놓치면 안되는 필수 정보💉',
-    date: '2025.04.02',
-    views: 101
-  },
-  {
-    id: 3,
-    title: '상처 봉합환자 주의사항',
-    date: '2025.01.20',
-    views: 104
-  },
-  {
-    id: 4,
-    title: '어린이 머리 손상 후 주의사항',
-    date: '2025.01.20',
-    views: 121
+    items.value = snapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        title: data.title || '(제목 없음)',
+        viewCount: data.viewCount || 0,
+        createdAt: data.createdAt ? data.createdAt.toDate() : null,
+      }
+    })
+  } catch (e) {
+    console.error('데이터 불러오기 실패:', e)
+  } finally {
+    loading.value = false
   }
-])
+})
 
+// --------------------------------------------
+// ✅ 검색 필터
+// --------------------------------------------
 const filteredItems = computed(() => {
   if (!keyword.value.trim()) return items.value
   const q = keyword.value.trim().toLowerCase()
-  return items.value.filter((v) => v.title.toLowerCase().includes(q))
+  return items.value.filter(v => v.title.toLowerCase().includes(q))
 })
 
-
-
-
+// --------------------------------------------
+// ✅ 날짜 포맷 함수
+// --------------------------------------------
+function formatDate(date) {
+  if (!date) return ''
+  return date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+}
 </script>
 
 <style scoped>
-/* 헤더/푸터 공간 고려 (프로젝트에서 --header-h, --footer-h 쓰고 있다면 활용) */
 .edu-page {
   padding-top: calc(var(--header-h, 56px) + 8px);
   padding-bottom: calc(var(--footer-h, 56px) + 8px);
@@ -135,33 +156,10 @@ const filteredItems = computed(() => {
   background-color: #ffffff;
 }
 
-/* 탭 */
-.edu-tab {
-  flex: 1 1 auto;
-  max-width: 160px;
-  text-align: center;
-  padding: 8px 0;
-  margin: 0 8px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #888;
-  background: transparent;
-  border: none;
-  border-bottom: 3px solid transparent;
-  border-radius: 0;
-}
-
-.edu-tab.active {
-  color: #00b894; /* 상단 타이틀 느낌 나는 그린 톤 */
-  border-bottom-color: #00b894;
-}
-
-/* 검색창 */
 .edu-search {
   background-color: #f5f5f5;
 }
 
-/* 리스트 */
 .edu-list {
   background-color: #ffffff;
 }
@@ -174,7 +172,6 @@ const filteredItems = computed(() => {
   border-bottom: 1px solid #e9ecef;
 }
 
-/* 제목 두 줄까지 표시 후 말줄임 */
 .edu-title {
   font-size: 17px;
   line-height: 1.4;

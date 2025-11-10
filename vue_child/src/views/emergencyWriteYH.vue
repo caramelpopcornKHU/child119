@@ -260,8 +260,11 @@
 import { reactive, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-const router = useRouter()
+// ★ Firestore import
+import { db } from '@/firebase'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
+const router = useRouter()
 
 const form = reactive({
   title: '',
@@ -272,14 +275,23 @@ const form = reactive({
   reasonList: [''],
   warning: ''
 })
+
 const newTag = ref('')
+const isSubmitting = ref(false) // ★ 중복 제출 방지용
+
+// ★ 유튜브 ID 추출 함수
+function extractYoutubeId(url) {
+  const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/
+  const match = url.match(regex)
+  return match ? match[1] : ''
+}
+
 // 유튜브 썸네일
 const thumbnail = computed(() => getYoutubeThumbnail(form.url))
 
 function getYoutubeThumbnail(url) {
-  const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/
-  const match = url.match(regex)
-  return match ? `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg` : ''
+  const id = extractYoutubeId(url)        // ★ 공통 함수 사용
+  return id ? `https://img.youtube.com/vi/${id}/maxresdefault.jpg` : ''
 }
 
 function addItem(key) {
@@ -294,16 +306,50 @@ function goBack() {
   router.back()
 }
 
-function handleSubmit() {
-  // TODO: API 연동해서 서버에 저장
-  console.log('제출 데이터:', JSON.parse(JSON.stringify(form)))
+// ★ Firestore에 실제로 저장하는 부분
+async function handleSubmit() {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
 
-  // 예시: 저장 후 목록 화면으로 이동
-  // router.push('/emergencyEduList')  // 실제 라우트 이름에 맞게 수정
-  alert('임시: 콘솔에 데이터가 출력되었습니다.')
+  try {
+    const youtubeId = extractYoutubeId(form.url)
+    if (!youtubeId) {
+      alert('올바른 유튜브 URL을 입력해주세요.')
+      isSubmitting.value = false
+      return
+    }
+
+    const thumbnailUrl = getYoutubeThumbnail(form.url)
+
+    // Firestore에 저장할 데이터 형태 (네가 보여준 필드 구조에 맞춤)
+    const payload = {
+      title: form.title,
+      youtubeUrl: form.url,
+      youtubeId: youtubeId,
+      thumbnailUrl: thumbnailUrl,
+      hashtags: form.hashtags,
+      symptomList: form.symptomList,
+      methodList: form.methodList,
+      reasonList: form.reasonList,
+      warning: form.warning,
+      viewCount: 0,                // ★ viewCountnumber → viewCount로 저장
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }
+
+    // emergencyData 컬렉션에 문서 추가
+    await addDoc(collection(db, 'emergencyData'), payload)
+
+    alert('응급 교육 콘텐츠가 저장되었습니다.')
+    // 저장 후 목록으로 이동 (라우트는 네 프로젝트에 맞게 수정)
+    router.push('/emergencyYH')
+  } catch (e) {
+    console.error('응급 교육 콘텐츠 저장 실패:', e)
+    alert('저장 중 오류가 발생했습니다. 콘솔을 확인해주세요.')
+  } finally {
+    isSubmitting.value = false
+  }
 }
-
-
 
 function addTag() {
   const tag = newTag.value.trim()
@@ -317,6 +363,7 @@ function removeTag(index) {
   form.hashtags.splice(index, 1)
 }
 </script>
+
 
 <style scoped>
 .object-fit-cover {

@@ -153,6 +153,12 @@ const router = createRouter({
       name: "emergencyWriteYH",
       component: () => import("../views/emergencyWriteYH.vue"),
     },
+     {
+  path: '/emergencyEditYH/:id',
+  name: 'emergencyEditYH',
+  component: () => import('@/views/emergencyEditYH.vue')
+}
+
   ],
 });
 
