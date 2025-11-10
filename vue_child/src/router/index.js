@@ -138,6 +138,11 @@ const router = createRouter({
       name: "navi",
       component: () => import("../views/navi.vue"),
     },
+     {
+      path: "/emergencyYH",
+      name: "emergencyYH",
+      component: () => import("../views/emergencyYH.vue"),
+    },
   ],
 });
 
