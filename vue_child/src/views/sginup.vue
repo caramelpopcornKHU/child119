@@ -2,7 +2,7 @@
   <div class="min-vh-100 d-flex align-items-start align-items-lg-center justify-content-center bg-body-tertiary py-4">
     <div class="container" style="max-width: 420px;">
       <div class="row justify-content-center">
-        <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+        <div class="col-12 col-sm-10 col-md-10 col-lg-8">
           <div class="text-center mb-3">
             </div>
           <div class="card shadow-sm">

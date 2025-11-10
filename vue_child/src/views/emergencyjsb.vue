@@ -4,18 +4,7 @@
 
     <!-- 상단 탭 -->
     <div class="d-flex justify-content-center mb-3">
-      <button
-        type="button"
-        class="edu-tab active"
-      >
-        교육자료
-      </button>
-      <button
-        type="button"
-        class="edu-tab"
-      >
-        동영상
-      </button>
+ 
     </div>
 
     <!-- 검색 영역 -->
