@@ -43,7 +43,7 @@
 
 
 
-    
+
     <!-- 내용 -->
     <div class="d-flex flex-column" style="height: 100%;">
       <!-- 상단 라인 -->
@@ -100,14 +100,11 @@
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
 
               <!-- ✅ 병상 현황: 'avail/total' -->
-              <span
-                v-if="h.bedAvail !== null || h.bedTotal !== null"
-                class="badge rounded-pill"
-                :class="bedBadgeClass(h)"
-              >
+              <span v-if="h.bedAvail !== null || h.bedTotal !== null" class="badge rounded-pill"
+                :class="bedBadgeClass(h)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="15" viewBox="0 0 24 24" class="me-1">
                   <path fill="currentColor"
-                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3"/>
+                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
                 </svg>
                 {{ bedLabel(h) }}
               </span>
@@ -169,17 +166,8 @@
           <div class="mt-2">주변 응급실 검색 중...</div>
         </div>
 
-        <div v-else-if="!loadingHospitals && hospitals.length === 0 && searchAttempted"
-          class="text-center text-muted py-4">
-          <i class="bi bi-search fs-1 d-block mb-2"></i>
-          <p class="mb-1">반경 {{ (lastRadius / 1000).toFixed(0) }}km 내 검색 결과가 없습니다.</p>
-          <small class="text-muted">증상을 변경하거나 다시 시도해주세요.</small>
-        </div>
 
-        <div v-else-if="!searchAttempted" class="text-center text-muted py-4">
-          <i class="bi bi-clipboard2-pulse fs-1 d-block mb-2"></i>
-          <p>증상을 선택하고 검색을 실행해 주세요.</p>
-        </div>
+
       </div>
     </div>
   </div>
@@ -242,7 +230,7 @@ import {
   getCurrentBBox4326,
   move
 } from '@/utils/vworldfunction';
-import { getEmergencyFromWFSByBBox } from '@/utils/api';
+import { calculateDistance, getEmergencyFromWFSByBBox, getTmapRoute } from '@/utils/api';
 
 // vmap 변수
 let vmap = null;
@@ -258,12 +246,9 @@ const cur = ref({ lat: null, lon: null })
 
 const hospitals = ref([])
 const loadingHospitals = ref(false)
-const searchAttempted = ref(false)
-const lastRadius = ref(0)
 const useSymptomsMode = ref(false)
 
-// 마커
-let markers = []
+// 마커 관련
 let debounceTimer = null
 
 /* 바텀시트 상태 start */
@@ -277,7 +262,6 @@ const MIN_SHEET_HEIGHT = 220
 
 const sheetY = computed(() => (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT) * (1 - sheetHeightRatio.value))
 const sheetStyle = computed(() => {
-  const interactive = sheetHeightRatio.value > 0.12
   return {
     transition: isDragging.value ? 'none' : 'transform 0.3s ease-out',
     transform: `translateY(${sheetY.value}px)`,
@@ -287,7 +271,7 @@ const sheetStyle = computed(() => {
     willChange: 'transform'
   }
 })
-/* 바텀시트 상태 end */
+
 
 /* 키워드 start */
 const keywordBase = computed(() => '소아응급실')
@@ -317,35 +301,6 @@ const onTouchEnd = () => {
 }
 const toggleSheet = () => { sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 0 : 1 }
 /* 바텀시트 제스처 end */
-
-/* 그립 액션 start*/
-const onGripTouchStart = (e) => {
-  isDragging.value = true
-  dragStart.value = { y: e.touches[0].clientY, ratio: sheetHeightRatio.value }
-  e.preventDefault()
-}
-const onGripTouchMove = (e) => {
-  if (!isDragging.value) return
-  e.preventDefault()
-
-  const dY = e.touches[0].clientY - dragStart.value.y
-  const dR = -dY / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT)
-  sheetHeightRatio.value = Math.min(1, Math.max(0, dragStart.value.ratio + dR))
-}
-const onGripTouchEnd = () => {
-  isDragging.value = false
-  sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0
-}
-/* 그립 액션 end */
-
-const toRad = (d) => d * Math.PI / 180
-function haversineMeter(lat1, lon1, lat2, lon2) {
-  const R = 6371000
-  const dLat = toRad(lat2 - lat1)
-  const dLon = toRad(lon2 - lon1)
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
-  return 2 * R * Math.asin(Math.sqrt(a))
-}
 
 
 /* 실제 렌더링 목록 */
@@ -384,78 +339,78 @@ const loadWFSMarkers = async () => {
 
 
   try {
-  
-  // 2. bbox에 걸리는 데이터 geoserver에서 가져오기
-  const feats = await getEmergencyFromWFSByBBox(minX, minY, maxX, maxY);
-  console.log('✅ WFS 응답:', feats.length, '개');
-  
-  
-  // 3. 사용자 현재 위치 설정
-  const centerLon = cur.value.lon; 
-  const centerLat = cur.value.lat;
-  
-  // JSON형태의 데이터 정제 함수
-  const processedHospitals = feats.map((f, i) => {
-    const [lon, lat] = f.geometry?.coordinates || [];
-    const p = f.properties || {};
 
-    // 문자열 병상수 ->  Number 타입
-    const toInt = (v) => {
-      if(v === null || v === undefined) return null;
-      const n = parseInt(String(v).trim(), 10);
-      return Number.isFinite(n) ? n : null;
-    }
+    // 2. bbox에 걸리는 데이터 geoserver에서 가져오기
+    const feats = await getEmergencyFromWFSByBBox(minX, minY, maxX, maxY);
+    console.log('✅ WFS 응답:', feats.length, '개');
 
-    const message = p.message
-    const state = p.state
-    const name = p.nickname
-    const bedAvail = toInt(p.bed_avail)
-    const bedTotal = toInt(p.bed_total)
 
-    // 거리 계산 로직
-    const distance = (Number.isFinite(lat) && Number.isFinite(lon))
-      ? haversineMeter(centerLat, centerLon, lat, lon)
-      : Infinity;
+    // 3. 사용자 현재 위치 설정
+    const centerLon = cur.value.lon;
+    const centerLat = cur.value.lat;
 
-    // 정제된 객체 반환
-    return {
-      id: f.id || `wfs-${i}`,
-      hpid: p.hpid,
-      lat,
-      lon,
-      distance,
-      name,
-      message,
-      state,
-      bedAvail,
-      bedTotal,
-    };
-  });
+    // JSON형태의 데이터 정제 함수
+    const processedHospitals = feats.map((f, i) => {
+      const [lon, lat] = f.geometry?.coordinates || [];
+      const p = f.properties || {};
 
-  // 4. 기존 마커 제거
-  clearMarkers();
+      // 문자열 병상수 ->  Number 타입
+      const toInt = (v) => {
+        if (v === null || v === undefined) return null;
+        const n = parseInt(String(v).trim(), 10);
+        return Number.isFinite(n) ? n : null;
+      }
 
-  // 5. 정제된 데이터(processedHospitals)로 마커 변경
-  processedHospitals.forEach((hospital) => {
-    addMarkerEmergency(hospital.lon, hospital.lat, {
-      id: hospital.id,
-      name: hospital.name,
-      message: hospital.message,
-      state: hospital.state,
-      bedAvail: hospital.bedAvail,
-      bedTotal: hospital.bedTotal
+      const message = p.message
+      const state = p.state
+      const name = p.nickname
+      const bedAvail = toInt(p.bed_avail)
+      const bedTotal = toInt(p.bed_total)
+
+      // 거리 계산 로직
+      const distance = (Number.isFinite(lat) && Number.isFinite(lon))
+        ? calculateDistance(centerLat, centerLon, lat, lon)
+        : Infinity;
+
+      // 정제된 객체 반환
+      return {
+        id: f.id || `wfs-${i}`,
+        hpid: p.hpid,
+        lat,
+        lon,
+        distance,
+        name,
+        message,
+        state,
+        bedAvail,
+        bedTotal,
+      };
     });
-  });
 
-  // 6. 바텀시트에 관련 데이터 넣기 
-  hospitals.value = processedHospitals;
+    // 4. 기존 마커 제거
+    clearMarkers();
 
-} catch (error) {
-  console.error("WFS 데이터 처리 중 오류 발생:", error);
-  // 에러 발생 시 목록 비우기
-  clearMarkers();
-  hospitals.value = [];
-}
+    // 5. 정제된 데이터(processedHospitals)로 마커 변경
+    processedHospitals.forEach((hospital) => {
+      addMarkerEmergency(hospital.lon, hospital.lat, {
+        id: hospital.id,
+        name: hospital.name,
+        message: hospital.message,
+        state: hospital.state,
+        bedAvail: hospital.bedAvail,
+        bedTotal: hospital.bedTotal
+      });
+    });
+
+    // 6. 바텀시트에 관련 데이터 넣기 
+    hospitals.value = processedHospitals;
+
+  } catch (error) {
+    console.error("WFS 데이터 처리 중 오류 발생:", error);
+    // 에러 발생 시 목록 비우기
+    clearMarkers();
+    hospitals.value = [];
+  }
 }
 
 // 🔹 현재 위치 가져오기
@@ -478,6 +433,7 @@ function getCurrentLocation() {
   })
 }
 
+// 지도 초기화 및 최초 실행시 마커 표출
 const initMapAndCoords = async () => {
   // 1. VWorld 라이브러리 로드 대기
   await new Promise((resolve) => {
@@ -496,6 +452,7 @@ const initMapAndCoords = async () => {
       const location = await getCurrentLocation()
       centerCoords = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
     } catch {
+      console.log(`위치 가져오기 실패, 기본 위치 사용`)
       centerCoords = ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
     }
 
@@ -512,7 +469,7 @@ const initMapAndCoords = async () => {
     // 4. 리스너 함수 정의 
     moveEndListener = () => {
       console.log(`지도 이동/줌 감지`)
-      if(debounceTimer) clearTimeout(debounceTimer)
+      if (debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {
         loadWFSMarkers()
       }, 300)
@@ -542,7 +499,7 @@ onActivated(async () => {
 onBeforeUnmount(() => {
   if (debounceTimer) clearTimeout(debounceTimer)
 
-  if(vmap && moveEndListener){
+  if (vmap && moveEndListener) {
     vmap.un('moveend', moveEndListener)
     console.log(`리스너 해제 완료.`)
   }
@@ -597,7 +554,7 @@ function bedBadgeClass(h) {
   }
   const ratio = a / t
   if (ratio >= 0.5) return 'bg-success-subtle text-success-emphasis'   // 여유
-  if (ratio > 0)   return 'bg-warning-subtle text-warning-emphasis'    // 부족
+  if (ratio > 0) return 'bg-warning-subtle text-warning-emphasis'    // 부족
   return 'bg-danger-subtle text-danger-emphasis'                        // 없음
 }
 

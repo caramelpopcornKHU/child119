@@ -123,7 +123,7 @@ onMounted(() => {
   // 페이지 진입 시 팝업 표시
   showPopup.value = true;
 
-  socket = new WebSocket("wss://child119-251868777139.asia-northeast3.run.app/ws/chat");
+  socket = new WebSocket("ws://172.168.10.12:8080/ws/chat");
 
   socket.onopen = () => console.log("✅ WebSocket 연결 성공");
   socket.onmessage = async (event) => {

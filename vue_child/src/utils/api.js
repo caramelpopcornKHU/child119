@@ -157,20 +157,135 @@ export async function getEmergencyFormWFSByFilter(hpid){
 // tmap API
 export const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8";
 
+// Tmap v2 스크립트 로드 (2단계 로딩)
 export function loadTmapScript() {
   return new Promise((resolve, reject) => {
-    if (window.Tmapv2) return resolve();
-    const script = document.createElement("script");
-    script.src = `https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${TMAP_APP_KEY}`;
-    script.onload = () => resolve();
-    script.onerror = (err) => reject(err);
-    document.head.appendChild(script);
-  });
+    // 이미 로드되어 있으면 바로 resolve
+    if (window.Tmapv2 && window.Tmapv2.Map && window.Tmapv2.LatLng) {
+      console.log('✅ Tmap v2 이미 로드됨')
+      return resolve()
+    }
+
+    console.log('🔄 Tmap v2 로드 시작 (2단계)')
+
+    // 1단계: 메인 스크립트
+    const script1 = document.createElement("script")
+    script1.type = "text/javascript"
+    script1.src = `https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${TMAP_APP_KEY}`
+    
+    script1.onload = () => {
+      console.log('✅ 1단계: 메인 스크립트 로드 완료')
+      
+      // 2단계: 실제 라이브러리 (tmapjs2.min.js)
+      const script2 = document.createElement("script")
+      script2.src = "https://topopentile1.tmap.co.kr/scriptSDKV2/tmapjs2.min.js?version=20231206"
+      
+      script2.onload = () => {
+        console.log('✅ 2단계: 라이브러리 로드 완료')
+        
+        // 약간의 딜레이 후 확인
+        setTimeout(() => {
+          if (window.Tmapv2 && window.Tmapv2.Map && window.Tmapv2.LatLng) {
+            console.log('✅ Tmapv2 준비 완료')
+            console.log('   Tmapv2.Map:', typeof window.Tmapv2.Map)
+            console.log('   Tmapv2.LatLng:', typeof window.Tmapv2.LatLng)
+            console.log('   Tmapv2.Marker:', typeof window.Tmapv2.Marker)
+            resolve()
+          } else {
+            console.error('❌ Tmapv2 객체가 제대로 생성되지 않았습니다.')
+            console.log('   window.Tmapv2:', window.Tmapv2)
+            reject(new Error('Tmap v2 API 초기화 실패'))
+          }
+        }, 200)
+      }
+      
+      script2.onerror = (err) => {
+        console.error('❌ 2단계 스크립트 로드 실패:', err)
+        reject(new Error('Tmap v2 라이브러리 로드 실패'))
+      }
+      
+      document.head.appendChild(script2)
+    }
+    
+    script1.onerror = (err) => {
+      console.error('❌ 1단계 스크립트 로드 실패:', err)
+      reject(new Error('Tmap v2 메인 스크립트 로드 실패'))
+    }
+    
+    document.head.appendChild(script1)
+  })
+}
+
+// 거리 계산 함수 (Haversine formula)
+export function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3 // 지구 반경 (미터)
+  const φ1 = lat1 * Math.PI / 180
+  const φ2 = lat2 * Math.PI / 180
+  const Δφ = (lat2 - lat1) * Math.PI / 180
+  const Δλ = (lon2 - lon1) * Math.PI / 180
+  
+  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+  
+  return R * c // 미터 단위
 }
 
 
+// 자동차 경로 탐색
+export async function findCarRoute(startLat, startLon, endLat, endLon, searchOption = '2', trafficInfo = 'N') {
+  const headers = {
+    "appKey": TMAP_APP_KEY,
+    "Content-Type": "application/json"
+  }
 
+  const data = {
+    "startX": String(startLon),
+    "startY": String(startLat),
+    "endX": String(endLon),
+    "endY": String(endLat),
+    "reqCoordType": "WGS84GEO",
+    "resCoordType": "WGS84GEO",
+    "searchOption": searchOption,
+    "trafficInfo": trafficInfo
+  }
 
+  const response = await axios.post(
+    "https://apis.openapi.sk.com/tmap/routes?version=1&format=json",
+    data,
+    { headers }
+  )
+
+  return response.data.features
+}
+
+// 도보 경로 탐색
+export async function findWalkRoute(startLat, startLon, endLat, endLon, endName = "도착지") {
+  const headers = {
+    "appKey": TMAP_APP_KEY,
+    "Content-Type": "application/json"
+  }
+
+  const data = {
+    "startX": String(startLon),
+    "startY": String(startLat),
+    "endX": String(endLon),
+    "endY": String(endLat),
+    "reqCoordType": "WGS84GEO",
+    "resCoordType": "WGS84GEO",
+    "startName": "출발지",
+    "endName": endName
+  }
+
+  const response = await axios.post(
+    "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json",
+    data,
+    { headers }
+  )
+
+  return response.data.features
+}
 
 
 
@@ -184,7 +299,7 @@ export async function getTmapRoute(startX, startY, endX, endY) {
       endX,
       endY,
       reqCoordType: "WGS84GEO",
-      resCoordType: "WGS84GEO",
+      resCoordType: "EPSG4326",
       searchOption: "0", // 기본(추천) 경로
     });
     return res.data;
