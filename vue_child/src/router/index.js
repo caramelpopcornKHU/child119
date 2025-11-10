@@ -27,7 +27,7 @@ const router = createRouter({
       component: () => import("../views/aichat.vue"),
     },
     {
-      path: "/emergencyorder",
+      path: "/emergencyorder/:id",
       name: "emergencyorder",
       component: () => import("../views/emergencyorder.vue"),
     },
@@ -149,9 +149,24 @@ const router = createRouter({
       component: () => import("../views/emergencyjsb.vue"),
     },
      {
-      path: "/emergencyWriteYH",
-      name: "emergencyWriteYH",
-      component: () => import("../views/emergencyWriteYH.vue"),
+      path: "/emergencyWrite",
+      name: "emergencyWrite",
+      component: () => import("../views/emergencyWrite.vue"),
+    },
+    {
+      path: "/emergencyEdit/:id",
+      name: "emergencyEdit",
+      component: () => import("../views/emergencyEdit.vue"),
+    },
+    {
+      path: "/emergencyadd",
+      name: "emergencyadd",
+      component: () => import("../views/emergencyadd.vue"),
+    },
+    {
+      path: "/HomeViewjsb",
+      name: "HomeViewjsb",
+      component: () => import("../views/HomeViewjsb.vue"),
     },
   ],
 });

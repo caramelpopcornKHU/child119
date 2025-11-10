@@ -257,8 +257,9 @@
 </template>
 
 <script setup>
-import { reactive, computed, ref } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { addEmergencyData } from '../firebase/emergency.js'
 
 const router = useRouter()
 
@@ -274,14 +275,11 @@ const form = reactive({
 })
 const newTag = ref('')
 // 유튜브 썸네일
-const thumbnail = computed(() => getYoutubeThumbnail(form.url))
-
-function getYoutubeThumbnail(url) {
+const thumbnail = computed(() => {
   const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/
-  const match = url.match(regex)
+  const match = form.url.match(regex)
   return match ? `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg` : ''
-}
-
+})
 function addItem(key) {
   form[key].push('')
 }
@@ -293,14 +291,60 @@ function removeItem(key, index) {
 function goBack() {
   router.back()
 }
-
-function handleSubmit() {
-  // TODO: API 연동해서 서버에 저장
-  console.log('제출 데이터:', JSON.parse(JSON.stringify(form)))
-
-  // 예시: 저장 후 목록 화면으로 이동
-  // router.push('/emergencyEduList')  // 실제 라우트 이름에 맞게 수정
-  alert('임시: 콘솔에 데이터가 출력되었습니다.')
+async function handleSubmit() {
+  try {
+    // 1. 제목 검증
+    if (!form.title.trim()) {
+      alert('제목을 입력해주세요.')
+      return
+    }
+    
+    // 2. URL 검증
+    if (!form.url.trim()) {
+      alert('동영상 URL을 입력해주세요.')
+      return
+    }
+    
+    // 3. 유튜브 ID 추출 (유튜브인 경우에만)
+    const youtubeRegex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/
+    const youtubeMatch = form.url.match(youtubeRegex)
+    const youtubeId = youtubeMatch ? youtubeMatch[1] : ''
+    
+    // 4. 썸네일 URL (유튜브인 경우 자동 생성, 아니면 빈 문자열)
+    const thumbnailUrl = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : ''
+    
+    // 5. 최소 하나의 항목 검증
+    const hasSymptom = form.symptomList.some(s => s.trim() !== '')
+    const hasMethod = form.methodList.some(m => m.trim() !== '')
+    const hasReason = form.reasonList.some(r => r.trim() !== '')
+    
+    if (!hasSymptom && !hasMethod && !hasReason) {
+      alert('증상, 응급처치, 원인 중 최소 하나는 입력해주세요.')
+      return
+    }
+    
+    // 6. Firebase에 저장할 데이터
+    const data = {
+      title: form.title.trim(),
+      youtubeUrl: form.url.trim(),
+      youtubeId: youtubeId,
+      thumbnailUrl: thumbnailUrl,
+      hashtags: form.hashtags,
+      symptomList: form.symptomList.filter(s => s.trim() !== ''),
+      methodList: form.methodList.filter(m => m.trim() !== ''),
+      reasonList: form.reasonList.filter(r => r.trim() !== ''),
+      warning: form.warning.trim()
+    }
+    
+    // 7. Firebase에 저장
+    await addEmergencyData(data)
+    alert('응급처치 정보가 저장되었습니다!')
+    router.push('/emergency')
+    
+  } catch (error) {
+    console.error('저장 실패:', error)
+    alert('저장에 실패했습니다. 다시 시도해주세요.')
+  }
 }
 
 

@@ -152,16 +152,16 @@
 
         <!-- 오른쪽: 버튼 그룹 -->
         <div class="d-flex gap-2">
-          <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByDistance">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
+          <button type="button" class="btn btn-light border rounded-pill px-2 text-bold" @click="sortByDistance">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
               <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
                 d="m24 42l-9-13h18zm0-36l-9 13h18z" />
             </svg>
-            <span class="fw-bold">거리순</span>
+            <span class="fw-bold"> 거리순</span>
           </button>
 
-          <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByTime">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <button type="button" class="btn btn-light border rounded-pill px-2 text-bold" @click="sortByTime">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
               <path fill="currentColor"
                 d="M12 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8a8 8 0 0 0-8 8a8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10a10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7z" />
             </svg>
@@ -170,9 +170,9 @@
         </div>
       </div>
 
-      <!-- 리스트 스크롤 영역 -->
+      <!-- 리스트 스크롤 영역 :: start -->
       <div class="overflow-auto px-3 flex-grow-1" style="min-height: 0; max-height: 100%;">
-        <!-- 병원 목록 -->
+        <!-- 카드 -->
         <div class="card shadow-sm mb-3" v-for="hospital in hospitals" :key="hospital.id">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
@@ -224,6 +224,7 @@
           <small class="text-muted">진료과를 변경하거나 다시 시도해주세요.</small>
         </div>
       </div>
+      <!-- 리스트 스크롤 영역 :: end -->
     </div>
   </div>
 
@@ -360,11 +361,14 @@
 
 </template>
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, onActivated } from 'vue'
 import axios from 'axios'
 
-// TMAP API 키
-const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8"
+import { initVworldMap, initVworldMapUser, clearMarkers, addMarkerHospital, getCurrentBBox4326 } from '@/utils/vworldfunction';
+import { getEmergencyFromWFSByBBox } from '@/utils/api';
+
+// vmap 변수
+let vmap = null;
 
 /* 진료과 필터 상태 */
 const departmentOptions = [
@@ -418,10 +422,13 @@ function getDepartmentColor(deptName) {
 /* 병원 데이터 상태 */
 const hospitals = ref([])
 const userLocation = ref(null)
-//const searchRadius = ref(5) // 기본 5km 반경
 
 /* 지도 상태 */
 const map = ref(null)
+const cur = ref({ lat: null, lon: null })
+const loadingHospitals = ref(false)
+const searchAttempted = ref(false)
+let myMapObj = null
 
 /* 경로 탐색 상태 */
 const isRouteMode = ref(false)
@@ -464,66 +471,60 @@ const sheetStyle = computed(() => ({
   top: 'auto'
 }))
 
+// 🔹 현재 위치 가져오기
+function getCurrentLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation not supported'))
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        cur.value.lat = position.coords.latitude
+        cur.value.lon = position.coords.longitude
+        resolve({ lat: cur.value.lat, lon: cur.value.lon })
+      },
+      error => reject(error),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    )
+  })
+}
+
 /** 상단 버튼 요소 별로 함수 호출 */
 /** 상단 버튼 요소별로 GeoServer Layer 조회 후 마커 표시 */
 async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
-  if (!map.value) {
+  if (!vmap) {
     alert("지도가 아직 준비되지 않았습니다.")
     return
   }
 
   try {
-    // 1️⃣ 현재 지도 화면의 bbox 구하기
-    const bounds = map.value.getBounds()
-    const sw = bounds._sw
-    const ne = bounds._ne
-    const bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()].join(',')
+    clearMarkers()
 
-    // 2️⃣ GeoServer 요청
+    // 현재 bbox 계산
+    const extent = vmap.getView().calculateExtent(vmap.getSize())
+    const [minX, minY, maxX, maxY] = window.ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326')
+    const bbox = [minX, minY, maxX, maxY].join(',')
+
+    // GeoServer 호출
     const fullUrl = `${url}&bbox=${bbox},EPSG:4326`
     console.log(`조회 URL: ${fullUrl}`)
-
     const res = await fetch(fullUrl)
     const geojson = await res.json()
 
-    // 3️⃣ 마커 초기화
-    clearMarkers()
-
-    // 4️⃣ 마커 표시
     geojson.features.forEach(f => {
       const [lon, lat] = f.geometry.coordinates
-      const props = f.properties
-
-      const marker = new Tmapv3.Marker({
-        position: new Tmapv3.LatLng(lat, lon),
-        icon: iconUrl,
-        map: map.value
-      })
-
-      const info = new Tmapv3.InfoWindow({
-        position: new Tmapv3.LatLng(lat, lon),
-        content: `
-          <div class="p-2 bg-white border rounded-2 shadow-sm" style="min-width:160px;">
-            <strong>${props[nameKey] || "이름 없음"}</strong><br>
-            <small>${props[addrKey] || "주소 없음"}</small>
-          </div>`,
-        type: 2,
-        map: null
-      })
-
-      marker.addListener("click", () => {
-        markers.forEach(m => m.info?.setMap(null))
-        info.setMap(map.value)
-      })
-
-      marker.info = info
-      markers.push(marker)
+      if (!isNaN(lon) && !isNaN(lat)) {
+        addMarkerHospital(lon, lat, {
+          iconUrl,
+          name: f.properties?.[nameKey] || listType,
+          addr: f.properties?.[addrKey] || '',
+        })
+      }
     })
 
-    // 5️⃣ 바텀시트 리스트 데이터 업데이트
     addToHospitalList(geojson.features, listType)
-    console.log("GeoServer 응답 샘플:", geojson.features[0])
-
     console.log(`✅ ${listType} ${geojson.features.length}개 표시 완료`)
   } catch (err) {
     console.error(`${listType} 조회 실패:`, err)
@@ -535,7 +536,7 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
 function showMoonlight() {
   showLayerInView({
     url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital:moonlight_hospital&outputFormat=application/json",
-    iconUrl: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjZmZmYjAwIiBkPSJtMTcuNzUgNC4wOWwtMi41MyAxLjk0bC45MSAzLjA2bC0yLjYzLTEuODFsLTIuNjMgMS44MWwuOTEtMy4wNmwtMi41My0xLjk0TDEyLjQ0IDRsMS4wNi0zbDEuMDYgM3ptMy41IDYuOTFsLTEuNjQgMS4yNWwuNTkgMS45OGwtMS43LTEuMTdsLTEuNyAxLjE3bC41OS0xLjk4TDE1Ljc1IDExbDIuMDYtLjA1TDE4LjUgOWwuNjkgMS45NXptLTIuMjggNC45NWMuODMtLjA4IDEuNzIgMS4xIDEuMTkgMS44NWMtLjMyLjQ1LS42Ni44Ny0xLjA4IDEuMjdDMTUuMTcgMjMgOC44NCAyMyA0Ljk0IDE5LjA3Yy0zLjkxLTMuOS0zLjkxLTEwLjI0IDAtMTQuMTRjLjQtLjQuODItLjc2IDEuMjctMS4wOGMuNzUtLjUzIDEuOTMuMzYgMS44NSAxLjE5Yy0uMjcgMi44Ni42OSA1LjgzIDIuODkgOC4wMmE5Ljk2IDkuOTYgMCAwIDAgOC4wMiAyLjg5bS0xLjY0IDIuMDJhMTIuMDggMTIuMDggMCAwIDEtNy44LTMuNDdjLTIuMTctMi4xOS0zLjMzLTUtMy40OS03LjgyYy0yLjgxIDMuMTQtMi43IDcuOTYuMzEgMTAuOThjMy4wMiAzLjAxIDcuODQgMy4xMiAxMC45OC4zMSIvPjwvc3ZnPg==",
+    iconUrl: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjYmNjNDMwIiBkPSJNMTIgMTEuNUEyLjUgMi41IDAgMCAxIDkuNSA5QTIuNSAyLjUgMCAwIDEgMTIgNi41QTIuNSAyLjUgMCAwIDEgMTQuNSA5YTIuNSAyLjUgMCAwIDEtMi41IDIuNU0xMiAyYTcgNyAwIDAgMC03IDdjMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2E3IDcgMCAwIDAtNy03Ii8+PC9zdmc+",
     nameKey: "duty_name",
     addrKey: "duty_addr",
     listType: "달빛어린이병원"
@@ -546,7 +547,7 @@ function showMoonlight() {
 function showPediatric() {
   showLayerInView({
     url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital%3Achildren_hospital&outputFormat=application%2Fjson&maxFeature=50",
-    iconUrl: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjMjQyZWZkIiBkPSJNMTIgMmEzIDMgMCAwIDEgMyAzYTMgMyAwIDAgMS0zIDNhMyAzIDAgMCAxLTMtM2EzIDMgMCAwIDEgMy0zbTAgN2MxLjYzIDAgMy4xMi4zNSA0LjUgMS4wNWMxLjM0LjcxIDIgMS41NiAyIDIuNTZ2NS43N2MwIDEuMTItLjg2IDIuMDYtMi42MSAyLjgxVjE5YzAtLjk1LS44Ni0xLjYyLTIuNTgtMi4wM2MtLjU2LS4xMy0xLS4xOS0xLjMxLS4xOWMtLjg3IDAtMS43LjE3LTIuNDYuNTJjLS43Ny4zNC0xLjIzLjc4LTEuMzggMS4zMWMxLjM0LjUzIDIuNjIuOCAzLjg0LjhsMS0uMXYyLjYzTDEyIDIyYTkuNyA5LjcgMCAwIDEtMy44OS0uODFjLTEuNzUtLjc1LTIuNjEtMS42OS0yLjYxLTIuODF2LTUuNzdjMC0xIC42Ni0xLjg1IDItMi41NlE5LjU3IDkgMTIgOW0wIDJhMiAyIDAgMCAwLTIgMmEyIDIgMCAwIDAgMiAyYTIgMiAwIDAgMCAyLTJhMiAyIDAgMCAwLTItMiIvPjwvc3ZnPg==",
+    iconUrl: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjMDA2MGZmIiBkPSJNMTIgMTEuNUEyLjUgMi41IDAgMCAxIDkuNSA5QTIuNSAyLjUgMCAwIDEgMTIgNi41QTIuNSAyLjUgMCAwIDEgMTQuNSA5YTIuNSAyLjUgMCAwIDEtMi41IDIuNU0xMiAyYTcgNyAwIDAgMC03IDdjMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2E3IDcgMCAwIDAtNy03Ii8+PC9zdmc+",
     nameKey: "duty_name",
     addrKey: "duty_addr",
     listType: "소아청소년과"
@@ -559,61 +560,50 @@ async function showPharmacy() {
 
 // ⚡ AED 조회 (공공데이터 API - 1000건씩만 추출)
 async function showAED() {
-  if (!map.value) {
+  if (!vmap) {
     alert("지도가 아직 준비되지 않았습니다.")
     return
   }
-  const key = "d43280d93d2b4881c7d82ace3929e20b5f2dfba72a77687d8ae7347d9f247d99"
-  const pageNo = 1
-  const numOfRows = 1000  // 필요에 따라 조정
-  const url = `https://apis.data.go.kr/B552657/AEDInfoInqireService/getAedLcinfoInqire?serviceKey=${key}&pageNo=${pageNo}&numOfRows=${numOfRows}`
 
   try {
-    const res = await fetch(url)
-    const text = await res.text()
-    const parser = new DOMParser()
-    const xml = parser.parseFromString(text, "application/xml")
-    const items = xml.getElementsByTagName("item")
-
+    // ✅ 기존 마커 모두 제거
     clearMarkers()
 
-    for (let i = 0; i < items.length; i++) {
-      const it = items[i]
-      const latText = it.getElementsByTagName("wgs84Lat")[0]?.textContent
-      const lonText = it.getElementsByTagName("wgs84Lon")[0]?.textContent
-      const lat = latText ? parseFloat(latText) : NaN
-      const lon = lonText ? parseFloat(lonText) : NaN
-      const place = it.getElementsByTagName("buildPlace")[0]?.textContent || ""
-      const addr = it.getElementsByTagName("placeDetail")[0]?.textContent || ""
+    // ✅ 공공데이터 API 호출
+    const key = "d43280d93d2b4881c7d82ace3929e20b5f2dfba72a77687d8ae7347d9f247d99"
+    const url = `https://apis.data.go.kr/B552657/AEDInfoInqireService/getAedLcinfoInqire?serviceKey=${key}&pageNo=1&numOfRows=500`
+    const res = await fetch(url)
+    const text = await res.text()
+    const xml = new DOMParser().parseFromString(text, "application/xml")
+    const items = Array.from(xml.getElementsByTagName("item"))
+
+    if (!items.length) {
+      alert("표시할 AED 정보가 없습니다.")
+      return
+    }
+
+    // ✅ 각 AED 마커 추가
+    let addedCount = 0
+    for (const item of items) {
+      const lat = parseFloat(item.getElementsByTagName("wgs84Lat")[0]?.textContent)
+      const lon = parseFloat(item.getElementsByTagName("wgs84Lon")[0]?.textContent)
+      const place = item.getElementsByTagName("buildPlace")[0]?.textContent || "AED 위치 미상"
 
       if (!isNaN(lat) && !isNaN(lon)) {
-        const marker = new Tmapv3.Marker({
-          position: new Tmapv3.LatLng(lat, lon),
-          icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjZjAwIiBkPSJNMTYuNSAyLjgzYy0xLjc0IDAtMy40MS44MS00LjUgMi4wN2MtMS4wOS0xLjI2LTIuNzYtMi4wNy00LjUtMi4wN2MtMy4wOCAwLTUuNSAyLjQxLTUuNSA1LjVjMCAzLjc3IDMuNCA2Ljg2IDguNTUgMTEuNTNMMTIgMjEuMTdsMS40NS0xLjMxQzE4LjYgMTUuMTkgMjIgMTIuMSAyMiA4LjMzYzAtMy4wOS0yLjQyLTUuNS01LjUtNS41bS00LjUgMTV2LTRIOWwzLTd2NGgzIi8+PC9zdmc+",
-          map: map.value
+        addMarkerHospital(lon, lat, {
+          iconUrl: '/icons/aed.svg',
+          scale: 0.8,
+          anchor: [0.5, 1],
+          name: place,
         })
-
-        const info = new Tmapv3.InfoWindow({
-          position: new Tmapv3.LatLng(lat, lon),
-          content: `<div><strong>${place}</strong><br>${addr}</div>`,
-          type: 2,
-          map: null
-        })
-
-        marker.addListener("click", () => {
-          markers.forEach(m => m.info?.setMap(null))
-          info.setMap(map.value)
-        })
-        marker.info = info
-        markers.push(marker)
+        addedCount++
       }
     }
 
-    console.log(`✅ AED 위치정보 ${items.length}건 표시 완료`)
-
+    console.log(`✅ AED ${addedCount}개 표시 완료`)
   } catch (err) {
-    console.error("AED 위치정보 API 호출 실패:", err)
-    alert("AED 정보를 불러올 수 없습니다.")
+    console.error("⚠️ AED 조회 실패:", err)
+    alert("AED 데이터를 불러오는 중 오류가 발생했습니다.")
   }
 }
 
@@ -624,6 +614,15 @@ function addToHospitalList(list, type) {
   hospitals.value = list.map((item) => {
     const props = item.properties || {}
     const [lon, lat] = item.geometry?.coordinates || [NaN, NaN]
+
+    // 거리 계산 (미터 -> km)
+    let distanceKm = null
+    let etaMin = null
+    if(userLocation.value && lat && lon) {
+      const dist = haversineMeter(userLocation.value.lat, userLocation.value.lon, lat, lon)
+      distanceKm = (dist / 1000).toFixed(1)
+      etaMin = Math.max(1, Math.round((dist / 1000) / 0.4))
+    }
 
     return {
       id: props.hpid || props.id || Math.random().toString(36).substring(2, 9),
@@ -637,12 +636,9 @@ function addToHospitalList(list, type) {
         props.duty_tel1 || props.dutytel3 || props.hospital_tel || props.dutyTel1 || "",
       lat,
       lon,
-      distanceKm: userLocation.value
-        ? (calcDistance(userLocation.value.lat, userLocation.value.lon, lat, lon) / 1000).toFixed(1)
-        : null,
-      etaMin: userLocation.value
-        ? ((calcDistance(userLocation.value.lat, userLocation.value.lon, lat, lon) / 80).toFixed(0))
-        : null
+      dept_name: props.dgid_id_name || null,
+      distanceKm,
+      etaMin
     }
   })
 
@@ -651,57 +647,16 @@ function addToHospitalList(list, type) {
 }
 
 /* 두 지점 간 거리 계산 (Haversine 공식) - 미터 단위 */
-const calcDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371e3 // 지구 반지름 (미터)
-  const φ1 = lat1 * Math.PI / 180
-  const φ2 = lat2 * Math.PI / 180
-  const Δφ = (lat2 - lat1) * Math.PI / 180
-  const Δλ = (lon2 - lon1) * Math.PI / 180
-
-  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-
-  return R * c
+const toRad = (d) => d * Math.PI / 180
+function haversineMeter(lat1, lon1, lat2, lon2) {
+  const R = 6371000
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(a))
 }
 
  let markers = []
-
-function clearMarkers() {
-  markers.forEach(m => {
-    if (m && m.setMap) m.setMap(null)
-    if (m.info) m.info.setMap(null)
-  })
-  markers = []
-}
-
-/* 지도에 병원 마커 추가 */
-const addHospitalMarkers = (hospitalList) => {
-  if (!map.value) return
-  clearMarkers()
-  const bounds = new window.Tmapv3.LatLngBounds()
-
-  hospitalList.forEach(hospital => {
-    const position = new window.Tmapv3.LatLng(
-      hospital.coordinates[1],
-      hospital.coordinates[0]
-    )
-    bounds.extend(position)
-
-    const marker = new window.Tmapv3.Marker({ position: position, map: map.value })
-
-    // 마커 클릭 시 경로 안내 모달 표시
-    window.Tmapv3.event.addListener(marker, 'click', () => {
-      openRouteModal(hospital)
-    })
-
-    marker.__hospital = hospital
-    markers.push(marker)
-  })
-
-  if (hospitalList.length) map.value.fitBounds(bounds)
-}
 
 /* 거리순 정렬 */
 const distanceAsc = ref(true)
@@ -768,164 +723,164 @@ function closeRouteModal() {
 }
 
 /* 경로 탐색 실행 */
-async function findRoute() {
-  if (!map.value || !userLocation.value || !selectedHospital.value) {
-    alert('위치 정보를 확인할 수 없습니다.')
-    return
-  }
+// async function findRoute() {
+//   if (!vmap || !userLocation.value || !selectedHospital.value) {
+//     alert('위치 정보를 확인할 수 없습니다.')
+//     return
+//   }
 
-  // 모달 닫기
-  closeRouteModal()
+//   // 모달 닫기
+//   closeRouteModal()
 
-  // 기존 병원 마커 숨기기
-  clearMarkers()
+//   // 기존 병원 마커 숨기기
+//   clearMarkers()
 
-  // 기존 경로 정보 초기화
-  clearRouteData()
+//   // 기존 경로 정보 초기화
+//   clearRouteData()
 
-  const headers = {
-    "appKey": TMAP_APP_KEY,
-    "Content-Type": "application/json"
-  }
+//   const headers = {
+//     "appKey": TMAP_APP_KEY,
+//     "Content-Type": "application/json"
+//   }
 
-  try {
-    let resultData, props
+//   try {
+//     let resultData, props
 
-    // 이동 수단에 따라 다른 API 호출
-    if (transportType.value === 'car') {
-      // 자동차 경로
-      const data = {
-        "startX": String(userLocation.value.lon),
-        "startY": String(userLocation.value.lat),
-        "endX": String(selectedHospital.value.coordinates[0]),
-        "endY": String(selectedHospital.value.coordinates[1]),
-        "reqCoordType": "WGS84GEO",
-        "resCoordType": "WGS84GEO",
-        "searchOption": searchOption.value,
-        "trafficInfo": trafficInfo.value
-      }
+//     // 이동 수단에 따라 다른 API 호출
+//     if (transportType.value === 'car') {
+//       // 자동차 경로
+//       const data = {
+//         "startX": String(userLocation.value.lon),
+//         "startY": String(userLocation.value.lat),
+//         "endX": String(selectedHospital.value.coordinates[0]),
+//         "endY": String(selectedHospital.value.coordinates[1]),
+//         "reqCoordType": "WGS84GEO",
+//         "resCoordType": "WGS84GEO",
+//         "searchOption": searchOption.value,
+//         "trafficInfo": trafficInfo.value
+//       }
 
-      const response = await axios.post(
-        "https://apis.openapi.sk.com/tmap/routes?version=1&format=json",
-        data,
-        { headers: headers }
-      )
+//       const response = await axios.post(
+//         "https://apis.openapi.sk.com/tmap/routes?version=1&format=json",
+//         data,
+//         { headers: headers }
+//       )
 
-      resultData = response.data.features
-      props = resultData[0].properties
+//       resultData = response.data.features
+//       props = resultData[0].properties
 
-      routeDetails.value = {
-        distance: `${(props.totalDistance / 1000).toFixed(1)}km`,
-        time: `${(props.totalTime / 60).toFixed(0)}분`,
-        fare: `${props.totalFare}원`,
-        taxiFare: `${props.taxiFare}원`,
-        walkTime: ''
-      }
-    } else if (transportType.value === 'walk') {
-      // 도보 경로
-      const data = {
-        "startX": String(userLocation.value.lon),
-        "startY": String(userLocation.value.lat),
-        "endX": String(selectedHospital.value.coordinates[0]),
-        "endY": String(selectedHospital.value.coordinates[1]),
-        "reqCoordType": "WGS84GEO",
-        "resCoordType": "WGS84GEO",
-        "startName": "출발지",
-        "endName": selectedHospital.value.properties.hospital_name || "도착지"
-      }
+//       routeDetails.value = {
+//         distance: `${(props.totalDistance / 1000).toFixed(1)}km`,
+//         time: `${(props.totalTime / 60).toFixed(0)}분`,
+//         fare: `${props.totalFare}원`,
+//         taxiFare: `${props.taxiFare}원`,
+//         walkTime: ''
+//       }
+//     } else if (transportType.value === 'walk') {
+//       // 도보 경로
+//       const data = {
+//         "startX": String(userLocation.value.lon),
+//         "startY": String(userLocation.value.lat),
+//         "endX": String(selectedHospital.value.coordinates[0]),
+//         "endY": String(selectedHospital.value.coordinates[1]),
+//         "reqCoordType": "WGS84GEO",
+//         "resCoordType": "WGS84GEO",
+//         "startName": "출발지",
+//         "endName": selectedHospital.value.properties.hospital_name || "도착지"
+//       }
 
-      const response = await axios.post(
-        "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json",
-        data,
-        { headers: headers }
-      )
+//       const response = await axios.post(
+//         "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json",
+//         data,
+//         { headers: headers }
+//       )
 
-      resultData = response.data.features
-      props = resultData[0].properties
+//       resultData = response.data.features
+//       props = resultData[0].properties
 
-      routeDetails.value = {
-        distance: `${(props.totalDistance / 1000).toFixed(1)}km`,
-        time: `${(props.totalTime / 60).toFixed(0)}분`,
-        fare: '',
-        taxiFare: '',
-        walkTime: `${(props.totalTime / 60).toFixed(0)}분`
-      }
-    } else if (transportType.value === 'transit') {
-      // 대중교통 경로 (간단한 직선 거리로 대체 - TMAP 대중교통 API는 별도 상품)
-      alert('대중교통 경로는 현재 지원하지 않습니다. 도보 또는 자동차를 선택해주세요.')
-      return
-    }
+//       routeDetails.value = {
+//         distance: `${(props.totalDistance / 1000).toFixed(1)}km`,
+//         time: `${(props.totalTime / 60).toFixed(0)}분`,
+//         fare: '',
+//         taxiFare: '',
+//         walkTime: `${(props.totalTime / 60).toFixed(0)}분`
+//       }
+//     } else if (transportType.value === 'transit') {
+//       // 대중교통 경로 (간단한 직선 거리로 대체 - TMAP 대중교통 API는 별도 상품)
+//       alert('대중교통 경로는 현재 지원하지 않습니다. 도보 또는 자동차를 선택해주세요.')
+//       return
+//     }
 
-    isRouteMode.value = true
+//     isRouteMode.value = true
 
-    // 경로 및 마커 그리기 - 파란색 라인
-    for (const i in resultData) {
-      const geometry = resultData[i].geometry
-      const properties = resultData[i].properties
+//     // 경로 및 마커 그리기 - 파란색 라인
+//     for (const i in resultData) {
+//       const geometry = resultData[i].geometry
+//       const properties = resultData[i].properties
 
-      if (geometry.type === "LineString") {
-        const drawInfoArr = []
-        for (const coord of geometry.coordinates) {
-          drawInfoArr.push(new window.Tmapv3.LatLng(coord[1], coord[0]))
-        }
-        drawLine(drawInfoArr) // 파란색 라인으로 그리기
-      } else {
-        // 출발지(S)와 도착지(E) 마커만 표시
-        if (properties.pointType === "S" || properties.pointType === "E") {
-          const [lng, lat] = geometry.coordinates
-          const position = new window.Tmapv3.LatLng(lat, lng)
+//       if (geometry.type === "LineString") {
+//         const drawInfoArr = []
+//         for (const coord of geometry.coordinates) {
+//           drawInfoArr.push(new window.Tmapv3.LatLng(coord[1], coord[0]))
+//         }
+//         drawLine(drawInfoArr) // 파란색 라인으로 그리기
+//       } else {
+//         // 출발지(S)와 도착지(E) 마커만 표시
+//         if (properties.pointType === "S" || properties.pointType === "E") {
+//           const [lng, lat] = geometry.coordinates
+//           const position = new window.Tmapv3.LatLng(lat, lng)
 
-          const label = properties.pointType === "S" ? "출발" : "도착"
-          const color = properties.pointType === "S" ? "#0d6efd" : "#dc3545"
+//           const label = properties.pointType === "S" ? "출발" : "도착"
+//           const color = properties.pointType === "S" ? "#0d6efd" : "#dc3545"
 
-          const marker = new window.Tmapv3.Marker({
-            position: position,
-            map: map.value,
-            title: label
-          })
+//           const marker = new window.Tmapv3.Marker({
+//             position: position,
+//             map: vmap,
+//             title: label
+//           })
 
-          // 커스텀 라벨 추가
-          const infoWindow = new window.Tmapv3.InfoWindow({
-            position: position,
-            content: `<div style="padding:5px 10px;background:${color};color:white;border-radius:5px;font-weight:bold;font-size:12px;">${label}</div>`,
-            type: 2,
-            map: map.value,
-            offset: new window.Tmapv3.Point(0, -10)
-          })
+//           // 커스텀 라벨 추가
+//           const infoWindow = new window.Tmapv3.InfoWindow({
+//             position: position,
+//             content: `<div style="padding:5px 10px;background:${color};color:white;border-radius:5px;font-weight:bold;font-size:12px;">${label}</div>`,
+//             type: 2,
+//             map: vmap,
+//             offset: new window.Tmapv3.Point(0, -10)
+//           })
 
-          resultMarkerArr.value.push(marker)
-          // ✅ 추가: 라벨도 기록
-          resultInfoWindowArr.value.push(infoWindow)
+//           resultMarkerArr.value.push(marker)
+//           // ✅ 추가: 라벨도 기록
+//           resultInfoWindowArr.value.push(infoWindow)
 
-        }
-      }
-    }
+//         }
+//       }
+//     }
 
-    // 바텀시트 올리기
-    sheetHeightRatio.value = 0.5
+//     // 바텀시트 올리기
+//     sheetHeightRatio.value = 0.5
 
-  } catch (error) {
-    console.error("경로 탐색 API 오류:", error)
-    alert("경로 탐색에 실패했습니다.")
-    if (error.response) {
-      console.error("응답 데이터:", error.response.data)
-    }
-  }
-}
+//   } catch (error) {
+//     console.error("경로 탐색 API 오류:", error)
+//     alert("경로 탐색에 실패했습니다.")
+//     if (error.response) {
+//       console.error("응답 데이터:", error.response.data)
+//     }
+//   }
+// }
 
 /* 경로 라인 그리기 - 깔끔한 파란색 */
-function drawLine(arrPoint) {
-  if (!window.Tmapv3) return
+// function drawLine(arrPoint) {
+//   if (!window.Tmapv3) return
 
-  // 파란색 경로 라인
-  const polyline_ = new window.Tmapv3.Polyline({
-    path: arrPoint,
-    strokeColor: "#0d6efd", // Bootstrap primary 파란색
-    strokeWeight: 6,
-    map: map.value
-  })
-  resultdrawArr.value.push(polyline_)
-}
+//   // 파란색 경로 라인
+//   const polyline_ = new window.Tmapv3.Polyline({
+//     path: arrPoint,
+//     strokeColor: "#0d6efd", // Bootstrap primary 파란색
+//     strokeWeight: 6,
+//     map: vmap
+//   })
+//   resultdrawArr.value.push(polyline_)
+// }
 
 /* 경로 데이터 초기화 */
 function clearRouteData() {
@@ -947,10 +902,10 @@ function exitRouteMode() {
   clearRouteData()
 }
 
-/* 경로 정보 토글 */
-function toggleRouteInfo() {
-  isRouteInfoExpanded.value = !isRouteInfoExpanded.value
-}
+// /* 경로 정보 토글 */
+// function toggleRouteInfo() {
+//   isRouteInfoExpanded.value = !isRouteInfoExpanded.value
+// }
 
 // 내 위치 마커와 정보창을 저장하는 변수
 const currentLocationMarker = ref(null)
@@ -958,21 +913,9 @@ const currentLocationInfoWindow = ref(null)
 
 /* 내 위치 새로고침 */
 function refreshLocation() {
-  if (!map.value) {
+  if (!vmap) {
     alert('지도를 불러오는 중입니다. 잠시 후 다시 시도해주세요.')
     return
-  }
-
-  if (!navigator.geolocation) {
-    alert('이 브라우저에서는 위치 정보를 지원하지 않습니다.')
-    return
-  }
-
-  // 위치 정보 옵션 설정
-  const geoOptions = {
-    enableHighAccuracy: true,  // 높은 정확도 요청
-    timeout: 10000,            // 10초 타임아웃
-    maximumAge: 0              // 캐시된 위치 사용 안함
   }
 
   navigator.geolocation.getCurrentPosition(
@@ -980,128 +923,27 @@ function refreshLocation() {
       const lat = pos.coords.latitude
       const lon = pos.coords.longitude
       console.log('위치 정보 새로고침 성공:', { lat, lon })
-
-      const currentPos = new window.Tmapv3.LatLng(lat, lon)
       userLocation.value = { lat, lon }
 
-      // 기존 내 위치 마커와 정보창 제거
-      if (currentLocationMarker.value) {
-        currentLocationMarker.value.setMap(null)
-      }
-      if (currentLocationInfoWindow.value) {
-        currentLocationInfoWindow.value.setMap(null)
-      }
-
-      // 새로운 내 위치 마커 생성
-      currentLocationMarker.value = new window.Tmapv3.Marker({
-        position: currentPos,
-        map: map.value
-      })
-
-      currentLocationInfoWindow.value = new window.Tmapv3.InfoWindow({
-        position: currentPos,
-        content: "<div class='p-1 bg-white border rounded-2'>현재 위치</div>",
-        offset: new window.Tmapv3.Point(0, -30),
-        type: 2,
-        map: map.value
-      })
-
       // 지도 중심 이동
-      map.value.setCenter(currentPos)
-      map.value.setZoom(17)
+      const center = window.ol.proj.fromLonLat([lon, lat])
+      vmap.getView().setCenter(center)
+      vmap.getView().setZoom(17)
+
+      // VWORLD 마커 표시
+      clearMarkers()
+      addMarkerHospital(lon, lat, {
+        name: '현재 위치',
+        iconUrl: '/icons/currentLocation.svg',
+        anchor: [0.5, 0.5]
+      })
     },
     err => {
-      console.error('Geolocation 오류 코드:', err.code, '메시지:', err.message)
-      let errorMsg = '현재 위치를 가져올 수 없습니다.\n'
-
-      switch (err.code) {
-        case 1: // PERMISSION_DENIED
-          errorMsg += '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.'
-          break
-        case 2: // POSITION_UNAVAILABLE
-          errorMsg += '위치 정보를 사용할 수 없습니다.'
-          break
-        case 3: // TIMEOUT
-          errorMsg += '위치 정보 요청 시간이 초과되었습니다.'
-          break
-        default:
-          errorMsg += 'HTTPS 환경인지 확인해주세요.'
-      }
-
-      alert(errorMsg)
+      console.error('위치 정보 오류:', err)
+      alert('현재 위치를 가져올 수 없습니다.')
     },
-    geoOptions
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   )
-}
-
-/* 지도 초기화 */
-const initTmap = () => {
-  const el = document.getElementById('map_div')
-  if (!el) return
-  map.value = new window.Tmapv3.Map('map_div', {
-    center: new window.Tmapv3.LatLng(37.5662952, 126.9779451),
-    width: '100%',
-    height: '100%',
-    zoom: 16
-  })
-
-  if (navigator.geolocation) {
-    // 위치 정보 옵션 설정
-    const geoOptions = {
-      enableHighAccuracy: true,  // 높은 정확도 요청
-      timeout: 10000,            // 10초 타임아웃
-      maximumAge: 0              // 캐시된 위치 사용 안함
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const lat = pos.coords.latitude
-        const lon = pos.coords.longitude
-        console.log('위치 정보 가져오기 성공:', { lat, lon })
-        const currentPos = new window.Tmapv3.LatLng(lat, lon)
-        userLocation.value = { lat, lon }
-
-        // 내 위치 마커와 정보창 생성 및 저장
-        currentLocationMarker.value = new window.Tmapv3.Marker({ position: currentPos, map: map.value })
-        currentLocationInfoWindow.value = new window.Tmapv3.InfoWindow({
-          position: currentPos,
-          content: "<div class='p-1 bg-white border rounded-2'>현재 위치</div>",
-          offset: new window.Tmapv3.Point(0, -30),
-          type: 2,
-          map: map.value
-        })
-
-        map.value.setCenter(currentPos)
-        map.value.setZoom(17)
-      },
-      err => {
-        console.error('Geolocation 오류 코드:', err.code, '메시지:', err.message)
-        let errorMsg = '현재 위치를 가져올 수 없습니다.\n'
-
-        switch (err.code) {
-          case 1: // PERMISSION_DENIED
-            errorMsg += '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.'
-            break
-          case 2: // POSITION_UNAVAILABLE
-            errorMsg += '위치 정보를 사용할 수 없습니다.'
-            break
-          case 3: // TIMEOUT
-            errorMsg += '위치 정보 요청 시간이 초과되었습니다.'
-            break
-          default:
-            errorMsg += 'HTTPS 환경인지 확인해주세요.'
-        }
-
-        alert(errorMsg)
-        console.log('기본 위치(서울시청)로 설정합니다.')
-        userLocation.value = { lat: 37.5662952, lon: 126.9779451 }
-      },
-      geoOptions
-    )
-  } else {
-    alert('이 브라우저에서는 위치 정보를 지원하지 않습니다.')
-    userLocation.value = { lat: 37.5662952, lon: 126.9779451 }
-  }
 }
 
 /* 바텀시트 제스처 */
@@ -1137,50 +979,138 @@ const toggleSheet = () => {
   sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 0 : 1
 }
 
-/* Tmap 스크립트 로더 */
-function loadTmapScript() {
-  return new Promise((resolve, reject) => {
-    if (window.Tmapv3) return resolve()
-    const exist = document.querySelector('script[data-tmap="v3"]')
-    if (exist) {
-      exist.addEventListener('load', resolve)
-      exist.addEventListener('error', reject)
-      return
-    }
-    const script = document.createElement('script')
-    script.src = `https://apis.openapi.sk.com/tmap/vectorjs?version=1&appKey=${TMAP_APP_KEY}`
-    script.dataset.tmap = 'v3'
-    script.onload = resolve
-    script.onerror = reject
-    document.head.appendChild(script)
+// onMounted - 초기실행
+onMounted(async () => {
+  // 1. VWorld 라이브러리 로드 대기
+  await new Promise((resolve) => {
+    const checkVworld = setInterval(() => {
+      if (window.vw && window.vw.ol3 && window.ol) {
+        clearInterval(checkVworld)
+        resolve()
+      }
+    }, 100)
   })
-}
-function waitTmapReady(retry = 10) {
-  return new Promise((resolve, reject) => {
-    const tick = () => {
-      if (window.Tmapv3 && typeof window.Tmapv3.Map === 'function') return resolve()
-      if (retry-- <= 0) return reject(new Error('Tmapv3 초기화 지연'))
-      setTimeout(tick, 100)
-    }
-    tick()
-  })
-}
 
-onMounted(() => {
-  sheetHeightRatio.value = 0
-  loadTmapScript().then(waitTmapReady).then(initTmap).catch(e => {
-    console.error('Tmap 로딩 실패:', e)
-    alert('지도를 불러오지 못했습니다. 네트워크/Tmap 콘솔 설정을 확인해주세요.')
-  })
+  try {
+    // 2. 현재 위치 가져오기
+    let centerCoords
+    try {
+      const location = await getCurrentLocation()
+      centerCoords = window.ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
+    } catch {
+      centerCoords = window.ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
+    }
+
+    // 3. 지도 초기화
+    vmap = initVworldMap({
+      containerId: 'map_div',
+      defaultCenter: centerCoords,
+      defaultZoom: 15,
+      autoFetch: false
+    })
+
+    clearMarkers()
+
+    if (!vmap) throw new Error('vmap 초기화 실패')
+
+  } catch (error) {
+    console.error('초기화 실패:', error)
+    alert('지도를 초기화할 수 없습니다.')
+  }
 })
+
+//캐시된 후 '다시 돌아올 때마다' 실행
+onActivated(async () => {
+  await new Promise((resolve) => {
+    const checkVworld = setInterval(() => {
+      if (window.vw && window.vw.ol3 && window.ol) {
+        clearInterval(checkVworld)
+        resolve()
+      }
+    }, 100)
+  })
+
+  try {
+    // 2. 현재 위치 가져오기
+    let centerCoords
+    try {
+      const location = await getCurrentLocation()
+      centerCoords = window.ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
+    } catch {
+      centerCoords = window.ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
+    }
+
+    // 3. 지도 초기화
+    vmap = initVworldMap({
+      containerId: 'map_div',
+      defaultCenter: centerCoords,
+      defaultZoom: 15,
+      autoFetch: false
+    })
+
+    clearMarkers()
+
+    if (!vmap) throw new Error('vmap 초기화 실패')
+
+  } catch (error) {
+    console.error('초기화 실패:', error)
+    alert('지도를 초기화할 수 없습니다.')
+  }
+});
 
 onBeforeUnmount(() => {
   clearMarkers()
   clearRouteData()
-  if (map.value) map.value.destroy()
+  if (vmap && vmap.getView) {
+    vmap.setTarget(null)
+    vmap = null
+  }
 })
 
 
 </script>
 
-<!-- 커스텀 CSS 없음: Bootstrap/Icons 유틸만 사용 -->
+<style scoped>
+/* 카드 기본/호버/클릭 */
+.card {
+  cursor: pointer;
+  /* 핵심: 위쪽을 기준으로 확대 → 위로는 안 튐 */
+  transform-origin: top center;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.25s ease,
+    border-color 0.18s ease;
+  background-color: #fff;
+}
+
+/* 호버: 아래쪽으로만 커짐 */
+.card:hover {
+  transform: scale(1.02);
+  /* ↑ translateY(-) 제거 */
+  background-color: #f0f6ff;
+  border-color: #0d6efd;
+  box-shadow: 0 6px 20px rgba(13, 110, 253, .15);
+}
+
+/* 클릭(눌림) */
+.card:active {
+  transform: scale(0.98);
+  /* 위아래 이동 없이 눌림만 */
+  background-color: #e2ebff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .15);
+}
+
+/* 스크롤 영역: iOS/WebView 부드러운 스크롤 */
+.sheet-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  /* 스크롤 제스처를 브라우저가 처리하도록 명시 */
+  touch-action: pan-y;
+}
+
+/* 그립: 제스처는 우리가 처리 (스크롤로 해석되지 않도록) */
+.sheet-grip {
+  touch-action: none;
+}
+</style>
