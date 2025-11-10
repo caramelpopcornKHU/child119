@@ -22,12 +22,7 @@
           v-model="keyword"
         />
         <span class="input-group-text bg-transparent border-0 p-0">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
             <path
               fill="#00b894"
               d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5
@@ -45,36 +40,45 @@
       전체 {{ filteredItems.length }}건이 등록되어 있습니다.
     </p>
 
-   <!-- 목록 -->
-<div
-  v-for="item in filteredItems"
-  :key="item.id"
-  class="edu-item border-top d-flex justify-content-between align-items-center"
->
-  <div class="py-3 flex-grow-1" @click="goToDetail(item.id)" style="cursor: pointer;">
-    <div class="fw-semibold edu-title text-primary">
-      {{ item.title }}
-    </div>
-    <div class="text-muted small mt-2">
-      {{ formatDate(item.createdAt) }}
-      <span class="mx-2">|</span>
-      조회수 {{ item.viewCount || 0 }}
-    </div>
-  </div>
-
-  <!-- ✅ 수정 버튼 -->
-  <div class="ms-3">
-    <button
-      type="button"
-      class="btn btn-outline-secondary btn-sm rounded-pill"
-      @click.stop="goToEdit(item.id)"
+    <!-- 목록 -->
+    <div
+      v-for="item in filteredItems"
+      :key="item.id"
+      class="edu-item border-top d-flex justify-content-between align-items-center"
     >
-      수정
-    </button>
-  </div>
-</div>
+      <div
+        class="py-3 flex-grow-1"
+        @click="goToDetail(item.id)"
+        style="cursor: pointer;"
+      >
+        <div class="fw-semibold edu-title text-primary">
+          {{ item.title }}
+        </div>
+        <div class="text-muted small mt-2">
+          {{ formatDate(item.createdAt) }}
+          <span class="mx-2">|</span>
+          조회수 {{ item.viewCount || 0 }}
+        </div>
+      </div>
 
-
+      <!-- ✅ 수정/삭제 버튼 -->
+      <div class="ms-3 d-flex gap-2">
+        <button
+          type="button"
+          class="btn btn-outline-secondary btn-sm rounded-pill"
+          @click.stop="goToEdit(item.id)"
+        >
+          수정
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-danger btn-sm rounded-pill"
+          @click.stop="handleDelete(item.id)"
+        >
+          삭제
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -82,7 +86,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { db } from '@/firebase'
-import { collection, getDocs, orderBy, query } from 'firebase/firestore'
+import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore'
 
 // --------------------------------------------
 // ✅ 기본 설정
@@ -92,27 +96,25 @@ const keyword = ref('')
 const items = ref([])
 const loading = ref(true)
 
-// 수정화면으로 이동
+// --------------------------------------------
+// ✅ 페이지 이동 함수
+// --------------------------------------------
 const goToEdit = (id) => {
   router.push(`/emergencyEdit/${id}`)
 }
 
-
-// 게시물 작성 페이지로 이동
 const goToWrite = () => {
   router.push('/emergencyWrite')
 }
 
-// 게시물 상세 페이지로 이동
 const goToDetail = (id) => {
   router.push({ name: 'emergencyorder', params: { id } })
 }
 
-
 // --------------------------------------------
 // ✅ Firestore에서 데이터 불러오기
 // --------------------------------------------
-onMounted(async () => {
+async function loadData() {
   try {
     const q = query(collection(db, 'emergencyData'), orderBy('createdAt', 'desc'))
     const snapshot = await getDocs(q)
@@ -131,7 +133,26 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadData)
+
+// --------------------------------------------
+// ✅ 삭제 기능
+// --------------------------------------------
+async function handleDelete(id) {
+  const confirmDelete = confirm('정말로 이 게시물을 삭제하시겠습니까?')
+  if (!confirmDelete) return
+
+  try {
+    await deleteDoc(doc(db, 'emergencyData', id))
+    alert('게시물이 삭제되었습니다.')
+    await loadData() // 목록 갱신
+  } catch (e) {
+    console.error('삭제 실패:', e)
+    alert('삭제 중 오류가 발생했습니다.')
+  }
+}
 
 // --------------------------------------------
 // ✅ 검색 필터
@@ -165,14 +186,6 @@ function formatDate(date) {
 
 .edu-search {
   background-color: #f5f5f5;
-}
-
-.edu-list {
-  background-color: #ffffff;
-}
-
-.edu-item {
-  cursor: pointer;
 }
 
 .edu-item:last-child {
