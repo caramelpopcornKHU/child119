@@ -119,11 +119,6 @@ const router = createRouter({
       component: () => import("../views/HomeViewApp.vue"),
     },
     {
-      path: "/HomeViewHSM",
-      name: "HomeViewHSM",
-      component: () => import("../views/HomeViewHSM.vue"),
-    },
-    {
       path: "/HomeView_SH",
       name: "HomeView_SH",
       component: () => import("../views/HomeView_SH.vue"),
@@ -138,10 +133,15 @@ const router = createRouter({
       name: "navi",
       component: () => import("../views/navi.vue"),
     },
-     {
+    {
       path: "/emergencyYH",
       name: "emergencyYH",
       component: () => import("../views/emergencyYH.vue"),
+    },
+    {
+      path: "/hospitalInformationApp",
+      name: "hospitalInformationApp",
+      component: () => import("../views/hospitalInformationApp.vue"),
     },
   ],
 });
