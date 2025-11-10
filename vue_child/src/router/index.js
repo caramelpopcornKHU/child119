@@ -163,6 +163,11 @@ const router = createRouter({
       name: "emergencyadd",
       component: () => import("../views/emergencyadd.vue"),
     },
+    {
+      path: "/HomeViewjsb",
+      name: "HomeViewjsb",
+      component: () => import("../views/HomeViewjsb.vue"),
+    },
   ],
 });
 
