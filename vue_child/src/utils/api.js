@@ -299,7 +299,7 @@ export async function getTmapRoute(startX, startY, endX, endY) {
       endX,
       endY,
       reqCoordType: "WGS84GEO",
-      resCoordType: "WGS84GEO",
+      resCoordType: "EPSG4326",
       searchOption: "0", // 기본(추천) 경로
     });
     return res.data;
