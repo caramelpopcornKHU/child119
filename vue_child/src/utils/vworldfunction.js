@@ -1,6 +1,7 @@
 let vmap = null;
 let vectorLayer = null;
 let vectorSource = null;
+let currentLayer = null;
 
 export function initVworldMap({
   containerId = "vmap",
@@ -253,6 +254,135 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
         </svg>
     `);
 };
+
+export function setCurrentLocationMarker(lon, lat, options = {}) {
+  if (!currentLayer) return
+  const src = currentLayer.getSource()
+  src.clear() // 기존 위치 지우고 새로 추가
+
+  const feature = new ol.Feature({
+    geometry: new ol.geom.Point(window.ol.proj.fromLonLat([lon, lat])),
+  })
+
+  feature.setStyle(
+    new ol.style.Style({
+      image: new ol.style.Icon({
+        src: options.iconUrl || '/icons/currentLocation.svg',
+        scale: options.scale || 1,
+        anchor: options.anchor || [0.5, 0.5],
+      }),
+    })
+  )
+
+  src.addFeature(feature)
+}
+
+export function addMarkerHospital(lon, lat, props = {}) {
+  if (!vectorSource) {
+    console.warn("vectorSource가 초기화되지 않았습니다.");
+    return null;
+  }
+
+  try {
+    const point4326 = [Number(lon), Number(lat)];
+    const p3857 = ol.proj.transform(point4326, "EPSG:4326", "EPSG:3857");
+    const feature = new ol.Feature({
+      geometry: new ol.geom.Point(p3857),
+      ...props,
+    });
+    const style = new ol.style.Style({
+      image: new ol.style.Icon({
+        src: props.iconUrl || "https://cdn-icons-png.flaticon.com/512/854/854878.png",
+        scale: props.scale || 0.5,
+        anchor: props.anchor || [0.5, 1]
+      }),
+    });
+    feature.setStyle(style);
+    vectorSource.addFeature(feature);
+    return feature;
+  } catch (e) {
+    console.error("마커 추가 실패", e);
+    return null;
+  }
+}
+
+export function initVworldMapUser({ containerId, defaultCenter, defaultZoom }) {
+  if (!window.vw || !window.vw.ol3) {
+    console.error("VWORLD 라이브러리가 로드되지 않았습니다.")
+    return null
+  }
+
+  // 1. 지도 생성
+  const vmap = new window.vw.ol3.Map(containerId, {
+    basemapType: vw.ol3.BasemapType.GRAPHIC,
+    controlDensity: vw.ol3.DensityType.BASIC,
+    interactionDensity: vw.ol3.DensityType.BASIC,
+    controlsAutoArrange: true,
+    homePosition: vw.ol3.CameraPosition,
+    initPosition: vw.ol3.CameraPosition,
+  })
+
+  // 2. 일반 마커용 벡터 레이어
+  const mainSource = new ol.source.Vector({})
+  const mainLayer = new ol.layer.Vector({ source: mainSource })
+  vmap.getMap().addLayer(mainLayer)
+
+  // 3. ✅ 현재 위치 전용 레이어 (내 전용)
+  const currentSource = new ol.source.Vector({})
+  const currentLayer = new ol.layer.Vector({ source: currentSource })
+  vmap.getMap().addLayer(currentLayer)
+
+  // 4. 초기 위치 설정
+  const view = vmap.getView()
+  view.setCenter(defaultCenter)
+  view.setZoom(defaultZoom)
+
+  // 5. 유틸 함수와 함께 반환 (객체 형태)
+  return {
+    vmap,
+    mainLayer,
+    mainSource,
+    currentLayer,
+    currentSource,
+
+    clearMainMarkers() {
+      mainSource.clear()
+    },
+
+    setCurrentMarker(lon, lat, options = {}) {
+      currentSource.clear()
+      const feature = new ol.Feature({
+        geometry: new ol.geom.Point(window.ol.proj.fromLonLat([lon, lat])),
+      })
+      feature.setStyle(
+        new ol.style.Style({
+          image: new ol.style.Icon({
+            src: options.iconUrl || '/icons/currentLocation.svg',
+            scale: options.scale || 1,
+            anchor: options.anchor || [0.5, 0.5],
+          }),
+        })
+      )
+      currentSource.addFeature(feature)
+    },
+
+    addMainMarker(lon, lat, props = {}) {
+      const feature = new ol.Feature({
+        geometry: new ol.geom.Point(window.ol.proj.fromLonLat([lon, lat])),
+      })
+      feature.setStyle(
+        new ol.style.Style({
+          image: new ol.style.Icon({
+            src: props.iconUrl || '/icons/hospital.svg',
+            scale: props.scale || 0.8,
+            anchor: props.anchor || [0.5, 1],
+          }),
+        })
+      )
+      mainSource.addFeature(feature)
+    },
+  }
+}
 
 export function getCurrentBBox4326() {
   if (!vmap) {
