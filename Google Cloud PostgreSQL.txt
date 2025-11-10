@@ -21,6 +21,12 @@ Cloud Build 트리거 (/springboot_child/Dockerfile)
 
 
 
+-----------------------
+
+Mongo db
+
+mongodb+srv://lxFinal:Child119@@emergencyhospital.5qwiuzq.mongodb.net/
+
 
 GeoServer
 
