@@ -238,13 +238,15 @@ import {
   initVworldMap,
   getVMap,
   clearMarkers,
-  addMarker,
-  getCurrentBBox4326
+  addMarkerEmergency,
+  getCurrentBBox4326,
+  move
 } from '@/utils/vworldfunction';
 import { getEmergencyFromWFSByBBox } from '@/utils/api';
 
 // vmap 변수
 let vmap = null;
+let moveEndListener = null;
 
 // 선택된 증상 - 반응형
 const symptomOptions = ['발열', '감기', '기침', '호흡곤란', '구토', '설사', '복통', '발진', '화상', '경련']
@@ -371,6 +373,7 @@ const loadWFSMarkers = async () => {
     return
   }
 
+  // 1. bbox 가져오기
   const bbox = getCurrentBBox4326()
   if (!bbox) {
     console.warn('bbox를 가져올 수 없습니다.')
@@ -379,42 +382,35 @@ const loadWFSMarkers = async () => {
 
   const [minX, minY, maxX, maxY] = bbox
 
-  console.log('🔍 WFS 조회 시작:', { minX, minY, maxX, maxY })
 
-  loadingHospitals.value = true
-  searchAttempted.value = true
-  const coalesce = (...vals) => vals.find(v => v !== undefined && v !== null && String(v).trim() !== '') ?? ''
-  const toInt = (v) => {
-      if (v === null || v === undefined) return null
-      const n = parseInt(String(v).trim(), 10)
-      return Number.isFinite(n) ? n : null
-    }
   try {
-  // BBox로 원본 GeoJSON features를 가져옵니다.
+  
+  // 2. bbox에 걸리는 데이터 geoserver에서 가져오기
   const feats = await getEmergencyFromWFSByBBox(minX, minY, maxX, maxY);
-
   console.log('✅ WFS 응답:', feats.length, '개');
-
-  // --- 여기에 첫 번째 코드의 정제 로직을 적용 ---
-
-  // ※ 중요: 거리 계산을 위해 지도 중심 좌표(centerLon, centerLat)가 필요합니다.
-  //    (아마도 cur.value.lon, cur.value.lat 같은 변수가 있을 것입니다)
-  const centerLon = cur.value.lon; // 이 변수명은 실제 코드에 맞게 수정하세요.
-  const centerLat = cur.value.lat; // 이 변수명은 실제 코드에 맞게 수정하세요.
-
+  
+  
+  // 3. 사용자 현재 위치 설정
+  const centerLon = cur.value.lon; 
+  const centerLat = cur.value.lat;
+  
+  // JSON형태의 데이터 정제 함수
   const processedHospitals = feats.map((f, i) => {
     const [lon, lat] = f.geometry?.coordinates || [];
     const p = f.properties || {};
 
-    // 첫 번째 코드의 정제 로직 + 두 번째 코드의 name 필드(dutyName) 결합
-    const message = coalesce(p.message, p.MSG, p.msg, '');
-    const state = Number(p.state ?? -1);
-    const name = coalesce(p.name, p.hospname, p.yadmNm, p.dutyName, `병원 ${i + 1}`);
-    const address = coalesce(p.addr, p.address, p.dutyAddr); // dutyAddr도 추가 (예시)
-    const tel = coalesce(p.tel, p.phone, p.dutyTel1);     // dutyTel1도 추가 (예시)
-    const hours = coalesce(p.hours, p.oper_time, '');
-     const bedAvail = toInt(p.bed_avail ?? p.bedAvail ?? p.bedavail);
-    const bedTotal = toInt(p.bed_total ?? p.bedTotal ?? p.bedtotal);
+    // 문자열 병상수 ->  Number 타입
+    const toInt = (v) => {
+      if(v === null || v === undefined) return null;
+      const n = parseInt(String(v).trim(), 10);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    const message = p.message
+    const state = p.state
+    const name = p.nickname
+    const bedAvail = toInt(p.bed_avail)
+    const bedTotal = toInt(p.bed_total)
 
     // 거리 계산 로직
     const distance = (Number.isFinite(lat) && Number.isFinite(lon))
@@ -425,39 +421,33 @@ const loadWFSMarkers = async () => {
     return {
       id: f.id || `wfs-${i}`,
       hpid: p.hpid,
-      name,
-      address,
-      tel,
-      hours,
       lat,
       lon,
       distance,
+      name,
       message,
       state,
       bedAvail,
       bedTotal,
-      // properties: p // 원본 속성이 필요하면 이 줄의 주석을 해제하세요.
     };
   });
-  // --- 정제 로직 끝 ---
 
-  // 기존 마커 제거
+  // 4. 기존 마커 제거
   clearMarkers();
 
-  // 3. 정제된 데이터(processedHospitals)로 UI를 업데이트합니다.
+  // 5. 정제된 데이터(processedHospitals)로 마커 변경
   processedHospitals.forEach((hospital) => {
-    // 마커 추가 (이제 hospital 객체는 정제된 데이터만 가짐)
-    addMarker(hospital.lon, hospital.lat, {
+    addMarkerEmergency(hospital.lon, hospital.lat, {
       id: hospital.id,
       name: hospital.name,
       message: hospital.message,
       state: hospital.state,
-      // ... addMarker가 필요로 하는 다른 정제된 속성들
+      bedAvail: hospital.bedAvail,
+      bedTotal: hospital.bedTotal
     });
   });
 
-  // 4. hospitals.value에 'forEach + push' 대신,
-  //    정제된 배열을 '한 번에' 할당하는 것이 더 효율적입니다.
+  // 6. 바텀시트에 관련 데이터 넣기 
   hospitals.value = processedHospitals;
 
 } catch (error) {
@@ -488,8 +478,7 @@ function getCurrentLocation() {
   })
 }
 
-// onMounted - 초기실행
-onMounted(async () => {
+const initMapAndCoords = async () => {
   // 1. VWorld 라이브러리 로드 대기
   await new Promise((resolve) => {
     const checkVworld = setInterval(() => {
@@ -520,79 +509,51 @@ onMounted(async () => {
 
     if (!vmap) throw new Error('vmap 초기화 실패')
 
-    // ✅ 여기서 바로 이벤트 등록
-    vmap.on('moveend', () => {
-      console.log('🗺️ 지도 이동/줌 감지 (vmap 이벤트)')
-      if (debounceTimer) clearTimeout(debounceTimer)
+    // 4. 리스너 함수 정의 
+    moveEndListener = () => {
+      console.log(`지도 이동/줌 감지`)
+      if(debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {
         loadWFSMarkers()
       }, 300)
-    })
-
-    // 4. 초기 마커 로드
-    setTimeout(() => loadWFSMarkers(), 500)
-
-  } catch (error) {
-    console.error('초기화 실패:', error)
-    alert('지도를 초기화할 수 없습니다.')
-  }
-})
-
-//캐시된 후 '다시 돌아올 때마다' 실행
-onActivated(async () => {
-  await new Promise((resolve) => {
-    const checkVworld = setInterval(() => {
-      if (window.vw && window.vw.ol3 && window.ol) {
-        clearInterval(checkVworld)
-        resolve()
-      }
-    }, 100)
-  })
-
-  try {
-    // 2. 현재 위치 가져오기
-    let centerCoords
-    try {
-      const location = await getCurrentLocation()
-      centerCoords = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
-    } catch {
-      centerCoords = ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
     }
 
-    // 3. 지도 초기화
-    vmap = initVworldMap({
-      containerId: 'vmap',
-      defaultCenter: centerCoords,
-      defaultZoom: 15,
-      autoFetch: false
-    })
+    vmap.on('moveend', moveEndListener)
 
-    if (!vmap) throw new Error('vmap 초기화 실패')
-
-    // ✅ 여기서 바로 이벤트 등록
-    vmap.on('moveend', () => {
-      console.log('🗺️ 지도 이동/줌 감지 (vmap 이벤트)')
-      if (debounceTimer) clearTimeout(debounceTimer)
-      debounceTimer = setTimeout(() => {
-        loadWFSMarkers()
-      }, 300)
-    })
-
-    // 4. 초기 마커 로드
+    // 5. 초기 마커 로드
     setTimeout(() => loadWFSMarkers(), 500)
 
   } catch (error) {
     console.error('초기화 실패:', error)
     alert('지도를 초기화할 수 없습니다.')
   }
+}
+
+onMounted(async () => {
+  await initMapAndCoords()
+})
+
+// zoom / moveend 됐을 때
+onActivated(async () => {
+  console.log(`onActivated 활성화`)
+  await getCurrentPositionApp()
 });
+
+onBeforeUnmount(() => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+
+  if(vmap && moveEndListener){
+    vmap.un('moveend', moveEndListener)
+    console.log(`리스너 해제 완료.`)
+  }
+})
 
 async function getCurrentPositionApp() {
   getCurrentLocation();
   loadWFSMarkers();
 }
 
-// 🔹 정렬 함수들
+// 🔹 정렬 함수들 -> 로직 수정
 const sortByDistance = () => {
   hospitals.value.sort((a, b) => a.name.localeCompare(b.name))
 }
@@ -617,20 +578,8 @@ function goToemergencyDetail(hpid) {
 
 }
 
-// cleanup
-onBeforeUnmount(() => {
-  if (debounceTimer) clearTimeout(debounceTimer)
 
-  const grip = document.querySelector('.sheet-grip')
-  if (grip) {
-    grip.removeEventListener('touchstart', onGripTouchStart)
-    grip.removeEventListener('touchmove', onGripTouchMove)
-    grip.removeEventListener('touchend', onGripTouchEnd)
-  }
-})
-
-
-
+// 바텀시트 오른쪽 병상 badge
 function bedLabel(h) {
   const a = h.bedAvail
   const t = h.bedTotal
