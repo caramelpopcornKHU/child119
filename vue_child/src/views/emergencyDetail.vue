@@ -191,19 +191,6 @@ const toggleShowAll = () => {
 };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 </script>
 
 <style scoped>

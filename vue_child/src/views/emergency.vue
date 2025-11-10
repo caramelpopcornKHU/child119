@@ -1,211 +1,155 @@
-<!-- src/views/EmergencyFirstAid.vue -->
 <template>
-  <div class="d-flex justify-content-center align-items-center  flex-column ">
+  <!-- 헤더/푸터는 이미 있다고 가정하고, 본문만 구성 -->
+  <div class="edu-page container-fluid px-3 py-3">
 
-    <!-- 상단 카테고리 + 칩 (상단 고정) -->
-    <div class="d-flex flex-column align-items-center sticky-top bg-white border-bottom w-100">
-      <!-- 카테고리 아이콘 라인 -->
-      <div class="container-fluid ">
-        <div class="d-flex align-items-center justify-content-between py-2" >
-          <button class="btn btn-link text-body-tertiary px-0"><i class="bi bi-chevron-left"></i></button>
-
-          <div class="d-flex gap-3 text-center">
-            <div
-              v-for="c in iconCats"
-              :key="c.label"
-              class="d-flex flex-column align-items-center category-item"
-              style="cursor: pointer;"
-              @click="selectTag(c.label)"
-            >
-              <div class="d-flex align-items-center justify-content-center rounded-circle border category-icon"
-                   :class="{ 'active': selectedTag === c.label }"
-                   style="width:40px;height:40px;transition: all .2s;">
-                <i :class="c.icon"></i>
-              </div>
-              <small class="mt-1 category-label"
-                     :class="{ 'text-medium': selectedTag === c.label, 'text-muted': selectedTag !== c.label }">
-                {{ c.label }}
-              </small>
-            </div>
-          </div>
-
-          <button class="btn btn-link text-body-tertiary px-0"><i class="bi bi-chevron-right"></i></button>
-        </div>
-      </div>
-
-     
+    <!-- 상단 탭 -->
+    <div class="d-flex justify-content-center mb-3">
+      <div></div> <!-- 왼쪽 여백용 -->
+      <button type="button" class="btn btn-success rounded-pill px-3 fw-semibold" @click="goToWrite">
+        + 게시물 추가
+      </button>
     </div>
 
-    <!-- 리스트 (남은 높이 채우고 스크롤) -->
-    <section class="container-fluid py-2 flex-grow-1 overflow-auto">
-      <article
-        v-for="v in items"
-        :key="v.id"
-        class="card border-0 border-bottom rounded-0"
-      >
-        <div class="card-body p-0">
+    <!-- 검색 영역 -->
+    <div class="mb-3">
+      <div class="input-group edu-search rounded-3 px-2">
+        <input type="text" class="form-control border-0 shadow-none p-2" placeholder="검색어를 입력하세요." v-model="keyword" />
+        <span class="input-group-text bg-transparent border-0 p-0">
+          <!-- 검색 아이콘 (부트스트랩 아이콘 없다는 가정으로 SVG 직접 사용) -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+            <path fill="#00b894" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5
+                 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L19 20.49
+                 20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5
+                 11.99 14 9.5 14" />
+          </svg>
+        </span>
+      </div>
+    </div>
 
-          <!-- 썸네일 16:9 (부트스트랩 ratio) -->
-          <div class="position-relative ratio ratio-16x9" @click="goToEmergencyorder()">
-            <img :src="v.thumbnail" :alt="v.title" class="w-100 h-100 object-fit-cover">
-           
+    <!-- 전체 개수 -->
+    <p class="text-muted small mb-3">
+      전체 {{ filteredItems.length }}건이 등록되어 있습니다.
+    </p>
+
+    <!-- 목록 -->
+    <div class="edu-list">
+      <div v-for="item in filteredItems" :key="item.id" class="edu-item border-top" @click="goToDetail(item.id)">
+        <div class="py-3">
+          <div class="fw-semibold edu-title">
+            {{ item.title }}
           </div>
-
-          <!-- 메타 -->
-          <div class="p-2 d-flex gap-2 align-items-start">
-            <div class="rounded-circle bg-secondary-subtle flex-shrink-0" style="width:36px;height:36px;"></div>
-            <div class="flex-grow-1" >
-              <h6 class="mb-1 fw-semibold text-body text-wrap text-bold" >{{ v.title }}</h6>
-              <div class="text-muted small text-light">
-                {{ v.channel }} · {{ v.views }} · {{ v.age }}
-              </div>
-            </div>
+          <div class="text-muted small mt-2">
+            {{ formatDate(item.createdAt) }}
+            <span class="mx-2">|</span>
+            조회수 {{ item.viewCountNumber || 0 }}
           </div>
         </div>
-      </article>
-
-      <!-- 로딩/끝 표시 -->
-      <div class="text-center py-3" v-if="loading">
-        <div class="spinner-border" role="status" style="width:1.8rem;height:1.8rem;"></div>
       </div>
-      <div class="text-center text-muted py-3" v-else-if="finished">끝까지 불러왔습니다</div>
+    </div>
 
-      <!-- 무한 스크롤 센티넬 -->
-      <div ref="observerTarget" style="height:1px;"></div>
-    </section>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-
-/* 아이콘 카테고리 예시 */
-const iconCats = [
-  { label: '화상', icon: 'bi bi-fire' },
-  { label: '감기', icon: 'bi bi-emoji-frown' },
-  { label: '복통', icon: 'bi bi-emoji-tear' },
-  { label: '발열', icon: 'bi bi-thermometer-sun' },
-  { label: '구토', icon: 'bi bi-emoji-dizzy' },
-  { label: '경련', icon: 'bi bi-activity' },
-]
-
-const tags = ['화상', '감기', '복통', '발열', '구토', '경련', '탈수', '골절']
-const selectedTag = ref('화상')
+import { getAllEmergencyData } from '../firebase/emergency.js'
 
 const keyword = ref('')
-const showSearch = ref(false)
-function selectTag(t){ selectedTag.value = t; resetAndLoad() }
-function toggleSearch(){ showSearch.value = !showSearch.value }
-function applyFilter(){ resetAndLoad() }
+const router = useRouter()
 
-/* 유튜브형 리스트 상태 */
-const useYouTubeAPI = !!import.meta.env.VITE_YT_API_KEY
-const YT_KEY = import.meta.env.VITE_YT_API_KEY
+// 게시물 추가 버튼
+const goToWrite = () => {
+  router.push('/emergencyadd')
+}
+
+// Firebase에서 데이터 가져오기
 const items = ref([])
-const nextPageToken = ref(null)
-const loading = ref(false)
-const finished = ref(false)
-const observerTarget = ref(null)
 
-const q = computed(() => (keyword.value || selectedTag.value || '응급처치'))
-
-async function loadYouTube() {
-  if (loading.value || finished.value) return
-  loading.value = true
+onMounted(async () => {
   try {
-    const params = new URLSearchParams({
-      key: YT_KEY, part: 'snippet', maxResults: '10', type: 'video',
-      q: q.value, pageToken: nextPageToken.value || ''
-    })
-    const res = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`)
-    const data = await res.json()
-
-    nextPageToken.value = data.nextPageToken || null
-    if (!data.items?.length) finished.value = true
-
-    items.value.push(...data.items.map(it => ({
-      id: it.id.videoId,
-      title: it.snippet.title,
-      channel: it.snippet.channelTitle,
-      age: new Date(it.snippet.publishedAt).toLocaleDateString(),
-      views: '조회수 정보(샘플)',
-      thumbnail: it.snippet.thumbnails?.medium?.url || it.snippet.thumbnails?.default?.url
-    })))
-
-    if (!nextPageToken.value) finished.value = true
-  } catch (e) {
-    console.error(e)
-    if (items.value.length === 0) {
-      items.value = sampleVideos()
-      finished.value = true
-    }
-  } finally {
-    loading.value = false
+    items.value = await getAllEmergencyData()
+    console.log('응급처치 데이터 로드 완료:', items.value.length, '건')
+  } catch (error) {
+    console.error('데이터 로드 실패:', error)
+    alert('데이터를 불러오는데 실패했습니다.')
   }
-}
-
-function sampleVideos() {
-  return Array.from({ length: 20 }).map((_, i) => ({
-    id: `mock-${i}`,
-    title: `응급처치 샘플 영상 ${i + 1}`,
-    channel: '아이119',
-    views: `${(i + 1) * 3}만회`,
-    age: '1년 전',
-    thumbnail: 'https://i.ytimg.com/vi/2Vv-BfVoq4g/hqdefault.jpg'
-  }))
-}
-
-function resetAndLoad() {
-  items.value = []
-  nextPageToken.value = null
-  finished.value = false
-  loadMore()
-}
-
-function mountObserver() {
-  const io = new IntersectionObserver((entries) => {
-    if (entries.some(e => e.isIntersecting)) loadMore()
-  }, { rootMargin: '600px 0px' })
-  if (observerTarget.value) io.observe(observerTarget.value)
-}
-
-function loadMore() {
-  if (useYouTubeAPI) return loadYouTube()
-  if (!loading.value && items.value.length === 0) {
-    items.value = sampleVideos()
-    finished.value = true
-  }
-}
-
-const router = useRouter();
-function goToEmergencyorder() {
-  router.push('/emergencyorder')
-}
-
-onMounted(() => {
-  resetAndLoad()
-  mountObserver()
 })
+
+const filteredItems = computed(() => {
+  if (!keyword.value.trim()) return items.value
+  const q = keyword.value.trim().toLowerCase()
+  return items.value.filter((v) => v.title.toLowerCase().includes(q))
+})
+
+// 아이템 클릭 시 상세 페이지로 이동
+function goToDetail(id) {
+  router.push({ name: 'emergencyorder', params: { id } })
+}
+function formatDate(timestamp) {
+  if (!timestamp) return ''
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
+  return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')
+}
 </script>
 
+
 <style scoped>
-/* 선택된 카테고리 아이콘 스타일 */
-.category-icon.active {
-  background-color: #e9ecef;
-  border-color: #e9ecef !important;
-  color: black;
-  transform: scale(1.05);
+/* 헤더/푸터 공간 고려 (프로젝트에서 --header-h, --footer-h 쓰고 있다면 활용) */
+.edu-page {
+  padding-top: calc(var(--header-h, 56px) + 8px);
+  padding-bottom: calc(var(--footer-h, 56px) + 8px);
+  min-height: calc(100vh - var(--header-h, 56px) - var(--footer-h, 56px));
+  background-color: #ffffff;
 }
 
-/* 선택된 카테고리 아이콘 호버 */
-.category-item:hover .category-icon.active {
-  background-color: #e9ecef;
-  transform: scale(1.1);
+/* 탭 */
+.edu-tab {
+  flex: 1 1 auto;
+  max-width: 160px;
+  text-align: center;
+  padding: 8px 0;
+  margin: 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #888;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
 }
 
-/* 라벨 전환 애니메이션 */
-.category-label {
-  transition: all 0.2s ease;
+.edu-tab.active {
+  color: #00b894;
+  /* 상단 타이틀 느낌 나는 그린 톤 */
+  border-bottom-color: #00b894;
+}
+
+/* 검색창 */
+.edu-search {
+  background-color: #f5f5f5;
+}
+
+/* 리스트 */
+.edu-list {
+  background-color: #ffffff;
+}
+
+.edu-item {
+  cursor: pointer;
+}
+
+.edu-item:last-child {
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* 제목 두 줄까지 표시 후 말줄임 */
+.edu-title {
+  font-size: 17px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style>

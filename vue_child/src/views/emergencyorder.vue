@@ -1,150 +1,172 @@
 <template>
-  <main class="bg-body-tertiary min-vh-100">
-    <div class="container-fluid py-4 px-3">
-
-<!-- 상단 헤더 -->
-<div class="d-flex align-items-center mb-3 gap-2">
-  <button class="btn btn-link p-0 text-dark" @click="goBack">
-    <i class="bi bi-arrow-left fs-5"></i>
-  </button>
-  <h5 class="mb-0 text-bold d-flex align-items-center gap-2">
-    {{ info.title }}
-    <i :class="categoryIcon" class="text-danger fs-5"></i>
-    <span class="badge bg-danger text-light">{{ info.category }}</span>
-  </h5>
-</div>
-
-
-<!-- 대표 이미지 -->
-<div class="mb-3 rounded-4 overflow-hidden position-relative">
-  <img :src="info.thumbnail" alt="응급처치 이미지" class="w-100 h-100 object-fit-cover" />
-
-  <!-- 중앙 재생 버튼 -->
-<a
-  :href="info.url"
-  target="_blank"
-  class="position-absolute top-50 start-50 translate-middle text-decoration-none play-btn"
->
-  <i class="bi bi-play-circle-fill text-danger fs-1 shadow-lg"></i>
-</a>
-</div>
-
-      <!-- 본문 카드 -->
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-3 p-md-4">
-          <!-- 증상 -->
-          <div class="mb-4">
-            <h6 class="text-danger text-bold mb-2">증상</h6>
-            <ul class="text-black text-light ps-3">
-              <li v-for="(s, idx) in info.symptomList" :key="idx">{{ s }}</li>
-            </ul>
-          </div>
-
-          <!-- 응급처치 -->
-          <div class="mb-4">
-            <h6 class="text-danger text-bold mb-2">응급처치</h6>
-            <ol class="mb-0 ps-3 text-black text-light d-flex flex-column gap-2">
-              <li v-for="(m, idx) in info.methodList" :key="idx">{{ m }}</li>
-            </ol>
-          </div>
-
-          <!-- 원인 -->
-          <div class="mb-4">
-            <h6 class="text-danger text-bold mb-2">원인</h6>
-            <ul class="text-black text-light ps-3">
-              <li v-for="(s, idx) in info.reasonList" :key="idx">{{ s }}</li>
-            </ul>
-          </div>
-
-          <!-- 주의 문구 -->
-          <div class="alert alert-warning text-black text-light small mb-0">
-            <strong class="text-danger text-bold">주의:</strong> {{ info.warning }}
+  <div class="container-fluid py-5" style="padding-top: calc(var(--header-h, 56px) + 16px) !important; padding-bottom: calc(var(--footer-h, 56px) + 16px) !important;">
+    
+    <!-- 로딩 중 -->
+    <div v-if="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">로딩 중...</span>
+      </div>
+    </div>
+    
+    <!-- 데이터 표시 -->
+    <div v-else-if="item" class="container px-3">
+      <!-- 제목 -->
+      <h1 class="fs-4 fw-bold mb-3">{{ item.title }}</h1>
+      
+      <!-- 메타 정보 -->
+      <div class="d-flex align-items-center text-muted small mb-4">
+        <span>{{ formatDate(item.createdAt) }}</span>
+        <span class="mx-2">|</span>
+        <span>조회수 {{ item.viewCountNumber || 0 }}</span>
+      </div>
+      
+      <!-- 유튜브 썸네일 이미지 (클릭 시 동영상으로) -->
+      <div v-if="item.thumbnailUrl && !showVideo" class="mb-4 position-relative" @click="showVideo = true" style="cursor: pointer;">
+        <img :src="item.thumbnailUrl" class="w-100 rounded" alt="썸네일" />
+        <div class="position-absolute top-50 start-50 translate-middle">
+          <div class="bg-danger bg-opacity-75 rounded-circle" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/>
+            </svg>
           </div>
         </div>
       </div>
-
-      <!-- 하단 여백 -->
-      <div class="pb-5" style="padding-bottom: calc(2rem + env(safe-area-inset-bottom));"></div>
+      
+      <!-- 유튜브 동영상 (썸네일 클릭 후 표시) -->
+      <div v-if="item.youtubeUrl && showVideo" class="ratio ratio-16x9 mb-4">
+        <iframe 
+          :src="getYoutubeEmbedUrl(item.youtubeUrl)"
+          allowfullscreen
+          class="rounded"
+        ></iframe>
+      </div>
+      
+      <!-- 일반 동영상 URL (유튜브가 아닌 경우) -->
+      <div v-if="item.youtubeUrl && !item.youtubeId && !item.thumbnailUrl" class="mb-4">
+        <a :href="item.youtubeUrl" target="_blank" class="btn btn-outline-primary w-100">
+          동영상 보러 가기
+        </a>
+      </div>
+      
+      <!-- 해시태그 -->
+      <div v-if="item.hashtags && item.hashtags.length > 0" class="mb-3">
+        <span v-for="(tag, idx) in item.hashtags" :key="idx" class="badge bg-danger-subtle text-danger me-2">
+          #{{ tag }}
+        </span>
+      </div>
+      
+      <!-- 증상 -->
+      <div v-if="item.symptomList && item.symptomList.length > 0" class="card mb-3">
+        <div class="card-header bg-danger text-white fw-bold">
+          증상
+        </div>
+        <div class="card-body">
+          <ol class="mb-0">
+            <li v-for="(symptom, idx) in item.symptomList" :key="idx" class="mb-2">
+              {{ symptom }}
+            </li>
+          </ol>
+        </div>
+      </div>
+      
+      <!-- 응급처치 -->
+      <div v-if="item.methodList && item.methodList.length > 0" class="card mb-3">
+        <div class="card-header bg-primary text-white fw-bold">
+          응급처치 방법
+        </div>
+        <div class="card-body">
+          <ol class="mb-0">
+            <li v-for="(method, idx) in item.methodList" :key="idx" class="mb-2">
+              {{ method }}
+            </li>
+          </ol>
+        </div>
+      </div>
+      
+      <!-- 원인 -->
+      <div v-if="item.reasonList && item.reasonList.length > 0" class="card mb-3">
+        <div class="card-header bg-warning text-dark fw-bold">
+          원인
+        </div>
+        <div class="card-body">
+          <ol class="mb-0">
+            <li v-for="(reason, idx) in item.reasonList" :key="idx" class="mb-2">
+              {{ reason }}
+            </li>
+          </ol>
+        </div>
+      </div>
+      
+      <!-- 주의사항 -->
+      <div v-if="item.warning" class="alert alert-warning mb-4">
+        <strong>⚠️ 주의:</strong> {{ item.warning }}
+      </div>
+      
+      <!-- 목록으로 버튼 -->
+      <div class="d-grid">
+        <button @click="goBack" class="btn btn-primary btn-lg">
+          목록으로
+        </button>
+      </div>
     </div>
-  </main>
+    
+    <!-- 데이터 없음 -->
+    <div v-else class="text-center py-5">
+      <p class="text-muted">데이터를 찾을 수 없습니다.</p>
+    </div>
+    
+  </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import { computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getEmergencyData, incrementViews } from '../firebase/emergency.js'
 
+const route = useRoute()
 const router = useRouter()
-function goBack() { router.back() }
 
-// 아이콘 카테고리 매핑
-const iconCats = [
-  { label: '화상', icon: 'bi bi-fire' },
-  { label: '감기', icon: 'bi bi-emoji-frown' },
-  { label: '복통', icon: 'bi bi-emoji-tear' },
-  { label: '열', icon: 'bi bi-thermometer-sun' },
-  { label: '구토', icon: 'bi bi-emoji-dizzy' },
-  { label: '경련', icon: 'bi bi-activity' }
-]
+const item = ref(null)
+const loading = ref(true)
+const showVideo = ref(false)
 
-// 데이터
-const info = {
-  title: '고열',
-  url: 'https://www.youtube.com/watch?v=6x7ZCxCu1oM',
-  thumbnail: getYoutubeThumbnail('https://youtu.be/6x7ZCxCu1oM?si=1xlFdsQ5qQ56Ld9k'),
-  category: '열',
-  symptomList: [
-    '아이의 체온은 연령에 따라 달라지며 성인에 비해 1-2도 정도 높은 것이 일반적입니다.',
-    '0-2세까지는 36.7~38°C까지도 정상으로 볼 수 있고, 3세에서 5세는 37~37.2°C 정도입니다.',
-    '측정 부위, 체온계에 따라서 달라질 수도 있습니다.',
-    '측정치에 차이가 있는 경우, 아이의 가장 높은 체온을 현재 체온으로 판단하여 처치하는 것이 좋습니다.'
-  ],
-  methodList: [
-    '열과 함께 구토, 두통, 호흡곤란, 복통, 경련 등의 증상이 있다면 즉시 병원으로 가서 의사와 상의하세요.',
-    '무조건 해열제를 먹이는 것은 아이의 상태에 좋지 않은 영향을 줄 수 있습니다.',
-    '열이 나면서 오한(춥다고 떠는 증상)이 있을 경우, 아이가 너무 추워하고 입술이나 손끝이 푸르게 변하면 얇은 이불을 살짝 덮어주세요.',
-    '약 20~30분 후 몸을 떠는 것이 멎고 따뜻해지면 그때 미온수로 몸을 닦아 체온을 낮춰주세요.'
-  ],
-  reasonList: [
-    '바이러스 감염(비특이적 바이러스 감염, 상기도 감염)',
-    '중이염(귀를 잡아당기면 통증, 붉어진 고막)',
-    '탈수',
-    '편도염(주로 바이러스성, 목 아픔, 편도샘의 비대, 숨 쉴 때 고약한 냄새)',
-    '독감(열, 기침, 두통, 식욕부진, 관절통)',
-    '발진을 동반한 바이러스 질환(수두, 홍역, 풍진, 비특이적 바이러스 발진)',
-    '폐렴(기침, 빠른 호흡)',
-    '요로감염(빈뇨, 배뇨장애, 허리통증, 구토)',
-    '가와사키병(발진, 결막염, 림프절병증, 입술 균열, 열, 피부 벗겨짐)',
-    '예방접종 후',
-    '중증의 혈액감염',
-    '인위적인 원인(뜨거운 음료를 마신 후 체온측정, 과도한 울음 또는 힘든 일, 너무 감싸서 온도가 올라감)'
-  ],
-  warning: '이 내용은 안내용입니다. 증상이 심하거나 아이의 경우 반드시 의료진의 진료를 받으세요. 생명이 위급한 경우 119에 신고하세요.'
-}
+const id = computed(() => route.params.id)
 
-// computed로 카테고리 아이콘 선택
-const categoryIcon = computed(() => {
-  const found = iconCats.find(c => c.label === info.category)
-  return found ? found.icon : 'bi bi-question-circle'
+onMounted(async () => {
+  try {
+    // emergency.js의 함수 사용
+    item.value = await getEmergencyData(id.value)
+    
+    // 조회수 증가
+    await incrementViews(id.value)
+  } catch (error) {
+    console.error('데이터 로드 실패:', error)
+  } finally {
+    loading.value = false
+  }
 })
 
-function getYoutubeThumbnail(url) {
-  // youtu.be 단축 URL 또는 youtube.com/watch URL 모두 처리
+function getYoutubeEmbedUrl(url) {
+  if (!url) return ''
   const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/
   const match = url.match(regex)
-  return match ? `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg` : ''
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url
 }
 
+function formatDate(timestamp) {
+  if (!timestamp) return ''
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
+  return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')
+}
+
+function goBack() {
+  router.back()
+}
 </script>
 
 <style scoped>
-.object-fit-cover { object-fit: cover; }
-.card-body ol li { line-height: 1.5rem; }
-.play-btn i {
-  transition: transform 0.2s ease-in-out;
-  cursor: pointer;
-}
-
-.play-btn i:hover {
-  transform: scale(1.3);
+.bg-danger-subtle {
+  background-color: #fdecea !important;
 }
 </style>
