@@ -168,6 +168,11 @@ const router = createRouter({
       name: "HomeViewjsb",
       component: () => import("../views/HomeViewjsb.vue"),
     },
+     {
+      path: "/HomeAdmin",
+      name: "HomeAdmin",
+      component: () => import("../views/HomeAdmin.vue"),
+    },
   ],
 });
 
