@@ -8,7 +8,7 @@
             <path fill="#000" d="M20 11v2H8l5.5 5.5l-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5L8 11z" />
           </svg>
         </button>
-        <div class="mb-0 text-bold fs-5 d-flex">{{ hospitalData.dutyName }}</div>
+        <div class="mb-0 text-bold fs-5 d-flex">{{ hospitalData.duty_name }}</div>
       </div>
 
       <!-- 병원 정보 -->
@@ -21,7 +21,7 @@
               d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
           </svg>
           <div class="d-flex text-plight">
-            {{ hospitalData.dutyAddr }}
+            {{ hospitalData.duty_addr }}
           </div>
         </div>
 
@@ -31,20 +31,7 @@
               d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25c1.12.37 2.32.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57c.11.35.03.74-.25 1.02z" />
           </svg>
           <div class=" text-plight">
-            {{ hospitalData.dutyTel3 }}
-          </div>
-        </div>
-
-        <div class="d-flex flex-column justify-content-start mb-2">
-          <div class="d-flex fs-7 text-bold ">소아 응급실 현황</div>
-          <div class="d-flex align-items-center gap-2 ms-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-              <path fill="#000"
-                d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3" />
-            </svg>
-            <div class="text-bold badge rounded-pill bg-success d-flex" v-if="realTimeData">
-              {{ realTimeData.bed_avail }} / {{ realTimeData.bed_total }}
-            </div>
+            {{ hospitalData.duty_tel3 || hospitalData.duty_tel1 }}
           </div>
         </div>
 
@@ -54,36 +41,35 @@
             <tbody>
               <tr>
                 <th>월</th>
-                <td>{{ formatTime(hospitalData.dutyTime1s) }} - {{ formatTime(hospitalData.dutyTime1c) }}</td>
+                <td>{{ formatTime(hospitalData.duty_time1s) }} - {{ formatTime(hospitalData.duty_time1c) }}</td>
               </tr>
               <tr>
                 <th>화</th>
-                <td>{{ formatTime(hospitalData.dutyTime2s) }} - {{ formatTime(hospitalData.dutyTime2c) }}</td>
+                <td>{{ formatTime(hospitalData.duty_time2s) }} - {{ formatTime(hospitalData.duty_time2c) }}</td>
               </tr>
               <tr>
                 <th>수</th>
-                <td>{{ formatTime(hospitalData.dutyTime3s) }} - {{ formatTime(hospitalData.dutyTime3c) }}</td>
+                <td>{{ formatTime(hospitalData.duty_time3s) }} - {{ formatTime(hospitalData.duty_time3c) }}</td>
               </tr>
               <tr>
                 <th>목</th>
-                <td>{{ formatTime(hospitalData.dutyTime4s) }} - {{ formatTime(hospitalData.dutyTime4c) }}</td>
+                <td>{{ formatTime(hospitalData.duty_time4s) }} - {{ formatTime(hospitalData.duty_time4c) }}</td>
               </tr>
               <tr>
                 <th>금</th>
-                <td>{{ formatTime(hospitalData.dutyTime5s) }} - {{ formatTime(hospitalData.dutyTime5c) }}</td>
+                <td>{{ formatTime(hospitalData.duty_time5s) }} - {{ formatTime(hospitalData.duty_time5c) }}</td>
               </tr>
               <tr>
                 <th>토</th>
-                <td>{{ formatTime(hospitalData.dutyTime6s) }} - {{ formatTime(hospitalData.dutyTime6c) }}</td>
+                <td>{{ formatTime(hospitalData.duty_time6s) }} - {{ formatTime(hospitalData.duty_time6c) }}</td>
               </tr>
               <tr>
                 <th>일</th>
-                <td>{{ formatTime(hospitalData.dutyTime7s) }} - {{ formatTime(hospitalData.dutyTime7c) }}</td>
+                <td>{{ formatTime(hospitalData.duty_time7s) }} - {{ formatTime(hospitalData.duty_time7c) }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-
 
         <div class="info-block">
           <div class="mb-2 text-bold">진료과목</div>
@@ -111,86 +97,85 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
-// api 연결
-import { getEmergencyHospitalByHPID, getEmergencyFormWFSByFilter } from '@/utils/api'
-
 
 const router = useRouter();
 const goBack = () => router.back();
 
-onMounted(async () => {
-  getHospitalData(hpid)
-  getRealTimeData(hpid)
-});
-
-
-let hospitalData = ref(null)
-let realTimeData = ref(null)
-
-// hpid
-// ex) emergency.A1100001 -> A1100001 
-const props = defineProps({
-  hpid: String
-})
-const parts = props.hpid.split('.');
-const hpid = parts[1]
-
-// 공공 데이터 불러오기
-async function getHospitalData(hpid) {
-  console.log(hpid)
-  try{
-    const res = await getEmergencyHospitalByHPID(hpid)
-    if( res && res.length > 0 ) {
-      hospitalData.value = res[0]
-    }
-    console.log(hospitalData.value)
-  } catch(err) {
-    console.error(`병원 정보 조회 실패 -> ${err}`)
-  }
-}
-
-// geoserver 데이터
-async function getRealTimeData(hpid) {
-  try{
-    realTimeData.value = await getEmergencyFormWFSByFilter(hpid);
-    console.log(realTimeData.value)
-  } catch (err) {
-    console.error(`WFS실행 오류 -> ${err}`)
-  }
-
-}
-
-
-// 시간 포맷팅 헬퍼 함수
-const formatTime = (time) => {
-    if (!time) return '정보 없음';
-    const timeStr = String(time).padStart(4, '0');
-    return `${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}`;
-};
-
+const hospitalData = ref(null);
 const showAll = ref(false);
 
-// 원본 진료과목 배열 생성 (dgidIdName 분리)
-const departments = computed(() => {
-    if (hospitalData.value && typeof hospitalData.value.dgidIdName === 'string') {
-        return hospitalData.value.dgidIdName.split(',');
+// props에서 hpid 받아오기
+const props = defineProps({ hpid: String });
+const hpid = ref("");
+
+// props가 들어오면 디코딩
+watch(() => props.hpid, (val) => {
+  if (!val) return
+  console.log('✅ 전달받은 HPID:', val)
+  getHospitalAllByHPID(val)
+}, { immediate: true })
+
+function formatTime(time) {
+  if (!time) return '정보 없음';
+  const timeStr = String(time).padStart(4, '0');
+  return `${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}`;
+}
+
+async function getHospitalAllByHPID(hpid) {
+  const layers = [
+    "hospital:moonlight_hospital",
+    "hospital:children_hospital",
+    "hospital:pharmacy"
+  ];
+
+  try {
+    const reqs = layers.map(async (layer) => {
+      // ✅ fid 변수를 여기서 선언해야 함!!
+      const fid = `${layer.split(":")[1]}.${hpid}`;
+      const url = `https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=${layer}&outputFormat=application/json&featureId=${fid}`;
+      
+      console.log("🌍 요청 URL:", url);
+
+      const res = await fetch(url);
+      const data = await res.json().catch(() => null);
+      return data?.features?.[0] || null;
+    });
+
+    const results = await Promise.all(reqs);
+    const found = results.find(Boolean);
+
+    if (!found) {
+      console.warn(`⚠️ HPID ${hpid} 에 해당하는 병원이 어떤 레이어에서도 발견되지 않음`);
+      hospitalData.value = null;
+      return;
     }
-    return [];
+
+    // ✅ 병원 데이터 저장
+    hospitalData.value = found.properties;
+    console.log("✅ 병원 데이터 로드 완료:", hospitalData.value);
+  } catch (err) {
+    console.error("🌐 GeoServer 조회 실패:", err);
+    hospitalData.value = null;
+  }
+}
+
+// 진료과목 표시용 computed
+const departments = computed(() => {
+  if (hospitalData.value && typeof hospitalData.value.dgid_id_name === "string") {
+    return hospitalData.value.dgid_id_name.split(",");
+  }
+  return [];
 });
- 
-// '더보기/접기' 로직 적용 (12개로 제한)
-const visibleDepartments = computed(() => {
-    // showAll 상태에 따라 전체 또는 일부(12개) 반환
-    return showAll.value ? departments.value : departments.value.slice(0, 12);
-});
+
+const visibleDepartments = computed(() =>
+  showAll.value ? departments.value : departments.value.slice(0, 12)
+);
 
 const toggleShowAll = () => {
-    showAll.value = !showAll.value;
+  showAll.value = !showAll.value;
 };
-
-
 </script>
 
 <style scoped>
@@ -198,37 +183,16 @@ const toggleShowAll = () => {
   background-color: rgba(170, 170, 188, 0.1);
   min-height: 100vh;
 }
-
-.box {
-  display: flex;
-  align-items: center;
-  background-color: rgba(170, 170, 188, 0.05);
-  width: 100%;
-  padding: 0.6rem 0.8rem;
-  border-radius: 0.6rem;
-  border: 1px solid rgba(170, 170, 188, 0.4);
-  color: #333;
-  font-size: 0.95rem;
-}
-
 .dept-badge {
   background-color: rgba(170, 170, 188, 0.15);
   border: 1px solid rgba(170, 170, 188, 0.4);
   font-size: 0.9rem;
   transition: all 0.2s ease;
 }
-
 .dept-badge:hover {
   background-color: rgba(170, 170, 188, 0.3);
   transform: scale(1.05);
 }
-
-
-
-.text-accent {
-  color: #0D6EFD;
-}
-
 .bg-white {
   background-color: #ffffff !important;
 }

@@ -17,16 +17,20 @@
               d="M18 14h2v-3h3V9h-3V6h-2v3h-3v2h3zM10 4c0-.6.4-1 1-1h1V1h-1c-1.7 0-3 1.3-3 3v1H4v2h11V5h-5zm-1 8H7c0-1.1.9-2 2-2zm3.5 7c.83 0 1.5-.67 1.5-1.5S13.33 16 12.5 16s-1.5.67-1.5 1.5s.67 1.5 1.5 1.5M5 22h14c1.1 0 2-.9 2-2v-9H3v9c0 1.1.9 2 2 2" />
           </svg> 진료과
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="달빛어린이병원" @click="showMoonlight()">
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="달빛어린이병원"
+          @click="showMoonlight()">
           🌙 달빛어린이병원
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="소아과" @click="showPediatric()">
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="소아과"
+          @click="showPediatric()">
           🧒 소아청소년과
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="약국" @click="showPharmacy()">
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="약국"
+          @click="showPharmacy()">
           <i class="bi bi-capsule"></i> 약국
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="AED" @click="showAED()">
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="AED"
+          @click="showAED()">
           ⚡ AED
         </button>
       </div>
@@ -173,12 +177,11 @@
       <!-- 리스트 스크롤 영역 :: start -->
       <div class="overflow-auto px-3 flex-grow-1" style="min-height: 0; max-height: 100%;">
         <!-- 카드 -->
-        <div class="card shadow-sm mb-3" v-for="hospital in hospitals" :key="hospital.id">
-          <div class="card-body">
+        <div class="card shadow-sm mb-3" v-for="hospital in hospitals" :key="hospital.fid || hospital.id">
+          <div class="card-body" @click="goToHospitalDetail(hospital.hpid)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ hospital.name || '병원명 없음' }}</h6>
-              <span v-if="hospital.type"
-                class="badge bg-success-subtle text-success-emphasis rounded-pill">
+              <span v-if="hospital.type" class="badge bg-success-subtle text-success-emphasis rounded-pill">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22px" height="15px" viewBox="0 0 24 24">
                   <path fill="#008A64"
                     d="M2 22V11h7V6h6v11h7v5H2M8 8V6h2v2H8m0 2v2h2v-2H8m6-4v2h2V6h-2m0 4v2h2v-2h-2m0 4v2h2v-2h-2" />
@@ -186,8 +189,8 @@
               </span>
             </div>
 
-            <div class="mb-2" v-if="hospital.dept_name">
-              <span v-for="(dept, index) in hospital.dept_name.split(',').map(d => d.trim())" :key="index"
+            <div v-if="hospital.dept_name" class="mb-2">
+              <span v-for="(dept, index) in (hospital.dept_name ? hospital.dept_name.split(',').map(d => d.trim()) : [])" :key="index"
                 class="badge rounded-pill me-1 mb-1"
                 :class="[getDepartmentColor(dept).bg, getDepartmentColor(dept).text]"
                 :style="getDepartmentColor(dept).style || ''">
@@ -202,8 +205,8 @@
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
-              <button class="btn btn-outline-primary w-100" v-if="hospital.tel"
-                @click.stop="callHospital(hospital.tel)" style="pointer-events: auto; z-index: 10;">
+              <button class="btn btn-outline-primary w-100" v-if="hospital.tel" @click.stop="callHospital(hospital.tel)"
+                style="pointer-events: auto; z-index: 10;">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
               <button class="btn btn-primary w-100" @click.stop="openRouteModal(hospital)"
@@ -363,6 +366,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, onActivated } from 'vue'
 import axios from 'axios'
+import { useRouter } from 'vue-router';
 
 import { initVworldMap, clearMarkers, addMarkerHospital, getCurrentBBox4326 } from '@/utils/vworldfunction';
 import { getEmergencyFromWFSByBBox } from '@/utils/api';
@@ -471,6 +475,50 @@ const sheetStyle = computed(() => ({
   top: 'auto'
 }))
 
+// 🔹 병원 상세 페이지로 이동
+const router = useRouter();
+
+function goToHospitalDetail(item) {
+  // item이 어떤 형태든 안전하게 파싱
+  let hpid = null;
+
+  if (!item) {
+    console.warn("⚠️ 병원 객체가 없음:", item);
+    return;
+  }
+
+  // GeoServer feature 형태 (f.id 존재)
+  if (item.id && typeof item.id === "string" && item.id.includes(".")) {
+    hpid = item.id.split(".")[1];
+  }
+
+  // 일반 hospital 데이터 객체 (properties 구조)
+  else if (item.hpid) {
+    hpid = item.hpid;
+  }
+
+  // 혹시 string으로 넘어온 경우
+  else if (typeof item === "string") {
+    hpid = item;
+  }
+
+  if (!hpid) {
+    console.warn("⚠️ hpid를 찾을 수 없습니다:", item);
+    return;
+  }
+
+  console.log("✅ 추출된 HPID:", hpid);
+
+  if (!hpid || typeof hpid !== 'string') {
+    console.warn(`잘못된 hpid:`, hpid)
+    return
+  }
+  router.push({
+    name: "hospitalInformationDetail",
+    params: { hpid },
+  });
+}
+
 // 🔹 현재 위치 가져오기
 function getCurrentLocation() {
   return new Promise((resolve, reject) => {
@@ -517,11 +565,11 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
     const filtered = selectedDepartments.value.length
       ? geojson.features.filter(f => {
         const depts = (f.properties?.dgid_id_name || '').split(',').map(d => d.trim())
-        return selectedDepartments.value.some(sel => 
+        return selectedDepartments.value.some(sel =>
           depts.some(dept => dept.includes(sel))
         )
       })
-      :geojson.features
+      : geojson.features
 
     filtered.forEach(f => {
       const [lon, lat] = f.geometry.coordinates
@@ -542,7 +590,7 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
   }
 }
 
-// ✅ 달빛어린이병원 조회 (GeoServer)
+// 달빛어린이병원 조회 (GeoServer)
 function showMoonlight() {
   showLayerInView({
     url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital:moonlight_hospital&outputFormat=application/json",
@@ -553,7 +601,7 @@ function showMoonlight() {
   })
 }
 
-// ✅ 소아청소년과 조회 (GeoServer)
+// 소아청소년과 조회 (GeoServer)
 function showPediatric() {
   showLayerInView({
     url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital%3Achildren_hospital&outputFormat=application%2Fjson&maxFeature=50",
@@ -564,8 +612,15 @@ function showPediatric() {
   })
 }
 
-// 🕐 약국 조회 (API 뜯어야함)
+// 약국 조회
 async function showPharmacy() {
+  showLayerInView({
+    url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital%3Apharmacy&outputFormat=application%2Fjson&maxFeature=50",
+    iconUrl: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjOTMwM2VlIiBkPSJNMTIgMTEuNUEyLjUgMi41IDAgMCAxIDkuNSA5QTIuNSAyLjUgMCAwIDEgMTIgNi41QTIuNSAyLjUgMCAwIDEgMTQuNSA5YTIuNSAyLjUgMCAwIDEtMi41IDIuNU0xMiAyYTcgNyAwIDAgMC03IDdjMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2E3IDcgMCAwIDAtNy03Ii8+PC9zdmc+",
+    nameKey: "duty_name",
+    addrKey: "duty_addr",
+    listType: "약국"
+  })
 }
 
 // ⚡ AED 조회 (공공데이터 API - 1000건씩만 추출)
@@ -622,47 +677,60 @@ async function showAED() {
  * API 응답을 hospitals 배열로 통일시켜주는 함수
  */
 function addToHospitalList(list, type) {
-  // 선택한 분과 필터링
+  // 1) 선택한 진료과 필터링 (여기서는 fid/hpid 불필요)
   let filteredList = list
   if (selectedDepartments.value.length > 0) {
     filteredList = list.filter(item => {
       const props = item.properties || {}
-      const deptNames = (props.dgid_id_name || '').split(',').map( d=> d.trim())
-
-      return selectedDepartments.value.some(sel => 
+      const deptNames = (props.dgid_id_name || '').split(',').map(d => d.trim())
+      return selectedDepartments.value.some(sel =>
         deptNames.some(dept => dept.includes(sel))
       )
     })
   }
 
+  // 2) 표준화된 병원 리스트로 매핑
   hospitals.value = filteredList.map((item) => {
     const props = item.properties || {}
+
+    // ✅ fid/hpidFromFid는 여기서 먼저 계산!
+    const fid = item.id || props.fid || null               // ex) "children_hospital.A1100647"
+    const hpidFromFid = fid && fid.includes('.') ? fid.split('.')[1] : null // ex) "A1100647"
+
+    // 좌표 추출 (GeoJSON Point 기준)
     const [lon, lat] = item.geometry?.coordinates || [NaN, NaN]
 
-    // 거리 계산 (미터 -> km)
+    // 거리/ETA 계산
     let distanceKm = null
     let etaMin = null
-    if(userLocation.value && lat && lon) {
+    if (userLocation.value && Number.isFinite(lat) && Number.isFinite(lon)) {
       const dist = haversineMeter(userLocation.value.lat, userLocation.value.lon, lat, lon)
       distanceKm = (dist / 1000).toFixed(1)
+      // 대략 시속 24km(분당 0.4km) 가정 → 필요시 조정
       etaMin = Math.max(1, Math.round((dist / 1000) / 0.4))
     }
 
     return {
-      id: props.hpid || props.id || Math.random().toString(36).substring(2, 9),
-      hpid: props.hpid || null,
-      type, // 예: "소아청소년과"
+      // 🔑 고유키들
+      fid,                                      // 전체 fid 보관(디버깅/로그용)
+      id: hpidFromFid || props.hpid || fid,     // v-for :key 용
+      hpid: hpidFromFid || props.hpid || null,  // 상세로 넘길 “진짜 HPID”
+
+      // 메타
+      type,
       name:
         props.duty_name || props.hospital_name || props.name || props.dutyName || "이름 없음",
       addr:
         props.duty_addr || props.address || props.addr || props.dutyAddr || "주소 없음",
       tel:
         props.duty_tel1 || props.dutytel3 || props.hospital_tel || props.dutyTel1 || "",
+
+      // 위치/거리
       lat,
       lon,
-      dept_name: props.dgid_id_name || null,
+      dept_name: props.dgid_id_name ?? '',
       distanceKm,
-      etaMin
+      etaMin,
     }
   })
 
@@ -680,7 +748,7 @@ function haversineMeter(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a))
 }
 
- let markers = []
+let markers = []
 
 /* 거리순 정렬 */
 const distanceAsc = ref(true)
@@ -939,12 +1007,12 @@ async function updateUserLocation(zoom = 16) {
   try {
     const position = await getCurrentLocation()
     const { lat, lon } = position
-    userLocation.value = {lat, lon}
+    userLocation.value = { lat, lon }
 
     const center = window.ol.proj.fromLonLat([lon, lat])
     vmap.getView().setCenter(center)
     vmap.getView().setZoom(zoom)
-    
+
     clearMarkers()
     addMarkerHospital(lon, lat, {
       name: '현재 위치',
@@ -952,10 +1020,10 @@ async function updateUserLocation(zoom = 16) {
       anchor: [0.5, 0.5]
     })
     console.log(`현재 위치: ${lat},${lon}`)
-  } catch(err) {
+  } catch (err) {
     console.error('위치 업데이트 실패:', err)
     alert('현재 위치를 가져올 수 없습니다.')
-    
+
   }
 }
 
