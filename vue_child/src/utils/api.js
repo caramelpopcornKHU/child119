@@ -154,6 +154,29 @@ export async function getEmergencyFormWFSByFilter(hpid) {
 
 }
 
+// 현재위치에서 가까운 거리 순으로 응급실 목록 구하기
+export async function getEmergencyFromWFSSortByDistance(startX, startY) {
+  
+  // 현재 위치에서 거리순으로 정렬
+  const cqlFilter = `DWITHIN(geom,POINT(${startX} ${startY}),5,km)`
+
+  try {
+    const res = await WFSApi.get("", {
+      params: {
+        service: 'WFS',
+        version: '1.1.0',
+        request: 'GetFeature',
+        typeName: 'hospital:emergency',
+        outputFormat: 'application/json',
+        cql_filter: cqlFilter
+      }
+    })
+    return res.data
+  } catch(err) {
+    console.error(`getEmergencyFromWFSSortByDistance Error -> ${err}`)
+  }
+}
+
 // tmap API
 export const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8";
 

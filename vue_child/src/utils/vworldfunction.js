@@ -38,8 +38,8 @@ export function initVworldMap({
     const internalMap = vmap.getMap
       ? vmap.getMap()
       : vmap.map
-      ? vmap.map
-      : null;
+        ? vmap.map
+        : null;
     if (internalMap && internalMap.addLayer) {
       internalMap.addLayer(vectorLayer);
     } else if (vmap.addLayer) {
@@ -86,7 +86,7 @@ export function addMarkerEmergency(lon, lat, props = {}) {
       geometry: new ol.geom.Point(p3857),
       ...props,
     });
-    
+
     const svgUrl = createMarkerIcon(
       props.bedAvail,
       props.bedTotal,
@@ -106,7 +106,7 @@ export function addMarkerEmergency(lon, lat, props = {}) {
     feature.setStyle(style);
     vectorSource.addFeature(feature);
     return feature;
-    
+
   } catch (e) {
     console.error("마커 추가 실패", e);
     return null;
@@ -116,91 +116,91 @@ export function addMarkerEmergency(lon, lat, props = {}) {
 // svg url 만들기
 const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, isHover = false) => {
 
-    
-    // ✅ 인자 안전성 강화 (undefined/null을 빈 문자열로 변환)
-    const name = hospitalName || '';
-    const message = emergencyMessage || '';
 
-    // 이미지 기반으로 측정한 SVG 전체 영역 크기
-    const svgWidth = 100;
-    const svgHeight = 100; 
+  // ✅ 인자 안전성 강화 (undefined/null을 빈 문자열로 변환)
+  const name = hospitalName || '';
+  const message = emergencyMessage || '';
 
-    // 흰색 둥근 직사각형 배경 설정
-    const rectWidth = 100;
-    const rectHeight = 90; 
-    const rectX = (svgWidth - rectWidth) / 2; 
-    const rectY = 0;
-    const borderRadius = 10;
+  // 이미지 기반으로 측정한 SVG 전체 영역 크기
+  const svgWidth = 100;
+  const svgHeight = 100;
 
-    // 원형 배지 설정
-    const cirRadius = rectHeight/2*0.6 ; 
-    const cirCenterX = svgWidth / 2;
-    const cirCenterY = rectY + cirRadius + rectHeight/2*0.1; // 원형 배지 Y 중심
+  // 흰색 둥근 직사각형 배경 설정
+  const rectWidth = 100;
+  const rectHeight = 90;
+  const rectX = (svgWidth - rectWidth) / 2;
+  const rectY = 0;
+  const borderRadius = 10;
 
-    // 메세지 텍스트 설정
-    const messageFontSize = 16;
-    const messageY = rectY + rectHeight - 20; 
+  // 원형 배지 설정
+  const cirRadius = rectHeight / 2 * 0.6;
+  const cirCenterX = svgWidth / 2;
+  const cirCenterY = rectY + cirRadius + rectHeight / 2 * 0.1; // 원형 배지 Y 중심
 
-    // ✅ 응급실 메시지 뱃지/텍스트 설정
-    const badgeHeight = 24; // 이미지에 맞게 높이 증가 (20 -> 24)
-    const badgeWidth = 10; // 뱃지 고정 너비 (텍스트에 맞게 조정)
-    const badgeX = (svgWidth - badgeWidth) / 2; // 중앙 정렬
+  // 메세지 텍스트 설정
+  const messageFontSize = 16;
+  const messageY = rectY + rectHeight - 20;
 
-    // 💡 메시지 뱃지 Y 좌표 (원형 배지 아래에 밀착)
-    const messageCenterY = cirCenterY + cirRadius + 20; // 원형 배지 바닥 + 20px 간격으로 분리
-    const badgeBgY = messageCenterY - (badgeHeight / 2); // 뱃지 배경의 시작 Y
+  // ✅ 응급실 메시지 뱃지/텍스트 설정
+  const badgeHeight = 24; // 이미지에 맞게 높이 증가 (20 -> 24)
+  const badgeWidth = 10; // 뱃지 고정 너비 (텍스트에 맞게 조정)
+  const badgeX = (svgWidth - badgeWidth) / 2; // 중앙 정렬
+
+  // 💡 메시지 뱃지 Y 좌표 (원형 배지 아래에 밀착)
+  const messageCenterY = cirCenterY + cirRadius + 20; // 원형 배지 바닥 + 20px 간격으로 분리
+  const badgeBgY = messageCenterY - (badgeHeight / 2); // 뱃지 배경의 시작 Y
 
 
-    // 원형 배지 내부 폰트 및 아이콘 크기
-    const bedTextFontSize = 18; 
-    const iconSizePx = 24;      
-    const iconBaseSize = 24;    
-    const iconScale = iconSizePx / iconBaseSize; 
+  // 원형 배지 내부 폰트 및 아이콘 크기
+  const bedTextFontSize = 18;
+  const iconSizePx = 24;
+  const iconBaseSize = 24;
+  const iconScale = iconSizePx / iconBaseSize;
 
-    // 원형 배지 내부 간격 및 중앙 정렬 계산
-    const gap = 2; 
-    const iconRenderedHeight = iconBaseSize * iconScale; 
-    const textRenderedHeight = bedTextFontSize;          
-    const contentTotalHeight = iconRenderedHeight + gap + textRenderedHeight; 
-    const iconCenterYOffset = -((contentTotalHeight / 2) - (iconRenderedHeight / 2)); 
-    const textCenterYOffset = iconCenterYOffset + iconRenderedHeight + gap; 
+  // 원형 배지 내부 간격 및 중앙 정렬 계산
+  const gap = 2;
+  const iconRenderedHeight = iconBaseSize * iconScale;
+  const textRenderedHeight = bedTextFontSize;
+  const contentTotalHeight = iconRenderedHeight + gap + textRenderedHeight;
+  const iconCenterYOffset = -((contentTotalHeight / 2) - (iconRenderedHeight / 2));
+  const textCenterYOffset = iconCenterYOffset + iconRenderedHeight + gap;
 
-    // 병상 정보 및 색상 로직
-    let bedText = '';
-    let badgeBgColor = '#16a085'; 
-    let badgeTextColor = 'white';
+  // 병상 정보 및 색상 로직
+  let bedText = '';
+  let badgeBgColor = '#16a085';
+  let badgeTextColor = 'white';
 
-    if (Number.isFinite(bedAvail) && Number.isFinite(bedTotal) && bedTotal > 0) {
-        bedText = `${bedAvail}/${bedTotal}`;
-        if (bedAvail/bedTotal <= 0.5) {
-            badgeBgColor = '#e74c3c'; 
-        } else {
-            badgeBgColor = '#16a085'; 
-        }
+  if (Number.isFinite(bedAvail) && Number.isFinite(bedTotal) && bedTotal > 0) {
+    bedText = `${bedAvail}/${bedTotal}`;
+    if (bedAvail / bedTotal <= 0.5) {
+      badgeBgColor = '#e74c3c';
     } else {
-        badgeBgColor = '#95a5a6'; 
-        bedText = '?/?';
+      badgeBgColor = '#16a085';
     }
+  } else {
+    badgeBgColor = '#95a5a6';
+    bedText = '?/?';
+  }
 
-    const strokeWidth = isHover ? '4' : '3';
-    
-    // 마커 핀 설정
-    const pinSvgPath = "M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7";
-    const pinColor = "#00000"; 
-    const pinWidth = 24; 
-    const pinHeight = 24; 
-    const pinScaleFactor = 1.3; 
-    const scaledPinWidth = pinWidth * pinScaleFactor; 
-    const scaledPinHeight = pinHeight * pinScaleFactor; 
-    const pinY = rectY + rectHeight - 10; 
+  const strokeWidth = isHover ? '4' : '3';
 
-    // 응급실 메시지 렌더링을 위한 색상과 텍스트 처리
-    let messageColor = '#333'; 
+  // 마커 핀 설정
+  const pinSvgPath = "M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7";
+  const pinColor = "#00000";
+  const pinWidth = 24;
+  const pinHeight = 24;
+  const pinScaleFactor = 1.3;
+  const scaledPinWidth = pinWidth * pinScaleFactor;
+  const scaledPinHeight = pinHeight * pinScaleFactor;
+  const pinY = rectY + rectHeight - 10;
+
+  // 응급실 메시지 렌더링을 위한 색상과 텍스트 처리
+  let messageColor = '#333';
 
 
 
-    // SVG 문자열 조립
-    return 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+  // SVG 문자열 조립
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(`
         <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight + scaledPinHeight - 20}" viewBox="0 0 ${svgWidth} ${svgHeight + scaledPinHeight - 20}">
             
 
@@ -214,7 +214,7 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
 
             <circle 
                 cx="${cirCenterX}" cy="${cirCenterY}" 
-                r="${cirRadius - (strokeWidth/2)}" 
+                r="${cirRadius - (strokeWidth / 2)}" 
                 fill="${badgeBgColor}" 
                 stroke="white" 
                 stroke-width="${strokeWidth}"/>
@@ -397,8 +397,8 @@ export function getCurrentBBox4326() {
     const internalMap = vmap.getMap
       ? vmap.getMap()
       : vmap.map
-      ? vmap.map
-      : null;
+        ? vmap.map
+        : null;
     const size = internalMap
       ? internalMap.getSize()
       : [window.innerWidth, window.innerHeight];
@@ -433,68 +433,68 @@ export function move(x, y, z = 15) {
 
 // 기존에 가진 레이어 삭제
 export async function removeRouteLayer(map) {
-  const layersToRemove = map.getLayers().getArray().filter(layer => 
+  const layersToRemove = map.getLayers().getArray().filter(layer =>
     layer.get('name') === 'tmap_route_layer'
   );
-  
+
   layersToRemove.forEach(layer => {
     map.removeLayer(layer);
-    });
-    
-    console.log("✅ 기존 Tmap 경로 레이어 제거 완료.");
-  }
-  
-  // 경로 그리기
-  export async function drawRoute(map, geoJsonData) {
-    // 1. 기존 경로 레이어 제거를 먼저 수행합니다.
-    removeRouteLayer(map);
-    
-    // 2. GeoJSON 데이터를 OpenLayers 피처로 변환
-    const format = new ol.format.GeoJSON({
-      // Tmap 응답 좌표계 (EPSG:4326)를 지도 좌표계 (EPSG:3857)로 변환
-      defaultDataProjection: 'EPSG:3857', 
-      featureProjection: 'EPSG:3857'     
-    });
-    
-    const features = format.readFeatures(geoJsonData);
-    
-    // 3. 경로를 담을 Vector Source 생성
-    const vectorSource = new ol.source.Vector({
-      features: features
-    });
-    
-    // 4. 경로 스타일 정의
-    const routeStyle = new ol.style.Style({
-      stroke: new ol.style.Stroke({
-        color: 'rgba(0, 0, 255, 0.7)', 
-        width: 6,
-      }),
-    });
-    
-    // 5. Vector Layer 생성 및 지도에 추가
-    const vectorLayer = new ol.layer.Vector({
-      source: vectorSource,
-      style: routeStyle,
-      name: 'tmap_route_layer' // 제거를 위한 이름 설정
-    });
-    
-    map.addLayer(vectorLayer);
-    console.log("✅ 새 Tmap 경로 레이어 추가 완료.");
-    
-    // 6. 경로 영역에 맞게 뷰 조정 (이 부분이 moveend 이벤트를 유발할 수 있습니다.)
-    map.getView().fit(vectorSource.getExtent(), {
-      padding: [50, 50, 50, 50],
-      duration: 1000,
-    });
-  }
-  
-  export default {
-    initVworldMap,
-    getVMap,
-    addMarkerEmergency,
-    clearMarkers,
-    getCurrentBBox4326,
-    move,
-    drawRoute,
-    removeRouteLayer
-  };
+  });
+
+  console.log("✅ 기존 Tmap 경로 레이어 제거 완료.");
+}
+
+// 경로 그리기
+export async function drawRoute(map, geoJsonData) {
+  // 1. 기존 경로 레이어 제거를 먼저 수행합니다.
+  removeRouteLayer(map);
+
+  // 2. GeoJSON 데이터를 OpenLayers 피처로 변환
+  const format = new ol.format.GeoJSON({
+    // Tmap 응답 좌표계 (EPSG:4326)를 지도 좌표계 (EPSG:3857)로 변환
+    defaultDataProjection: 'EPSG:3857',
+    featureProjection: 'EPSG:3857'
+  });
+
+  const features = format.readFeatures(geoJsonData);
+
+  // 3. 경로를 담을 Vector Source 생성
+  const vectorSource = new ol.source.Vector({
+    features: features
+  });
+
+  // 4. 경로 스타일 정의
+  const routeStyle = new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: 'rgba(0, 0, 255, 0.7)',
+      width: 6,
+    }),
+  });
+
+  // 5. Vector Layer 생성 및 지도에 추가
+  const vectorLayer = new ol.layer.Vector({
+    source: vectorSource,
+    style: routeStyle,
+    name: 'tmap_route_layer' // 제거를 위한 이름 설정
+  });
+
+  map.addLayer(vectorLayer);
+  console.log("✅ 새 Tmap 경로 레이어 추가 완료.");
+
+  // 6. 경로 영역에 맞게 뷰 조정 (이 부분이 moveend 이벤트를 유발할 수 있습니다.)
+  map.getView().fit(vectorSource.getExtent(), {
+    padding: [50, 50, 50, 50],
+    duration: 1000,
+  });
+}
+
+export default {
+  initVworldMap,
+  getVMap,
+  addMarkerEmergency,
+  clearMarkers,
+  getCurrentBBox4326,
+  move,
+  drawRoute,
+  removeRouteLayer
+};

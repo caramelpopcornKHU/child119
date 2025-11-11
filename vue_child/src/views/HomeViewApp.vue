@@ -229,7 +229,7 @@ import {
   getCurrentBBox4326,
   drawRoute
 } from '@/utils/vworldfunction';
-import { calculateDistance, getEmergencyFromWFSByBBox, getTmapRoute } from '@/utils/api';
+import { calculateDistance, getEmergencyFromWFSByBBox, getTmapRoute, getEmergencyFromWFSSortByDistance } from '@/utils/api';
 
 // vmap 변수
 let vmap = null;
@@ -485,12 +485,15 @@ vmap.on('moveend', moveEndListener)
 // 5. 초기 마커 로드
 setTimeout(() => loadWFSMarkers(), 500)
 
-// 6-1. tmap api로 경로 불러오기
-const response = await getTmapRoute(location.lon, location.lat, 126.885082, 37.492379)
-// 6-2. 경로 그리기
-if(response && vmap) {
+// 6-1. 현재 위치에서 근처의 병원 목록 가져오기
+const emergencyRes = await getEmergencyFromWFSSortByDistance(location.lon, location.lat)
+console.log(`emergencyRes ->${emergencyRes}`)
+// 6-2. tmap api로 경로 불러오기
+const routeRes = await getTmapRoute(location.lon, location.lat, 126.885082, 37.492379)
+// 6-3. 경로 그리기
+if(routeRes && vmap) {
   console.log(`경로 그리기 함수 실행`)
-  drawRoute(vmap, response)
+  drawRoute(vmap, routeRes)
 }
 
 } catch (error) {
