@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import axios from 'axios'
-import { getHospitalFromWFSByBBox } from '@/utils/api_nono'
 
 // 지도 및 위치 상태
 export const map = ref(null)
