@@ -79,6 +79,8 @@
         </button>
       </div>
     </div>
+     <!-- 채팅 버튼 (오른쪽 아래 고정) -->
+    
   </div>
 </template>
 
@@ -87,8 +89,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { db,auth } from '@/firebase'
 import { collection, getDocs, orderBy, query, deleteDoc, doc,getDoc } from 'firebase/firestore'
-import { onAuthStateChanged } from 'firebase/auth'
-
+import { onAuthStateChanged } from 'firebase/auth'// ←
 // --------------------------------------------
 // ✅ 기본 설정
 // --------------------------------------------
