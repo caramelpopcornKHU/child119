@@ -169,9 +169,14 @@ const router = createRouter({
       component: () => import("../views/HomeViewjsb.vue"),
     },
      {
-      path: "/HomeAdmin",
-      name: "HomeAdmin",
-      component: () => import("../views/HomeAdmin.vue"),
+      path: "/AdminHome",
+      name: "AdminHome",
+      component: () => import("../views/AdminHome.vue"),
+    },
+    {
+      path: "/AdminUserEdit/:uid",
+      name: "AdminUserEdit",
+      component: () => import("../views/AdminUserEdit.vue"),
     },
   ],
 });

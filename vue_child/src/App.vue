@@ -3,7 +3,8 @@
     <!-- ===============================
          📌 Header (상단 고정 네비게이션)
          =============================== -->
-    <header class="navbar navbar-light bg-white shadow-sm fixed-top">
+    <header v-if="!isAdminRoute"
+      class="navbar navbar-light bg-white shadow-sm fixed-top">
       <div class="container d-flex align-items-center justify-content-between">
         <!-- 좌측: 로고 + 홈 버튼 -->
         <div class="d-flex align-items-center">
@@ -35,7 +36,9 @@
     <!-- ===============================
          🦶 Footer (하단 고정 네비게이션)
          =============================== -->
-    <nav class="navbar bg-white border-top fixed-bottom">
+    <nav 
+    v-if="!isAdminRoute"
+      class="navbar bg-white border-top fixed-bottom">
       <ul class="nav nav-fill w-100 align-items-stretch  m-0 flex-nowrap">
         <!-- 각 버튼은 라우터 경로에 따라 아이콘/페이지 전환 -->
         <li class="nav-item">
@@ -112,7 +115,12 @@ import { signOut } from 'firebase/auth'
 export default {
   name: 'App',
   components: { RouterView },
-
+   computed: {
+    // ✅ /admin으로 시작하는 경로는 관리자 페이지로 간주
+    isAdminRoute() {
+      return this.$route.path.startsWith('/Admin')
+    }
+  },
   methods: {
     // 라우팅 이동 메서드
     mypage() { this.$router.push('/mypage') },
