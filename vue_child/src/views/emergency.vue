@@ -1,7 +1,7 @@
 <template>
   <div class="edu-page container-fluid px-3 py-3">
     <!-- 상단 탭 -->
-    <div class="d-flex justify-content-center mb-3">
+    <div class="d-flex justify-content-center mb-3" v-if="isAdmin">
       <div></div>
       <button
         type="button"
@@ -62,7 +62,7 @@
       </div>
 
       <!-- ✅ 수정/삭제 버튼 -->
-      <div class="ms-3 d-flex gap-2">
+      <div class="ms-3 d-flex gap-2" v-if="isAdmin">
         <button
           type="button"
           class="btn btn-outline-secondary btn-sm rounded-pill"
@@ -85,8 +85,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { db } from '@/firebase'
-import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore'
+import { db,auth } from '@/firebase'
+import { collection, getDocs, orderBy, query, deleteDoc, doc,getDoc } from 'firebase/firestore'
+import { onAuthStateChanged } from 'firebase/auth'
 
 // --------------------------------------------
 // ✅ 기본 설정
@@ -95,7 +96,8 @@ const router = useRouter()
 const keyword = ref('')
 const items = ref([])
 const loading = ref(true)
-
+const isAdmin = ref(false) // 사용자 확인 변수
+const currentUserUid = ref(null) //현제 uid 사용자 저장 변
 // --------------------------------------------
 // ✅ 페이지 이동 함수
 // --------------------------------------------
@@ -135,7 +137,32 @@ async function loadData() {
   }
 }
 
-onMounted(loadData)
+onMounted(() => { // 사용자 권환 확인 
+  loadData()
+  checkAdminStatus()
+})
+async function checkAdminStatus() { // 사용자 귄함 확인 매소
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUserUid.value = user.uid
+      
+      // Firestore users 컬렉션에서 사용자 정보 가져오기
+      const userDocRef = doc(db, 'users', user.uid)
+      const userDoc = await getDoc(userDocRef)
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data()
+        const username = userData.username || ''
+        
+        // username에 'admin'이 포함되어 있는지 확인
+        isAdmin.value = username.toLowerCase().includes('admin')
+      }
+    } else {
+      isAdmin.value = false
+      currentUserUid.value = null
+    }
+  })
+}
 
 // --------------------------------------------
 // ✅ 삭제 기능
