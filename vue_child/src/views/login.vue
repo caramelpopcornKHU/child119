@@ -120,38 +120,58 @@ async function onSubmit() {
 
     const user = userCredential.user
 
-    // 3단계: Firestore에서 사용자 정보 가져오기
-    const userDocRef = doc(db, 'users', user.uid)
-    const userDoc = await getDoc(userDocRef)
+   // 3단계: Firestore에서 사용자 정보 가져오기
+const userDocRef = doc(db, 'users', user.uid)
+const userDoc = await getDoc(userDocRef)
 
-    let userData = {
-      uid: user.uid,
-      name: user.displayName || '사용자',
-      username: form.username,
-      email: userEmail,
-      phone: ''
-    }
+let userData = {
+  uid: user.uid,
+  name: user.displayName || '사용자',
+  username: form.username,
+  email: userEmail,
+  phone: ''
+}
 
-    if (userDoc.exists()) {
-      const firestoreData = userDoc.data()
-      userData = {
-        uid: firestoreData.uid || user.uid,
-        name: firestoreData.name || user.displayName || '사용자',
-        username: firestoreData.username || form.username,
-        email: userEmail,
-        phone: firestoreData.phone || ''
-      }
-      console.log('사용자 정보:', firestoreData)
-    }
+let isAdmin = false   // ✅ 관리자 여부 플래그
 
-    // 4단계: localStorage에 사용자 정보 저장
-    setUser(userData)
+if (userDoc.exists()) {
+  const firestoreData = userDoc.data()
+  userData = {
+    uid: firestoreData.uid || user.uid,
+    name: firestoreData.name || user.displayName || '사용자',
+    username: firestoreData.username || form.username,
+    email: userEmail,
+    phone: firestoreData.phone || ''
+  }
+  console.log('사용자 정보:', firestoreData)
 
-    // 로그인 성공
-    alert('로그인에 성공했습니다!')
+  // ✅ Firestore에 저장된 username 기준으로 admin 여부 판별
+  if (firestoreData.username && firestoreData.username.includes('admin')) {
+    isAdmin = true
+  }
+} else {
+  // 혹시 users 문서가 없을 때: 입력한 아이디로라도 체크
+  if (form.username.includes('admin')) {
+    isAdmin = true
+  }
+}
 
-    // 메인 페이지 또는 홈으로 이동
-    router.push('/')
+// 4단계: localStorage에 사용자 정보 저장
+setUser({
+  ...userData,
+  role: isAdmin ? 'admin' : 'user'   // ✅ 선택: 역할 같이 저장해두면 나중에 편함
+})
+
+// 로그인 성공
+alert('로그인에 성공했습니다!')
+
+// ✅ 메인 페이지 이동: admin이면 관리자 홈, 아니면 일반 홈
+if (isAdmin) {
+  router.push('/AdminHome')        // <-- AdminHome.vue에 연결된 경로로 수정
+} else {
+  router.push('/')             // 기존 홈
+}
+
 
   } catch (error) {
     console.error('로그인 오류:', error)

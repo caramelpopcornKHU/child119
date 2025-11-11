@@ -5,14 +5,14 @@
       <div class="container d-flex align-items-center justify-content-between">
         <!-- 좌측: 로고 + 홈 버튼 -->
         <div class="d-flex align-items-center">
-          <button @click="goToHome" class="btn btn-link p-0 border-0">
+          
             <img
               src="@/assets/kid_logo.png"
               alt="logo"
               class="me-2"
               style="width:50px;height:50px;vertical-align:middle;"
             />
-          </button>
+          
           <span class="fw-bold fs-5 text-dark">아이119 관리자</span>
         </div>
 
@@ -128,23 +128,34 @@
             <div class="table-responsive">
               <thead class="table-light">
                 <tr>
-                  <th style="width: 6%;">No</th>
-                  <th style="width: 22%;">이메일</th>
-                  <th style="width: 16%;">이름</th>
+                  <th style="width: 4%;">No</th>
+                  <th style="width: 18%;">이메일</th>
+                  <th style="width: 12%;">아이디</th>      <!-- ✅ username -->
+                  <th style="width: 12%;">이름</th>        <!-- ✅ name -->
+                  <th style="width: 12%;">전화번호</th>    <!-- ✅ phone -->
                   <th style="width: 10%;">자녀 수</th>
                   <th>자녀 정보</th>
+                  <th style="width: 12%;">가입일</th>     <!-- ✅ createdAt -->
+                  <th style="width: 10%;">동의</th>       <!-- ✅ 약관/마케팅 -->
                   <th style="width: 10%;">관리</th>
                 </tr>
               </thead>
+
               <tbody>
                 <tr v-for="(u, idx) in usersWithKids" :key="u.uid">
                   <td>{{ idx + 1 }}</td>
                   <td>{{ u.email }}</td>
-                  <td>{{ u.name }}</td>
+                  <td>{{ u.username || '-' }}</td>         <!-- ✅ 로그인 ID -->
+                  <td>{{ u.name }}</td>                    <!-- ✅ 실명 -->
+                  <td>{{ u.phone || '-' }}</td>           <!-- ✅ 전화번호 -->
                   <td>{{ u.kids.length }}</td>
                   <td>
                     <div class="small">
-                      <div v-for="(k, kIdx) in u.kids" :key="k.id" class="text-muted">
+                      <div
+                        v-for="(k, kIdx) in u.kids"
+                        :key="k.id"
+                        class="text-muted"
+                      >
                         • {{ k.name }} ({{ k.age }}세, {{ k.gender }})
                       </div>
                       <div v-if="u.kids.length === 0" class="text-muted">
@@ -152,6 +163,26 @@
                       </div>
                     </div>
                   </td>
+                  <td>{{ formatDate(u.createdAt) }}</td>   <!-- ✅ 가입일 표시 -->
+
+                  <!-- ✅ 약관/마케팅 동의 상태 -->
+                  <td>
+                    <div class="d-flex flex-column gap-1 small">
+                      <span
+                        class="badge rounded-pill px-2"
+                        :class="u.agreeTerms ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-muted'"
+                      >
+                        이용약관 {{ u.agreeTerms ? '동의' : '미동의' }}
+                      </span>
+                      <span
+                        class="badge rounded-pill px-2"
+                        :class="u.agreeMarketing ? 'bg-info-subtle text-info' : 'bg-secondary-subtle text-muted'"
+                      >
+                        마케팅 {{ u.agreeMarketing ? '동의' : '미동의' }}
+                      </span>
+                    </div>
+                  </td>
+
                   <td>
                     <button
                       type="button"
@@ -163,6 +194,7 @@
                   </td>
                 </tr>
               </tbody>
+
 
             </div>
 
@@ -181,7 +213,7 @@
               <button
                 type="button"
                 class="btn btn-outline-primary btn-sm rounded-pill"
-                @click="goToEmergencyList"
+                @click="goToEmergency"
               >
                 콘텐츠 관리 화면으로 이동
               </button>
@@ -521,10 +553,10 @@ async function loadUsersWithKids() {
       }
 
       kidsByParent[parentUid].push({
-        id: docSnap.id,
-        name: data.kid || '(이름 없음)',                  // ✅ 아이 이름
-        age: calcAge(data.birthYear),                    // ✅ 출생년→나이
-        gender: data.gender || '-',                      // "F" / "M"
+       id: docSnap.id,
+        name: data.kid || '(이름 없음)',
+        age: calcAge(data.birthYear),
+        gender: data.gender || '-',
         heightCm: data.heightCm ?? null,
         weightKg: data.weightKg ?? null,
         bloodType: data.bloodType || '',
@@ -541,9 +573,14 @@ async function loadUsersWithKids() {
       const uid = docSnap.id
 
       return {
-        uid,
+       uid,
         email: u.email || u.userEmail || '(이메일 없음)',
-        name: u.username || u.name || '(이름 없음)',
+        username: u.username || '',              // ✅ 로그인 ID
+        name: u.name || '(이름 없음)',           // ✅ 실명
+        phone: u.phone || '',                    // ✅ 전화번호
+        agreeTerms: u.agreeTerms ?? false,       // ✅ 약관 동의
+        agreeMarketing: u.agreeMarketing ?? false, // ✅ 마케팅 동의
+        createdAt: u.createdAt ? new Date(u.createdAt) : null, // ✅ 가입일 (ISO 문자열 → Date)
         kids: kidsByParent[uid] || []
       }
     })
@@ -646,15 +683,10 @@ const emergencyFeedbacks = ref([
 // ----------------------
 // 공통 함수
 // ----------------------
-function goToHome() {
-  router.push('/') // 필요에 따라 관리자 홈 라우트로 수정
-}
 
-
-
-function goToEmergencyList() {
+function goToEmergency() {
   // 이미 구현해둔 응급교육 리스트 라우트로 이동
-  router.push('/emergencyList') // 실제 라우트명에 맞게 수정
+  router.push('/emergency') // 실제 라우트명에 맞게 수정
 }
 
 function formatDate(date) {
