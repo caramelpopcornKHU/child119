@@ -1,18 +1,12 @@
 <template>
   <div class="d-flex justify-content-center">
     <div class="card shadow-sm w-100" style="max-width: 100vw;">
-      <div
-        v-if="showPopup"
+      <div v-if="showPopup"
         class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-50"
-        style="z-index: 9999;"
-      >
+        style="z-index: 9999;">
         <div class="bg-white rounded-4 shadow p-5 position-relative" style="width: 90%; max-width: 420px;">
-          <button
-            type="button"
-            class="btn-close position-absolute top-0 start-0 m-3"
-            aria-label="Close"
-            @click="cancelPopup"
-          ></button>
+          <button type="button" class="btn-close position-absolute top-0 start-0 m-3" aria-label="Close"
+            @click="cancelPopup"></button>
 
           <h5 class="text-center fw-bold mb-4 mt-2">안내</h5>
           <p class="text-medium text-center mb-3 guide-text">
@@ -29,59 +23,39 @@
 
 
           <div class="mt-5">
-            <button
-              class="btn w-100 py-2 text-medium"
-              style="background-color: #0D6EFD; color: white;"
-              @click="confirmPopup"
-            >
+            <button class="btn w-100 py-2 text-medium" style="background-color: #0D6EFD; color: white;"
+              @click="confirmPopup">
               확인
             </button>
           </div>
         </div>
       </div>
 
-    <!-- 메시지 영역 -->
-    <div class="card-body overflow-auto border-bottom" ref="messagesContainer" style="height: 70vh;">
-      <div
-        v-for="(msg, i) in messages"
-        :key="i"
-        class="mb-3"
-        :class="msg.type === 'user' ? 'text-end' : 'text-start'"
-      >
-        <span
-          class="d-inline-block text-light px-3 py-2 rounded-4"
-          :class="msg.type === 'user' ? 'bg-primary text-white' : 'bg-light text-dark'"
-          style="max-width: 70%; white-space: pre-line; word-break: keep-all; line-height: 1.6;"
-        >
-          {{ msg.text }}
-        </span>
+      <!-- 메시지 영역 -->
+      <div class="card-body overflow-auto border-bottom" ref="messagesContainer" style="height: 70vh;">
+        <div v-for="(msg, i) in messages" :key="i" class="mb-3"
+          :class="msg.type === 'user' ? 'text-end' : 'text-start'">
+          <span class="d-inline-block text-light px-3 py-2 rounded-4"
+            :class="msg.type === 'user' ? 'bg-primary text-white' : 'bg-light text-dark'"
+            style="max-width: 70%; white-space: pre-line; word-break: keep-all; line-height: 1.6;">
+            {{ msg.text }}
+          </span>
+        </div>
       </div>
-    </div>
 
 
       <!-- 입력 폼 -->
-       <form class="d-flex align-items-center p-2" @submit.prevent="sendMessage">
-        <input
-          v-model="input"
-          type="text"
-          class="form-control rounded-pill text-medium px-3"
-          placeholder="메시지를 입력하세요..."
-        />
+      <form class="d-flex align-items-center p-2" @submit.prevent="sendMessage">
+        <input v-model="input" type="text" class="form-control rounded-pill text-medium px-3"
+          placeholder="메시지를 입력하세요..." />
         <!-- 🎤 음성 인식 버튼 -->
-        <button
-          type="button"
-          class="btn btn-outline-secondary ms-2 rounded-circle"
-          @click="toggleVoiceRecognition"
-          style="width: 45px; height: 45px;"
-        >
+        <button type="button" class="btn btn-outline-secondary ms-2 rounded-circle" @click="toggleVoiceRecognition"
+          style="width: 45px; height: 45px;">
           <i :class="isListening ? 'bi bi-mic-mute-fill' : 'bi bi-mic-fill'"></i>
         </button>
 
         <!-- 전송 -->
-        <button
-          class="btn btn-primary rounded-pill text-medium ms-2 px-4"
-          type="submit"
-        >
+        <button class="btn btn-primary rounded-pill text-medium ms-2 px-4" type="submit">
           전송
         </button>
       </form>
@@ -123,7 +97,7 @@ onMounted(() => {
   // 페이지 진입 시 팝업 표시
   showPopup.value = true;
 
-  socket = new WebSocket("ws://172.168.10.12:8080/ws/chat");
+  socket = new WebSocket("wss://child119-251868777139.asia-northeast3.run.app/ws/chat");
 
   socket.onopen = () => console.log("✅ WebSocket 연결 성공");
   socket.onmessage = async (event) => {
@@ -132,7 +106,7 @@ onMounted(() => {
     await nextTick();
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
 
-    speakText(aiText); 
+    speakText(aiText);
   };
   socket.onclose = () => console.log("❌ WebSocket 연결 종료");
   socket.onerror = (error) => console.error("⚠️ WebSocket 오류:", error);
@@ -228,9 +202,9 @@ const speakText = (text) => {
 </script>
 <style scoped>
 .guide-text {
-  white-space: pre-line;    
-  word-break: keep-all; 
-  line-height: 1.6; 
-  letter-spacing: 0.2px; 
+  white-space: pre-line;
+  word-break: keep-all;
+  line-height: 1.6;
+  letter-spacing: 0.2px;
 }
 </style>
