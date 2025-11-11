@@ -17,16 +17,16 @@
               d="M18 14h2v-3h3V9h-3V6h-2v3h-3v2h3zM10 4c0-.6.4-1 1-1h1V1h-1c-1.7 0-3 1.3-3 3v1H4v2h11V5h-5zm-1 8H7c0-1.1.9-2 2-2zm3.5 7c.83 0 1.5-.67 1.5-1.5S13.33 16 12.5 16s-1.5.67-1.5 1.5s.67 1.5 1.5 1.5M5 22h14c1.1 0 2-.9 2-2v-9H3v9c0 1.1.9 2 2 2" />
           </svg> 진료과
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold" title="달빛어린이병원" @click="showMoonlight()">
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="달빛어린이병원" @click="showMoonlight()">
           🌙 달빛어린이병원
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold" title="소아과" @click="showPediatric()">
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="소아과" @click="showPediatric()">
           🧒 소아청소년과
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold" title="약국" @click="showPharmacy()">
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="약국" @click="showPharmacy()">
           <i class="bi bi-capsule"></i> 약국
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold" title="AED" @click="showAED()">
+        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="AED" @click="showAED()">
           ⚡ AED
         </button>
       </div>
@@ -364,7 +364,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, onActivated } from 'vue'
 import axios from 'axios'
 
-import { initVworldMap, initVworldMapUser, clearMarkers, addMarkerHospital, getCurrentBBox4326 } from '@/utils/vworldfunction';
+import { initVworldMap, clearMarkers, addMarkerHospital, getCurrentBBox4326 } from '@/utils/vworldfunction';
 import { getEmergencyFromWFSByBBox } from '@/utils/api';
 
 // vmap 변수
@@ -501,6 +501,7 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
 
   try {
     clearMarkers()
+    refreshUserMarker()
 
     // 현재 bbox 계산
     const extent = vmap.getView().calculateExtent(vmap.getSize())
@@ -513,7 +514,16 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
     const res = await fetch(fullUrl)
     const geojson = await res.json()
 
-    geojson.features.forEach(f => {
+    const filtered = selectedDepartments.value.length
+      ? geojson.features.filter(f => {
+        const depts = (f.properties?.dgid_id_name || '').split(',').map(d => d.trim())
+        return selectedDepartments.value.some(sel => 
+          depts.some(dept => dept.includes(sel))
+        )
+      })
+      :geojson.features
+
+    filtered.forEach(f => {
       const [lon, lat] = f.geometry.coordinates
       if (!isNaN(lon) && !isNaN(lat)) {
         addMarkerHospital(lon, lat, {
@@ -524,8 +534,8 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
       }
     })
 
-    addToHospitalList(geojson.features, listType)
-    console.log(`✅ ${listType} ${geojson.features.length}개 표시 완료`)
+    addToHospitalList(filtered, listType)
+    console.log(`✅ ${listType} ${filtered.length}개 표시 완료`)
   } catch (err) {
     console.error(`${listType} 조회 실패:`, err)
     alert(`${listType} 데이터를 불러오는 중 오류가 발생했습니다.`)
@@ -568,6 +578,7 @@ async function showAED() {
   try {
     // ✅ 기존 마커 모두 제거
     clearMarkers()
+    refreshUserMarker()
 
     // ✅ 공공데이터 API 호출
     const key = "d43280d93d2b4881c7d82ace3929e20b5f2dfba72a77687d8ae7347d9f247d99"
@@ -611,7 +622,20 @@ async function showAED() {
  * API 응답을 hospitals 배열로 통일시켜주는 함수
  */
 function addToHospitalList(list, type) {
-  hospitals.value = list.map((item) => {
+  // 선택한 분과 필터링
+  let filteredList = list
+  if (selectedDepartments.value.length > 0) {
+    filteredList = list.filter(item => {
+      const props = item.properties || {}
+      const deptNames = (props.dgid_id_name || '').split(',').map( d=> d.trim())
+
+      return selectedDepartments.value.some(sel => 
+        deptNames.some(dept => dept.includes(sel))
+      )
+    })
+  }
+
+  hospitals.value = filteredList.map((item) => {
     const props = item.properties || {}
     const [lon, lat] = item.geometry?.coordinates || [NaN, NaN]
 
@@ -911,39 +935,53 @@ function exitRouteMode() {
 const currentLocationMarker = ref(null)
 const currentLocationInfoWindow = ref(null)
 
+async function updateUserLocation(zoom = 16) {
+  try {
+    const position = await getCurrentLocation()
+    const { lat, lon } = position
+    userLocation.value = {lat, lon}
+
+    const center = window.ol.proj.fromLonLat([lon, lat])
+    vmap.getView().setCenter(center)
+    vmap.getView().setZoom(zoom)
+    
+    clearMarkers()
+    addMarkerHospital(lon, lat, {
+      name: '현재 위치',
+      iconUrl: 'icons/currentLocation.svg',
+      anchor: [0.5, 0.5]
+    })
+    console.log(`현재 위치: ${lat},${lon}`)
+  } catch(err) {
+    console.error('위치 업데이트 실패:', err)
+    alert('현재 위치를 가져올 수 없습니다.')
+    
+  }
+}
+
+async function refreshUserMarker() {
+  try {
+    // 위치만 새로 받아옴
+    const position = await getCurrentLocation()
+    const { lat, lon } = position
+    userLocation.value = { lat, lon }
+
+    // 기존 마커만 교체
+    clearMarkers()
+    addMarkerHospital(lon, lat, {
+      name: '현재 위치',
+      iconUrl: 'icons/currentLocation.svg',
+      anchor: [0.5, 0.5]
+    })
+    console.log(`현재 위치 마커만 갱신됨: ${lat},${lon}`)
+  } catch (err) {
+    console.error('위치 마커 갱신 실패:', err)
+  }
+}
+
 /* 내 위치 새로고침 */
 function refreshLocation() {
-  if (!vmap) {
-    alert('지도를 불러오는 중입니다. 잠시 후 다시 시도해주세요.')
-    return
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      const lat = pos.coords.latitude
-      const lon = pos.coords.longitude
-      console.log('위치 정보 새로고침 성공:', { lat, lon })
-      userLocation.value = { lat, lon }
-
-      // 지도 중심 이동
-      const center = window.ol.proj.fromLonLat([lon, lat])
-      vmap.getView().setCenter(center)
-      vmap.getView().setZoom(17)
-
-      // VWORLD 마커 표시
-      clearMarkers()
-      addMarkerHospital(lon, lat, {
-        name: '현재 위치',
-        iconUrl: '/icons/currentLocation.svg',
-        anchor: [0.5, 0.5]
-      })
-    },
-    err => {
-      console.error('위치 정보 오류:', err)
-      alert('현재 위치를 가져올 수 없습니다.')
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-  )
+  updateUserLocation(16)
 }
 
 /* 바텀시트 제스처 */
@@ -981,7 +1019,6 @@ const toggleSheet = () => {
 
 // onMounted - 초기실행
 onMounted(async () => {
-  // 1. VWorld 라이브러리 로드 대기
   await new Promise((resolve) => {
     const checkVworld = setInterval(() => {
       if (window.vw && window.vw.ol3 && window.ol) {
@@ -992,34 +1029,24 @@ onMounted(async () => {
   })
 
   try {
-    // 2. 현재 위치 가져오기
-    let centerCoords
-    try {
-      const location = await getCurrentLocation()
-      centerCoords = window.ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
-    } catch {
-      centerCoords = window.ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
-    }
-
-    // 3. 지도 초기화
+    // 1️⃣ 지도 초기화
+    const defaultCenter = window.ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
     vmap = initVworldMap({
       containerId: 'map_div',
-      defaultCenter: centerCoords,
+      defaultCenter,
       defaultZoom: 15,
       autoFetch: false
     })
-
     clearMarkers()
-
     if (!vmap) throw new Error('vmap 초기화 실패')
 
-  } catch (error) {
-    console.error('초기화 실패:', error)
-    alert('지도를 초기화할 수 없습니다.')
+    // 2️⃣ 현재 위치 표시
+    await updateUserLocation(16)
+  } catch (err) {
+    console.error('초기화 실패:', err)
   }
 })
 
-//캐시된 후 '다시 돌아올 때마다' 실행
 onActivated(async () => {
   await new Promise((resolve) => {
     const checkVworld = setInterval(() => {
@@ -1031,32 +1058,23 @@ onActivated(async () => {
   })
 
   try {
-    // 2. 현재 위치 가져오기
-    let centerCoords
-    try {
-      const location = await getCurrentLocation()
-      centerCoords = window.ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
-    } catch {
-      centerCoords = window.ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
-    }
-
-    // 3. 지도 초기화
+    // 1️⃣ 지도 초기화
+    const defaultCenter = window.ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
     vmap = initVworldMap({
       containerId: 'map_div',
-      defaultCenter: centerCoords,
+      defaultCenter,
       defaultZoom: 15,
       autoFetch: false
     })
-
     clearMarkers()
-
     if (!vmap) throw new Error('vmap 초기화 실패')
 
-  } catch (error) {
-    console.error('초기화 실패:', error)
-    alert('지도를 초기화할 수 없습니다.')
+    // 2️⃣ 현재 위치 표시
+    await updateUserLocation(16)
+  } catch (err) {
+    console.error('초기화 실패:', err)
   }
-});
+})
 
 onBeforeUnmount(() => {
   clearMarkers()
@@ -1098,6 +1116,12 @@ onBeforeUnmount(() => {
   transform: scale(0.98);
   /* 위아래 이동 없이 눌림만 */
   background-color: #e2ebff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .15);
+}
+
+/* 클릭(눌림) */
+.top-button:focus {
+  background-color: #0d6efd;
   box-shadow: 0 3px 10px rgba(0, 0, 0, .15);
 }
 

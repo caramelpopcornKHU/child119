@@ -1,8 +1,8 @@
 let vmap = null;
 let vectorLayer = null;
 let vectorSource = null;
-let currentLayer = null;
 
+// 지도 초기화
 export function initVworldMap({
   containerId = "vmap",
   defaultCenter,
@@ -38,8 +38,8 @@ export function initVworldMap({
     const internalMap = vmap.getMap
       ? vmap.getMap()
       : vmap.map
-        ? vmap.map
-        : null;
+      ? vmap.map
+      : null;
     if (internalMap && internalMap.addLayer) {
       internalMap.addLayer(vectorLayer);
     } else if (vmap.addLayer) {
@@ -64,15 +64,12 @@ export function initVworldMap({
   }
 }
 
-export function getVMap() {
-  return vmap;
-}
-
+// 기존 marker 삭제
 export function clearMarkers() {
   if (vectorSource) vectorSource.clear();
 }
 
-// marker 생성 함수
+// Homeview marker 생성
 export function addMarkerEmergency(lon, lat, props = {}) {
   if (!vectorSource) {
     console.warn("vectorSource가 초기화되지 않았습니다.");
@@ -86,7 +83,7 @@ export function addMarkerEmergency(lon, lat, props = {}) {
       geometry: new ol.geom.Point(p3857),
       ...props,
     });
-
+    
     const svgUrl = createMarkerIcon(
       props.bedAvail,
       props.bedTotal,
@@ -106,7 +103,7 @@ export function addMarkerEmergency(lon, lat, props = {}) {
     feature.setStyle(style);
     vectorSource.addFeature(feature);
     return feature;
-
+    
   } catch (e) {
     console.error("마커 추가 실패", e);
     return null;
@@ -116,91 +113,91 @@ export function addMarkerEmergency(lon, lat, props = {}) {
 // svg url 만들기
 const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, isHover = false) => {
 
+    
+    // ✅ 인자 안전성 강화 (undefined/null을 빈 문자열로 변환)
+    const name = hospitalName || '';
+    const message = emergencyMessage || '';
 
-  // ✅ 인자 안전성 강화 (undefined/null을 빈 문자열로 변환)
-  const name = hospitalName || '';
-  const message = emergencyMessage || '';
+    // 이미지 기반으로 측정한 SVG 전체 영역 크기
+    const svgWidth = 100;
+    const svgHeight = 100; 
 
-  // 이미지 기반으로 측정한 SVG 전체 영역 크기
-  const svgWidth = 100;
-  const svgHeight = 100;
+    // 흰색 둥근 직사각형 배경 설정
+    const rectWidth = 100;
+    const rectHeight = 90; 
+    const rectX = (svgWidth - rectWidth) / 2; 
+    const rectY = 0;
+    const borderRadius = 10;
 
-  // 흰색 둥근 직사각형 배경 설정
-  const rectWidth = 100;
-  const rectHeight = 90;
-  const rectX = (svgWidth - rectWidth) / 2;
-  const rectY = 0;
-  const borderRadius = 10;
+    // 원형 배지 설정
+    const cirRadius = rectHeight/2*0.6 ; 
+    const cirCenterX = svgWidth / 2;
+    const cirCenterY = rectY + cirRadius + rectHeight/2*0.1; // 원형 배지 Y 중심
 
-  // 원형 배지 설정
-  const cirRadius = rectHeight / 2 * 0.6;
-  const cirCenterX = svgWidth / 2;
-  const cirCenterY = rectY + cirRadius + rectHeight / 2 * 0.1; // 원형 배지 Y 중심
+    // 메세지 텍스트 설정
+    const messageFontSize = 16;
+    const messageY = rectY + rectHeight - 20; 
 
-  // 메세지 텍스트 설정
-  const messageFontSize = 16;
-  const messageY = rectY + rectHeight - 20;
+    // ✅ 응급실 메시지 뱃지/텍스트 설정
+    const badgeHeight = 24; // 이미지에 맞게 높이 증가 (20 -> 24)
+    const badgeWidth = 10; // 뱃지 고정 너비 (텍스트에 맞게 조정)
+    const badgeX = (svgWidth - badgeWidth) / 2; // 중앙 정렬
 
-  // ✅ 응급실 메시지 뱃지/텍스트 설정
-  const badgeHeight = 24; // 이미지에 맞게 높이 증가 (20 -> 24)
-  const badgeWidth = 10; // 뱃지 고정 너비 (텍스트에 맞게 조정)
-  const badgeX = (svgWidth - badgeWidth) / 2; // 중앙 정렬
-
-  // 💡 메시지 뱃지 Y 좌표 (원형 배지 아래에 밀착)
-  const messageCenterY = cirCenterY + cirRadius + 20; // 원형 배지 바닥 + 20px 간격으로 분리
-  const badgeBgY = messageCenterY - (badgeHeight / 2); // 뱃지 배경의 시작 Y
+    // 💡 메시지 뱃지 Y 좌표 (원형 배지 아래에 밀착)
+    const messageCenterY = cirCenterY + cirRadius + 20; // 원형 배지 바닥 + 20px 간격으로 분리
+    const badgeBgY = messageCenterY - (badgeHeight / 2); // 뱃지 배경의 시작 Y
 
 
-  // 원형 배지 내부 폰트 및 아이콘 크기
-  const bedTextFontSize = 18;
-  const iconSizePx = 24;
-  const iconBaseSize = 24;
-  const iconScale = iconSizePx / iconBaseSize;
+    // 원형 배지 내부 폰트 및 아이콘 크기
+    const bedTextFontSize = 18; 
+    const iconSizePx = 24;      
+    const iconBaseSize = 24;    
+    const iconScale = iconSizePx / iconBaseSize; 
 
-  // 원형 배지 내부 간격 및 중앙 정렬 계산
-  const gap = 2;
-  const iconRenderedHeight = iconBaseSize * iconScale;
-  const textRenderedHeight = bedTextFontSize;
-  const contentTotalHeight = iconRenderedHeight + gap + textRenderedHeight;
-  const iconCenterYOffset = -((contentTotalHeight / 2) - (iconRenderedHeight / 2));
-  const textCenterYOffset = iconCenterYOffset + iconRenderedHeight + gap;
+    // 원형 배지 내부 간격 및 중앙 정렬 계산
+    const gap = 2; 
+    const iconRenderedHeight = iconBaseSize * iconScale; 
+    const textRenderedHeight = bedTextFontSize;          
+    const contentTotalHeight = iconRenderedHeight + gap + textRenderedHeight; 
+    const iconCenterYOffset = -((contentTotalHeight / 2) - (iconRenderedHeight / 2)); 
+    const textCenterYOffset = iconCenterYOffset + iconRenderedHeight + gap; 
 
-  // 병상 정보 및 색상 로직
-  let bedText = '';
-  let badgeBgColor = '#16a085';
-  let badgeTextColor = 'white';
+    // 병상 정보 및 색상 로직
+    let bedText = '';
+    let badgeBgColor = '#16a085'; 
+    let badgeTextColor = 'white';
 
-  if (Number.isFinite(bedAvail) && Number.isFinite(bedTotal) && bedTotal > 0) {
-    bedText = `${bedAvail}/${bedTotal}`;
-    if (bedAvail / bedTotal <= 0.5) {
-      badgeBgColor = '#e74c3c';
+    if (Number.isFinite(bedAvail) && Number.isFinite(bedTotal) && bedTotal > 0) {
+        bedText = `${bedAvail}/${bedTotal}`;
+        if (bedAvail/bedTotal <= 0.5) {
+            badgeBgColor = '#e74c3c'; 
+        } else {
+            badgeBgColor = '#16a085'; 
+        }
     } else {
-      badgeBgColor = '#16a085';
+        badgeBgColor = '#95a5a6'; 
+        bedText = '?/?';
     }
-  } else {
-    badgeBgColor = '#95a5a6';
-    bedText = '?/?';
-  }
 
-  const strokeWidth = isHover ? '4' : '3';
+    const strokeWidth = isHover ? '4' : '3';
+    
+    // 마커 핀 설정
+    const pinSvgPath = "M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7";
+    const pinColor = "#00000"; 
+    const pinWidth = 24; 
+    const pinHeight = 24; 
+    const pinScaleFactor = 1.3; 
+    const scaledPinWidth = pinWidth * pinScaleFactor; 
+    const scaledPinHeight = pinHeight * pinScaleFactor; 
+    const pinY = rectY + rectHeight - 10; 
 
-  // 마커 핀 설정
-  const pinSvgPath = "M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7";
-  const pinColor = "#00000";
-  const pinWidth = 24;
-  const pinHeight = 24;
-  const pinScaleFactor = 1.3;
-  const scaledPinWidth = pinWidth * pinScaleFactor;
-  const scaledPinHeight = pinHeight * pinScaleFactor;
-  const pinY = rectY + rectHeight - 10;
-
-  // 응급실 메시지 렌더링을 위한 색상과 텍스트 처리
-  let messageColor = '#333';
+    // 응급실 메시지 렌더링을 위한 색상과 텍스트 처리
+    let messageColor = '#333'; 
 
 
 
-  // SVG 문자열 조립
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+    // SVG 문자열 조립
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(`
         <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight + scaledPinHeight - 20}" viewBox="0 0 ${svgWidth} ${svgHeight + scaledPinHeight - 20}">
             
 
@@ -214,7 +211,7 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
 
             <circle 
                 cx="${cirCenterX}" cy="${cirCenterY}" 
-                r="${cirRadius - (strokeWidth / 2)}" 
+                r="${cirRadius - (strokeWidth/2)}" 
                 fill="${badgeBgColor}" 
                 stroke="white" 
                 stroke-width="${strokeWidth}"/>
@@ -255,28 +252,7 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
     `);
 };
 
-export function setCurrentLocationMarker(lon, lat, options = {}) {
-  if (!currentLayer) return
-  const src = currentLayer.getSource()
-  src.clear() // 기존 위치 지우고 새로 추가
-
-  const feature = new ol.Feature({
-    geometry: new ol.geom.Point(window.ol.proj.fromLonLat([lon, lat])),
-  })
-
-  feature.setStyle(
-    new ol.style.Style({
-      image: new ol.style.Icon({
-        src: options.iconUrl || '/icons/currentLocation.svg',
-        scale: options.scale || 1,
-        anchor: options.anchor || [0.5, 0.5],
-      }),
-    })
-  )
-
-  src.addFeature(feature)
-}
-
+// HospitalInformation marker 생성 
 export function addMarkerHospital(lon, lat, props = {}) {
   if (!vectorSource) {
     console.warn("vectorSource가 초기화되지 않았습니다.");
@@ -306,84 +282,7 @@ export function addMarkerHospital(lon, lat, props = {}) {
   }
 }
 
-export function initVworldMapUser({ containerId, defaultCenter, defaultZoom }) {
-  if (!window.vw || !window.vw.ol3) {
-    console.error("VWORLD 라이브러리가 로드되지 않았습니다.")
-    return null
-  }
-
-  // 1. 지도 생성
-  const vmap = new window.vw.ol3.Map(containerId, {
-    basemapType: vw.ol3.BasemapType.GRAPHIC,
-    controlDensity: vw.ol3.DensityType.BASIC,
-    interactionDensity: vw.ol3.DensityType.BASIC,
-    controlsAutoArrange: true,
-    homePosition: vw.ol3.CameraPosition,
-    initPosition: vw.ol3.CameraPosition,
-  })
-
-  // 2. 일반 마커용 벡터 레이어
-  const mainSource = new ol.source.Vector({})
-  const mainLayer = new ol.layer.Vector({ source: mainSource })
-  vmap.getMap().addLayer(mainLayer)
-
-  // 3. ✅ 현재 위치 전용 레이어 (내 전용)
-  const currentSource = new ol.source.Vector({})
-  const currentLayer = new ol.layer.Vector({ source: currentSource })
-  vmap.getMap().addLayer(currentLayer)
-
-  // 4. 초기 위치 설정
-  const view = vmap.getView()
-  view.setCenter(defaultCenter)
-  view.setZoom(defaultZoom)
-
-  // 5. 유틸 함수와 함께 반환 (객체 형태)
-  return {
-    vmap,
-    mainLayer,
-    mainSource,
-    currentLayer,
-    currentSource,
-
-    clearMainMarkers() {
-      mainSource.clear()
-    },
-
-    setCurrentMarker(lon, lat, options = {}) {
-      currentSource.clear()
-      const feature = new ol.Feature({
-        geometry: new ol.geom.Point(window.ol.proj.fromLonLat([lon, lat])),
-      })
-      feature.setStyle(
-        new ol.style.Style({
-          image: new ol.style.Icon({
-            src: options.iconUrl || '/icons/currentLocation.svg',
-            scale: options.scale || 1,
-            anchor: options.anchor || [0.5, 0.5],
-          }),
-        })
-      )
-      currentSource.addFeature(feature)
-    },
-
-    addMainMarker(lon, lat, props = {}) {
-      const feature = new ol.Feature({
-        geometry: new ol.geom.Point(window.ol.proj.fromLonLat([lon, lat])),
-      })
-      feature.setStyle(
-        new ol.style.Style({
-          image: new ol.style.Icon({
-            src: props.iconUrl || '/icons/hospital.svg',
-            scale: props.scale || 0.8,
-            anchor: props.anchor || [0.5, 1],
-          }),
-        })
-      )
-      mainSource.addFeature(feature)
-    },
-  }
-}
-
+// bbox 계산
 export function getCurrentBBox4326() {
   if (!vmap) {
     console.warn("vmap이 초기화되지 않았습니다.");
@@ -397,8 +296,8 @@ export function getCurrentBBox4326() {
     const internalMap = vmap.getMap
       ? vmap.getMap()
       : vmap.map
-        ? vmap.map
-        : null;
+      ? vmap.map
+      : null;
     const size = internalMap
       ? internalMap.getSize()
       : [window.innerWidth, window.innerHeight];
@@ -417,19 +316,6 @@ export function getCurrentBBox4326() {
     return null;
   }
 }
-
-export function move(x, y, z = 15) {
-  if (!vmap) return;
-  const view = vmap.getView();
-  try {
-    view.setCenter([x, y]);
-    view.setZoom(z);
-  } catch (e) {
-    console.error("지도 이동 실패", e);
-  }
-}
-
-
 
 // 기존에 가진 레이어 삭제
 export async function removeRouteLayer(map) {
@@ -490,11 +376,9 @@ export async function drawRoute(map, geoJsonData) {
 
 export default {
   initVworldMap,
-  getVMap,
   addMarkerEmergency,
   clearMarkers,
   getCurrentBBox4326,
-  move,
   drawRoute,
   removeRouteLayer
 };
