@@ -231,6 +231,9 @@ import {
 } from '@/utils/vworldfunction';
 import { calculateDistance, getEmergencyFromWFSByBBox, getTmapRoute, getEmergencyFromWFSSortByDistance } from '@/utils/api';
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+
 // vmap 변수
 let vmap = null;
 let moveEndListener = null;
@@ -485,15 +488,42 @@ vmap.on('moveend', moveEndListener)
 // 5. 초기 마커 로드
 setTimeout(() => loadWFSMarkers(), 500)
 
-// 6-1. 현재 위치에서 근처의 병원 목록 가져오기
+// 6-1. 현재 위치에서 가장 가까운 응급실 가져오기
 const emergencyRes = await getEmergencyFromWFSSortByDistance(location.lon, location.lat)
-console.log(`emergencyRes ->${emergencyRes}`)
-// 6-2. tmap api로 경로 불러오기
-const routeRes = await getTmapRoute(location.lon, location.lat, 126.885082, 37.492379)
+const top3Emergency = emergencyRes.slice(0, 3)
+
+const routeResArray = []
+
+for(const [index, feature] of top3Emergency.entries()) {
+  const [endX, endY] = feature.geometry.coordinates
+
+  try {
+    // 6.2 경로 데이터 불러오기
+    const routeData = await getTmapRoute(location.lon, location.lat, endX, endY)
+    routeResArray.push(routeData)
+  } catch (err) {
+    console.error(`${index + 1}번째 경로 요청 오류`)
+    routeResArray.push(null)
+  }
+
+
+  // api 요청 차레로 보내기
+  if(index < top3Emergency.length -1 ) {
+    await delay(800)
+  }
+
+}
+
 // 6-3. 경로 그리기
-if(routeRes && vmap) {
+if(routeResArray.length > 0 && vmap) {
   console.log(`경로 그리기 함수 실행`)
-  drawRoute(vmap, routeRes)
+  routeResArray.forEach((routeData, index) => {
+    if(routeData) {
+      drawRoute(vmap, routeData, index + 1)
+    } else {
+      console.log(`${index + 1 }번째 병원 경로 데이터가 없어 건너 뜁니다.`)
+    }
+  })
 }
 
 } catch (error) {
