@@ -23,6 +23,34 @@
       </div>
     </header>
 
+
+     <!-- 👇 관리자용 헤더 -->
+    <header
+      v-else
+      class="navbar navbar-light bg-white shadow-sm fixed-top"
+    >
+      <div class="container d-flex align-items-center justify-content-between">
+        <!-- 좌측: 로고 + 텍스트 -->
+        <div class="d-flex align-items-center" style="cursor: pointer;" @click="goToAdminHome">
+          <img
+            src="@/assets/kid_logo.png"
+            alt="logo"
+            class="me-2"
+            style="width:50px;height:50px;vertical-align:middle;"
+          />
+          <span class="fw-bold fs-5 text-dark">아이119 관리자</span>
+        </div>
+
+        <!-- 우측: 로그인/로그아웃 버튼 (같은 로직 재사용) -->
+        <button
+          @click="logAction"
+          class="btn text-bold"
+          :class="{ 'btn-light' : status === '로그아웃', 'btn-primary' : status === '로그인'}"
+        >
+          <span>{{ status }}</span>
+        </button>
+      </div>
+    </header>
     <!-- ===============================
          🧭 Main (헤더/푸터 사이 컨텐츠 영역)
          =============================== -->
@@ -130,6 +158,11 @@ export default {
     MyKids() { this.$router.push('/MyKids') },
     goToHome() { this.$router.push('/') },
     goToLogin() { this.$router.push('/login')},
+
+    // ✅ 관리자 홈으로 이동
+  goToAdminHome() {
+    this.$router.push('/AdminHome')
+  },
 
     // 로그인/로그아웃 버튼 이동 메서드
     async logout() {
