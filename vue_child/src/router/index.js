@@ -184,9 +184,10 @@ const router = createRouter({
       component: () => import("../views/AdminEmergencysuggestionsdetail.vue"),
     },
     {
-      path: "/hospitalInformationDetail", //병의원 디테일뷰
+      path: "/hospitalInformationDetail/:hpid", //병의원 디테일뷰
       name: "hospitalInformationDetail",
       component: () => import("../views/hospitalInformationDetail.vue"),
+      props: true
     },
     {
       path: "/AdminEmergency", 
