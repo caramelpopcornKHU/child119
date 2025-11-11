@@ -198,9 +198,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-
-
 import { useRouter } from 'vue-router';
+import{initTmap} from '@/utils/tmapfunction';
 
 // <script setup> 맨 위 근처
 const isDesktop = matchMedia('(pointer:fine)').matches
@@ -755,13 +754,13 @@ async function fetchHospitalsFromWFS(centerLon, centerLat, radiusMeters) {
 function onConfirmSymptoms() { searchER(3000, true) }
 
 /* 지도 초기화 */
-const initTmap = () => {
-  const el = document.getElementById('map_div')
-  if (!el) return
-  map.value = new window.Tmapv3.Map('map_div', {
-    center: new window.Tmapv3.LatLng(37.566295, 126.9779451),
-    width: '100%', height: '100%', zoom: 16
-  })
+// const initTmap = () => {
+//   const el = document.getElementById('map_div')
+//   if (!el) return
+//   map.value = new window.Tmapv3.Map('map_div', {
+//     center: new window.Tmapv3.LatLng(37.566295, 126.9779451),
+//     width: '100%', height: '100%', zoom: 16
+//   })
 
   // 지도 클릭 → 가장 가까운 마커를 선택으로 간주 (모바일/웹뷰에서 클릭 누락 보완)
 window.Tmapv3.event.addListener(map.value, 'click', (evt) => {
@@ -825,7 +824,7 @@ window.Tmapv3.event.addListener(map.value, 'click', (evt) => {
     cur.value = { lat: 37.566295, lon: 126.9779451 }
     searchER(5000, false)
   }
-}
+
 
 /* 바텀시트 제스처 */
 /* 터치 핸들러 */
