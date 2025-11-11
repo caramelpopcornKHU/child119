@@ -189,9 +189,10 @@ const router = createRouter({
       component: () => import("../views/AdminHomejsb.vue"),
     },
       {
-      path: "/emergencysuggestionsdetail", //응급제안사항 상세화면 페이지
+      path: "/emergencysuggestionsdetail/:id", //응급제안사항 상세화면 페이지
       name: "emergencysuggestionsdetail",
       component: () => import("../views/emergencysuggestionsdetail.vue"),
+      props: true //URL 파라미터로 컴포넌트 props로 전달합니다
     },
   ],
 });
