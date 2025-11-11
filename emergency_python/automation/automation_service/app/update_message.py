@@ -1,112 +1,50 @@
-import pandas as pd
 import requests
-from urllib.parse import urlencode
 import psycopg2
+import psycopg2.extras # Batch 처리를 위해 추가
 from pymongo import MongoClient
 import urllib.parse
-import datetime
-from bson import ObjectId
 import datetime
 import json
 import os
 import google.generativeai as genai
+import logging # 로깅 모듈 추가
+from concurrent.futures import ThreadPoolExecutor, as_completed # 병렬 처리를 위해 추가
+
+# --- 1. 로깅 설정 (표준 로깅 시스템) ---
+# [시간] - [로그 레벨] - [메시지] 형식으로 로그를 출력합니다.
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 
-# 결과 저장용 리스트
-emog_dataset = []
+# --- 2. 설정 및 민감 정보 관리 (환경 변수 사용) ---
+# 서버 환경 변수로 설정하여 불러옵니다.
 
-# 지역 코드
-region = [11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+# MongoDB
+RAW_USERNAME = os.environ.get("MONGO_USER", "xxxxxxxx")
+RAW_PASSWORD = os.environ.get("MONGO_PASS", "xxxxxxxx@")
+ENCODED_USERNAME = urllib.parse.quote_plus(RAW_USERNAME)
+ENCODED_PASSWORD = urllib.parse.quote_plus(RAW_PASSWORD)
+MONGO_URI = f"mongodb+srv://{ENCODED_USERNAME}:{ENCODED_PASSWORD}@emergencyhospital.5qwiuzq.mongodb.net/"
 
-for r in region:
-    request_url = f'https://mediboard.nemc.or.kr/api/v1/search/handy?searchCondition=regional&emogloca={r}'
-    response = requests.get(request_url)
+# PostgreSQL
+DB_HOST = os.environ.get("PG_HOST", "xxxxxxxx")
+DB_NAME = os.environ.get("PG_DBNAME", "xxxxxxxx")
+DB_USER = os.environ.get("PG_USER", "xxxxxxxx")
+DB_PASS = os.environ.get("PG_PASS", "xxxxxxxx")
 
-    if response.status_code == 200:
-        data = response.json()
-        emog_dataset.extend(data['result']['data'])
-    else:
-        print(f"지역 코드 {r} 요청 실패: {response.status_code}")
+# Gemini API
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "xxxxxxx")
 
-emog_dictionary = {item['emogCode']: item for item in emog_dataset}
-
-# 인코딩이 필요한 사용자 이름과 비밀번호
-raw_username = "lxFinal"
-raw_password = "Child119@"
-
-#  urllib.parse.quote_plus를 사용하여 인코딩
-encoded_username = urllib.parse.quote_plus(raw_username)
-encoded_password = urllib.parse.quote_plus(raw_password)
-
-MONGO_URI = f"mongodb+srv://{encoded_username}:{encoded_password}@emergencyhospital.5qwiuzq.mongodb.net/"
-
-# 3. 인코딩된 URI로 MongoClient 연결 시도
-from pymongo import MongoClient
-
-try:
-    client = MongoClient(MONGO_URI)
-    # 데이터베이스와 컬렉션 선택
-    db = client['emergencyhospital']
-    collection = db['emogs_collection']
-
-    ## 🚨 1단계: 기존 데이터 모두 삭제 (초기화)
-    print("⏳ 기존 데이터를 모두 삭제합니다...")
-    # 필터 {}는 컬렉션의 모든 도큐먼트를 의미합니다.
-    delete_result = collection.delete_many({})
-    print(f"✅ 기존 데이터 {delete_result.deleted_count}개가 성공적으로 삭제되었습니다.")
-    
-    # insert_many()는 리스트 형태의 데이터를 여러 도큐먼트로 삽입합니다.
-    result = collection.insert_many(emog_dataset)
-    
-    print(f"✅ {len(result.inserted_ids)}개의 도큐먼트가 성공적으로 삽입되었습니다.")
-    print("✅ MongoDB 연결 성공!")
-    
-except Exception as e:
-    print(f"❌ 연결 실패: {e}")
+# API 설정
+NEMC_REGION_CODES = [11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+MAX_API_WORKERS = 10 # 동시에 호출할 API 스레드 수 (조절 가능)
 
 
-
-try:
-    client = MongoClient(MONGO_URI)
-    # 데이터베이스와 컬렉션 선택
-    db = client['emergencyhospital']
-    collection = db['emogs_collection']
-
-    query_result = collection.find({})
-    
-    # find() 결과(Cursor 객체)를 리스트로 변환하여 개수를 확인하고 출력합니다.
-    found_documents = list(query_result)
-    
-    print(f"{len(found_documents)}개의 도큐먼트가 검색되었습니다.")
-        
-    print("MongoDB 연결 성공 및 조회 완료!")
-    
-except Exception as e:
-    print(f"연결 실패: {e}")
-
-finally:
-    # 클라이언트 연결은 반드시 닫아주는 것이 좋습니다.
-    if 'client' in locals() and client:
-        client.close()
-        print("MongoDB 클라이언트 연결이 닫혔습니다.")
-
-
-#현재 시간 (KST, 한국 표준시) 가져오기
-# AI 판별 로직이 한국 시간을 기준으로 해야 하므로 KST(UTC+9)
-kst_timezone = datetime.timezone(datetime.timedelta(hours=9))
-current_time_kst = datetime.datetime.now(kst_timezone)
-
-# API 전송을 위해 ISO 8601 표준 문자열 형식으로 변환
-current_time_str = current_time_kst.isoformat()
-
-
-# --- 1. 프롬프트 엔지니어링 함수 ---
-
+# --- 3. 프롬프트 및 API 호출 함수  ---
 def create_gemini_prompt(payload):
-    """
-    Gemini API에 전송할 프롬프트 문자열을 생성합니다.
-    [소아 진료] 가능 여부에 초점을 맞춰 데이터를 분석하고 분류합니다.
-    """
     
     payload_str = json.dumps(payload, indent=2, ensure_ascii=False)
     
@@ -152,91 +90,234 @@ def create_gemini_prompt(payload):
 """
     return prompt
 
-
 def get_er_status_from_gemini(api_key, payload):
-    """
-    (예시) 실제로 Gemini API를 호출하고 결과를 파싱하는 함수
-    """
-    # 1. API 키 설정
+    # 1. API 키 설정 (함수 호출 시마다 설정)
     genai.configure(api_key=api_key) 
-    # 참고: 실제 환경에서는 os.environ.get("GEMINI_API_KEY") 사용 권장
     
-    # 2. 프롬프트 생성
+    # 2. 프롬프트 생성 및 모델 초기화
     prompt = create_gemini_prompt(payload)
-    model = genai.GenerativeModel('models/gemini-2.5-flash')
+    model = genai.GenerativeModel('models/gemini-2.5-flash') # 최신 모델명 확인 권장
     
     try:
-        #API 호출
+        # 3. API 호출
         response = model.generate_content(
             prompt,
-            # JSON 모드 강제
             generation_config=genai.types.GenerationConfig(
                 response_mime_type="application/json" 
             ))
         result_json = json.loads(response.text)
         return result_json
-    except (json.JSONDecodeError, AttributeError) as e:
-        print(f"Error: Gemini API 응답 파싱 실패 - {e}")
+    except Exception as e:
+        # API 호출 실패 시 에러 로그 기록
+        logging.error(f"Gemini API 오류 (emogCode: {payload.get('emogCode')}): {e}", exc_info=True)
+        # 실패 시 None 반환하여 후속 처리에서 제외
         return None
 
-# --- postgres db ---
-DB_HOST = "34.50.41.93"
-DB_NAME = "hospital"       # 데이터베이스 이름
-DB_USER = "postgres"       # pgAdmin 로그인할 때 쓰는 사용자 이름
-DB_PASS = "Child119@"  # pgAdmin 로그인할 때 쓰는 비밀번호
-# ------------------------------------
-conn = None
-cur = None
+# --- 4. 로직 수행 함수 (기능별로 분리) ---
 
+def fetch_nemc_data():
+    """중앙응급의료센터 API에서 최신 병원 데이터를 가져옵니다."""
+    logging.info("NEMC API로부터 데이터 수집을 시작합니다...")
+    emog_dataset = []
+    for r in NEMC_REGION_CODES:
+        request_url = f'https://mediboard.nemc.or.kr/api/v1/search/handy?searchCondition=regional&emogloca={r}'
+        try:
+            response = requests.get(request_url, timeout=10) # 타임아웃 설정
+            
+            if response.status_code == 200:
+                data = response.json()
+                emog_dataset.extend(data['result']['data'])
+            else:
+                logging.warning(f"NEMC 지역 코드 {r} 요청 실패: {response.status_code}")
+        except requests.RequestException as e:
+            logging.error(f"NEMC 지역 코드 {r} 요청 중 예외 발생: {e}")
+            
+    logging.info(f"NEMC API로부터 총 {len(emog_dataset)}개의 병원 데이터를 수집했습니다.")
+    return emog_dataset
 
-for i in range(len(found_documents)):
-    emog_code = found_documents[i].get('emogCode')
-    er_messages = found_documents[i].get('erMessages', [])
-    unavailable_messages = found_documents[i].get('unavailableMessages', [])
-    
+def update_mongodb(emog_dataset):
+    """MongoDB에 연결하여 기존 데이터를 삭제하고 새 데이터로 교체합니다."""
+    if not emog_dataset:
+        logging.warning("MongoDB에 저장할 데이터가 없습니다. 업데이트를 건너뜁니다.")
+        return
+        
+    logging.info("MongoDB에 연결하여 데이터 업데이트를 시작합니다...")
+    try:
+        client = MongoClient(MONGO_URI)
+        db = client['emergencyhospital']
+        collection = db['emogs_collection']
+
+        # 1단계: 기존 데이터 모두 삭제
+        delete_result = collection.delete_many({})
+        logging.info(f"MongoDB: 기존 데이터 {delete_result.deleted_count}개 삭제 완료.")
+        
+        # 2단계: 새 데이터 삽입
+        result = collection.insert_many(emog_dataset)
+        logging.info(f"MongoDB: 새 데이터 {len(result.inserted_ids)}개 삽입 완료.")
+        
+    except Exception as e:
+        logging.error(f"MongoDB 작업 중 오류 발생: {e}", exc_info=True)
+    finally:
+        if 'client' in locals() and client:
+            client.close()
+            logging.info("MongoDB 연결이 닫혔습니다.")
+
+def fetch_data_from_mongodb():
+    """MongoDB에서 AI 분석에 사용할 데이터를 조회합니다."""
+    logging.info("MongoDB에서 AI 분석 대상 데이터를 조회합니다...")
+    found_documents = []
+    try:
+        client = MongoClient(MONGO_URI)
+        db = client['emergencyhospital']
+        collection = db['emogs_collection']
+        
+        # 필요한 필드만 가져오도록 프로젝션 설정 (최적화)
+        query_result = collection.find({}, {"emogCode": 1, "erMessages": 1, "unavailableMessages": 1, "_id": 0})
+        found_documents = list(query_result)
+        logging.info(f"MongoDB에서 총 {len(found_documents)}개의 문서를 조회했습니다.")
+        
+    except Exception as e:
+        logging.error(f"MongoDB 조회 중 오류 발생: {e}", exc_info=True)
+    finally:
+        if 'client' in locals() and client:
+            client.close()
+            logging.info("MongoDB 조회 연결이 닫혔습니다.")
+    return found_documents
+
+def process_single_document(doc, current_time_str):
+    """단일 문서를 받아 Gemini API에 전송하고 결과를 반환합니다 (병렬 처리용 함수)."""
+    emog_code = doc.get('emogCode')
+    if not emog_code:
+        return None
+
     api_request_payload = {
         "emogCode": emog_code,
-        "erMessages": er_messages,
-        "unavailableMessages": unavailable_messages,
+        "erMessages": doc.get('erMessages', []),
+        "unavailableMessages": doc.get('unavailableMessages', []),
         "currentTime": current_time_str
     }
-    print(api_request_payload)
-    result_emergency = get_er_status_from_gemini(api_key="AIzaSyA0r-m0evmY02vkptSA6qYm8JpT4afDa4c",payload=api_request_payload)
+    
+    # Gemini API 호출
+    result_emergency = get_er_status_from_gemini(GEMINI_API_KEY, api_request_payload)
+    
+    if result_emergency and 'state' in result_emergency:
+        # PostgreSQL에 업데이트할 튜플 형식으로 반환
+        return (
+            result_emergency.get('state'),
+            result_emergency.get('message'),
+            result_emergency.get('emogCode') # emogCode는 hpid와 동일
+        )
+    else:
+        logging.warning(f"emogCode {emog_code}에 대한 AI 분석 결과를 받지 못했습니다.")
+        return None
+
+def update_postgresql_batch(update_data_list):
+    """PostgreSQL에 AI 분석 결과를 Batch로 일괄 업데이트합니다."""
+    if not update_data_list:
+        logging.warning("PostgreSQL에 업데이트할 데이터가 없습니다.")
+        return
+
+    logging.info(f"PostgreSQL에 총 {len(update_data_list)}개의 데이터 업데이트를 시작합니다...")
+    
+    conn = None
+    cur = None
+    
+    # 실행할 SQL (hpid = emogCode)
+    sql = """
+    UPDATE public.emergency
+    SET state = %s, message = %s
+    WHERE hpid = %s
+    """
+    
     try:
-        # 데이터베이스 연결
+        # DB에 한 번만 연결
         conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASS)
         cur = conn.cursor()
         
-        # 실행할 SQL 쿼리 정의
-        # hpid를 기준으로 state message 업데이트합니다.
-        sql = """
-        UPDATE public.emergency
-        SET state = %s, message = %s
-        WHERE hpid = %s
-        """
-        update_param = []
-        update_param.append((result_emergency['state'],result_emergency['message'],result_emergency['emogCode']))
-        # 쿼리 일괄 실행
-        # update_param 리스트에 있는 모든 튜플에 대해 UPDATE 쿼리를 실행합니다.
-        cur.executemany(sql, update_param)
+        # execute_batch를 사용하여 대량의 데이터를 효율적으로 업데이트
+        psycopg2.extras.execute_batch(cur, sql, update_data_list)
         
-        # 트랜잭션 커밋 - 모든 변경 사항을 데이터베이스에 영구 저장
+        # 모든 작업 완료 후 한 번만 커밋
         conn.commit()
-        # cur.rowcount는 executemany로 영향을 받은 총 행의 수를 반환합니다.
-        print(f"총 {cur.rowcount}개 행이 성공적으로 업데이트되었습니다.")
+        
+        logging.info(f"PostgreSQL: 총 {cur.rowcount}개 행이 성공적으로 업데이트되었습니다.")
+        
     except (Exception, psycopg2.Error) as error:
-        print("PostgreSQL 작업 중 오류 발생:", error)
-        # 오류 발생 시, 이번 트랜잭션에서 실행된 모든 변경 사항을 취소합니다.
+        logging.error(f"PostgreSQL Batch 작업 중 오류 발생: {error}", exc_info=True)
         if conn:
             conn.rollback()
-            print("트랜잭션이 롤백되었습니다.")
+            logging.warning("트랜잭션이 롤백되었습니다.")
     finally:
-        # 리소스 정리
-        if cur is not None:
+        # 모든 작업 완료 후 한 번만 연결 해제
+        if cur:
             cur.close()
-        if conn is not None:
+        if conn:
             conn.close()
-        print("PostgreSQL 연결이 닫혔습니다.")
+        logging.info("PostgreSQL 연결이 닫혔습니다.")
+
+
+# --- 5. 메인 실행 로직 ---
+def main():
+    logging.info("=== 응급실 데이터 처리 배치 작업을 시작합니다 ===")
     
+    # 1. NEMC API에서 원본 데이터 수집
+    emog_dataset = fetch_nemc_data()
     
+    # 2. MongoDB에 최신 데이터로 업데이트 (초기화 및 삽입)
+    update_mongodb(emog_dataset)
     
+    # 3. AI 분석을 위해 MongoDB에서 데이터 다시 조회
+    documents_to_process = fetch_data_from_mongodb()
+    
+    if not documents_to_process:
+        logging.info("처리할 데이터가 없습니다. 작업을 종료합니다.")
+        return
+
+    # 4. Gemini API 병렬 처리
+    logging.info(f"총 {len(documents_to_process)}개의 문서에 대해 Gemini API 병렬 분석을 시작합니다 (Workers: {MAX_API_WORKERS})...")
+    
+    # KST 시간 설정
+    kst_timezone = datetime.timezone(datetime.timedelta(hours=9))
+    current_time_str = datetime.datetime.now(kst_timezone).isoformat()
+    
+    # PostgreSQL에 일괄 업데이트할 데이터를 담을 리스트
+    postgres_update_list = []
+    
+    # ThreadPoolExecutor를 사용하여 API 호출 병렬 수행
+    with ThreadPoolExecutor(max_workers=MAX_API_WORKERS) as executor:
+        # 퓨처(Future) 객체 딕셔너리 생성 (어떤 emogCode가 실패했는지 추적하기 위함)
+        future_to_doc = {
+            executor.submit(process_single_document, doc, current_time_str): doc
+            for doc in documents_to_process
+        }
+        
+        completed_count = 0
+        for future in as_completed(future_to_doc):
+            doc = future_to_doc[future]
+            emog_code = doc.get('emogCode')
+            
+            try:
+                # API 호출 결과 (성공 시 튜플, 실패 시 None)
+                result_tuple = future.result() 
+                
+                if result_tuple:
+                    postgres_update_list.append(result_tuple)
+                
+                completed_count += 1
+                if completed_count % 50 == 0: # 50개 처리마다 로그 출력
+                    logging.info(f"AI 분석 진행 중... ({completed_count}/{len(documents_to_process)})")
+
+            except Exception as e:
+                logging.error(f"emogCode {emog_code} 처리 중 예외 발생: {e}", exc_info=True)
+
+    logging.info(f"Gemini API 분석 완료. (총 {len(postgres_update_list)}개 결과 수집)")
+
+    # 5. PostgreSQL에 AI 분석 결과 일괄 업데이트
+    update_postgresql_batch(postgres_update_list)
+    
+    logging.info("=== 모든 배치 작업이 성공적으로 완료되었습니다 ===")
+
+
+if __name__ == "__main__":
+    
+    main()

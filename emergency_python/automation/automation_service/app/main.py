@@ -1,8 +1,8 @@
-# app/main.py
 import uuid
 import threading
 import subprocess
 import time
+import asyncio  # <--- (수정 1) 파일 최상단으로 이동
 from typing import Dict, List
 
 from fastapi import FastAPI, Request, HTTPException
@@ -14,7 +14,7 @@ app = FastAPI(
 )
 
 # 작업 상태/로그 저장용 in-memory 구조
-jobs: Dict[str, str] = {}         # job_id -> 'running' | 'done' | 'error'
+jobs: Dict[str, str] = {}        # job_id -> 'running' | 'done' | 'error'
 log_buffers: Dict[str, List[str]] = {}  # job_id -> [log lines]
 
 
@@ -32,11 +32,12 @@ def run_automation_job(job_id: str):
     try:
         process = subprocess.Popen(
             cmd,
-            cwd="app",  # 컨테이너 내부에서 update_message.py가 있는 디렉토리
+            # (수정 2) cwd="app" 제거. Dockerfile의 WORKDIR /app을 사용합니다.
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
             bufsize=1,
+            encoding='utf-8' # 로그가 한글일 경우를 대비해 명시
         )
 
         # stdout 한 줄씩 읽어서 버퍼에 추가
@@ -103,12 +104,19 @@ async def stream_logs(job_id: str, request: Request):
                     yield f"data: {line}\n\n"
                 last_index = len(logs)
 
-            # 작업이 완료/에러 상태면 한 텀 더 보내고 종료
+            # 작업이 완료/에러 상태면 남은 로그 마저 보내고 종료
             if jobs.get(job_id) in ("done", "error"):
-                await asyncio.sleep(0.3)
-                break
+                # 혹시 모를 최종 로그 전송을 위해 아주 짧게 대기
+                await asyncio.sleep(0.1) 
+                
+                # 마지막 남은 로그 전송
+                logs = log_buffers.get(job_id, [])
+                if last_index < len(logs):
+                    for line in logs[last_index:]:
+                        yield f"data: {line}\n\n"
+                
+                break # 스트림 종료
 
             await asyncio.sleep(0.5)
 
-    import asyncio
     return StreamingResponse(event_generator(), media_type="text/event-stream")

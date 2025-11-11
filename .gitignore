@@ -28,7 +28,7 @@ coverage
 *.sw?
 
 *.tsbuildinfo
-
+.env
 
 *.iml
 .gradle
