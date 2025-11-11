@@ -139,9 +139,9 @@ const router = createRouter({
       component: () => import("../views/emergencyjsb.vue"),
     },
      {
-      path: "/emergencyWrite",
-      name: "emergencyWrite",
-      component: () => import("../views/emergencyWrite.vue"),
+      path: "/AdminEmergencyWrite",
+      name: "AdminEmergencyWrite",
+      component: () => import("../views/AdminEmergencyWrite.vue"),
     },
     {
       path: "/AdminEmergencyEdit/:id",
