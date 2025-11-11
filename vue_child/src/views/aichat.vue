@@ -170,7 +170,7 @@ const selectKid = (kid) => {
 const loadKidDetail = async (kid) => {
   const auth = getAuth();
   const user = auth.currentUser;
-  const res = await axios.get("http://172.168.10.12:8080/api/kids/detail", {
+  const res = await axios.get("https://child119-251868777139.asia-northeast3.run.app/api/kids/detail", {
     params: { parentUid: user.uid, kidName: kid.kid },
   });
   selectedKid.value = res.data;
@@ -178,7 +178,7 @@ const loadKidDetail = async (kid) => {
 
 // ✅ WebSocket 연결
 const initWebSocket = () => {
-  socket = new WebSocket("ws://172.168.10.12:8080/ws/chat");
+  socket = new WebSocket("wss://child119-251868777139.asia-northeast3.run.app/ws/chat");
 
   socket.onopen = () => console.log("✅ WebSocket 연결 완료");
 
@@ -254,7 +254,7 @@ onMounted(async () => {
   if (user) {
     isLoggedIn.value = true;
     try {
-      const res = await axios.get("http://172.168.10.12:8080/api/kids/list", {
+      const res = await axios.get("https://child119-251868777139.asia-northeast3.run.app/api/kids/list", {
         params: { parentUid: user.uid },
       });
       kidList.value = res.data;
