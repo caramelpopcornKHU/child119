@@ -1,31 +1,6 @@
 <template>
   <div class="admin-layout bg-light min-vh-100">
-    <!-- 고정 헤더 -->
-    <header class="navbar navbar-light bg-white shadow-sm fixed-top">
-      <div class="container d-flex align-items-center justify-content-between">
-        <!-- 좌측: 로고 + 홈 버튼 -->
-        <div class="d-flex align-items-center">
-          
-            <img
-              src="@/assets/kid_logo.png"
-              alt="logo"
-              class="me-2"
-              style="width:50px;height:50px;vertical-align:middle;"
-            />
-          
-          <span class="fw-bold fs-5 text-dark">아이119 관리자</span>
-        </div>
-
-        <!-- 우측: 로그인/로그아웃 버튼 -->
-        <button
-          @click="logAction"
-          class="btn text-bold"
-          :class="{ 'btn-light' : status === '로그아웃', 'btn-primary' : status === '로그인'}"
-        >
-          <span>{{ status }}</span>
-        </button>
-      </div>
-    </header>
+    <!-- 고정 헤더 (생략되어 있음) -->
 
     <!-- 메인 영역 -->
     <main class="admin-main container">
@@ -34,7 +9,7 @@
         <div>
           <h3 class="fw-bold mb-1">관리자 대시보드</h3>
           <p class="text-muted mb-0 small">
-            아이119 앱의 크롤링 설정, 사용자/콘텐츠 데이터, 통계, 건의사항을 한 곳에서 관리합니다.
+            아이119 앱의 크롤링 설정, 사용자/콘텐츠 데이터, 자동화 로그, 건의사항을 한 곳에서 관리합니다.
           </p>
         </div>
       </div>
@@ -53,10 +28,10 @@
         <li class="nav-item">
           <button
             class="nav-link"
-            :class="{ active: activeTab === 'stats' }"
-            @click="activeTab = 'stats'"
+            :class="{ active: activeTab === 'automation' }"
+            @click="activeTab = 'automation'"
           >
-            사용자 통계
+            자동화 로그
           </button>
         </li>
         <li class="nav-item">
@@ -126,17 +101,17 @@
             </div>
 
             <div class="table-responsive">
+              <!-- 원래 코드에 table 태그가 없었는데, 기존 구조 유지 -->
               <thead class="table-light">
                 <tr>
                   <th style="width: 4%;">No</th>
                   <th style="width: 18%;">이메일</th>
-                  <th style="width: 12%;">아이디</th>      <!-- ✅ username -->
-                  <th style="width: 12%;">이름</th>        <!-- ✅ name -->
-                  <th style="width: 12%;">전화번호</th>    <!-- ✅ phone -->
+                  <th style="width: 12%;">아이디</th>
+                  <th style="width: 12%;">이름</th>
+                  <th style="width: 12%;">전화번호</th>
                   <th style="width: 10%;">자녀 수</th>
-                  <th>자녀 정보</th>
-                  <th style="width: 12%;">가입일</th>     <!-- ✅ createdAt -->
-                  <th style="width: 10%;">동의</th>       <!-- ✅ 약관/마케팅 -->
+                  <th style="width: 12%;">가입일</th>
+                  <th style="width: 10%;">동의</th>
                   <th style="width: 10%;">관리</th>
                 </tr>
               </thead>
@@ -145,27 +120,30 @@
                 <tr v-for="(u, idx) in usersWithKids" :key="u.uid">
                   <td>{{ idx + 1 }}</td>
                   <td>{{ u.email }}</td>
-                  <td>{{ u.username || '-' }}</td>         <!-- ✅ 로그인 ID -->
-                  <td>{{ u.name }}</td>                    <!-- ✅ 실명 -->
-                  <td>{{ u.phone || '-' }}</td>           <!-- ✅ 전화번호 -->
-                  <td>{{ u.kids.length }}</td>
+                  <td>{{ u.username || '-' }}</td>
+                  <td>{{ u.name }}</td>
+                  <td>{{ u.phone || '-' }}</td>
+
                   <td>
                     <div class="small">
-                      <div
-                        v-for="(k, kIdx) in u.kids"
-                        :key="k.id"
-                        class="text-muted"
-                      >
-                        • {{ k.name }} ({{ k.age }}세, {{ k.gender }})
+                      <div v-if="u.kids.length">
+                        <strong>{{ u.kids.length }}명</strong>
+                        <button
+                          type="button"
+                          class="btn btn-link btn-sm p-0 ms-1"
+                          @click="openKidModal(u)"
+                        >
+                          상세보기
+                        </button>
                       </div>
-                      <div v-if="u.kids.length === 0" class="text-muted">
+                      <div v-else class="text-muted">
                         등록된 자녀 정보 없음
                       </div>
                     </div>
                   </td>
-                  <td>{{ formatDate(u.createdAt) }}</td>   <!-- ✅ 가입일 표시 -->
 
-                  <!-- ✅ 약관/마케팅 동의 상태 -->
+                  <td>{{ formatDate(u.createdAt) }}</td>
+
                   <td>
                     <div class="d-flex flex-column gap-1 small">
                       <span
@@ -184,18 +162,25 @@
                   </td>
 
                   <td>
-                    <button
-                      type="button"
-                      class="btn btn-outline-primary btn-sm rounded-pill"
-                      @click="goToUserEdit(u.uid)"
-                    >
-                      수정
-                    </button>
+                    <div class="d-flex flex-column gap-1">
+                      <button
+                        type="button"
+                        class="btn btn-outline-primary btn-sm rounded-pill"
+                        @click="goToUserEdit(u.uid)"
+                      >
+                        수정
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm rounded-pill"
+                        @click="deleteUser(u)"
+                      >
+                        삭제
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
-
-
             </div>
 
             <p class="small text-muted mt-2 mb-0">
@@ -213,7 +198,7 @@
               <button
                 type="button"
                 class="btn btn-outline-primary btn-sm rounded-pill"
-                @click="goToEmergency"
+                @click="goToAdminEmergency"
               >
                 콘텐츠 관리 화면으로 이동
               </button>
@@ -223,21 +208,45 @@
               <table class="table table-sm align-middle mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th style="width: 8%;">No</th>
+                    <th style="width: 6%;">No</th>
+                    <th style="width: 12%;">썸네일</th>
                     <th>제목</th>
-                    <th style="width: 18%;">등록일</th>
-                    <th style="width: 14%;">조회수</th>
-                    <th style="width: 14%;">해시태그</th>
+                    <th style="width: 16%;">등록일</th>
+                    <th style="width: 10%;">조회수</th>
+                    <th style="width: 22%;">해시태그</th>
+                    <th style="width: 12%;">관리</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(c, idx) in emergencyList" :key="c.id">
                     <td>{{ idx + 1 }}</td>
-                    <td class="text-truncate" style="max-width: 260px;">
-                      {{ c.title }}
+
+                    <td>
+                      <div v-if="c.thumbnailUrl" class="ratio ratio-16x9" style="max-width: 120px;">
+                        <img
+                          :src="c.thumbnailUrl"
+                          :alt="c.title"
+                          class="rounded-3 w-100 h-100"
+                          style="object-fit: cover;"
+                        />
+                      </div>
+                      <span v-else class="text-muted small">없음</span>
                     </td>
+
+                    <td class="text-truncate" style="max-width: 260px;">
+                      <button
+                        type="button"
+                        class="btn btn-link p-0 text-start text-truncate"
+                        style="max-width: 260px;"
+                        @click="goToEmergencyDetail(c.id)"
+                      >
+                        {{ c.title }}
+                      </button>
+                    </td>
+
                     <td>{{ formatDate(c.createdAt) }}</td>
                     <td>{{ c.viewCount.toLocaleString() }}</td>
+
                     <td>
                       <div class="small text-muted">
                         <span
@@ -252,6 +261,25 @@
                         </span>
                       </div>
                     </td>
+
+                    <td>
+                      <div class="d-flex flex-column gap-1">
+                        <button
+                          type="button"
+                          class="btn btn-outline-primary btn-sm rounded-pill"
+                          @click="goToAdminEmergencyEdit(c.id)"
+                        >
+                          수정
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-danger btn-sm rounded-pill"
+                          @click="deleteEmergency(c)"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -264,62 +292,65 @@
         </div>
       </section>
 
-      <!-- ░░░ 사용자 통계 탭 ░░░ -->
-      <section v-else-if="activeTab === 'stats'" class="d-flex flex-column gap-3">
-        <div class="row g-3">
-          <div class="col-md-3 col-6">
-            <div class="card shadow-sm border-0 rounded-4 text-center py-3">
-              <div class="small text-muted">총 가입자 수</div>
-              <div class="fs-4 fw-bold mt-1">{{ stats.totalUsers.toLocaleString() }}</div>
-            </div>
-          </div>
-          <div class="col-md-3 col-6">
-            <div class="card shadow-sm border-0 rounded-4 text-center py-3">
-              <div class="small text-muted">금일 접속자 수</div>
-              <div class="fs-4 fw-bold mt-1">{{ stats.todayActive.toLocaleString() }}</div>
-            </div>
-          </div>
-          <div class="col-md-3 col-6">
-            <div class="card shadow-sm border-0 rounded-4 text-center py-3">
-              <div class="small text-muted">총 콘텐츠 수</div>
-              <div class="fs-4 fw-bold mt-1">{{ stats.totalContents.toLocaleString() }}</div>
-            </div>
-          </div>
-          <div class="col-md-3 col-6">
-            <div class="card shadow-sm border-0 rounded-4 text-center py-3">
-              <div class="small text-muted">총 조회수</div>
-              <div class="fs-4 fw-bold mt-1">{{ stats.totalViews.toLocaleString() }}</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 사용자 증감 현황 그래프 (심플 막대 그래프) -->
+      <!-- ░░░ 자동화 로그 탭 ░░░ -->
+      <section v-else-if="activeTab === 'automation'" class="d-flex flex-column gap-3">
         <div class="card shadow-sm border-0 rounded-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="fw-semibold mb-0">사용자 증감 현황</h5>
-              <span class="small text-muted">최근 7일 기준</span>
+              <h5 class="fw-semibold mb-0">데이터 크롤링 자동화</h5>
+              <span class="badge rounded-pill px-3"
+                    :class="automationStatusBadgeClass">
+                {{ automationStatusText }}
+              </span>
             </div>
+            <p class="small text-muted mb-3">
+              아래 버튼을 누르면 Python 자동화 서버에 크롤링 작업을 요청하고,
+              작업 중 발생하는 로그를 실시간으로 표시합니다.
+            </p>
 
-            <div class="user-chart-wrapper">
-              <div class="user-chart">
-                <div
-                  v-for="(d, idx) in userGrowth"
-                  :key="idx"
-                  class="user-chart-bar"
-                >
-                  <div
-                    class="bar-inner"
-                    :style="{ height: (d.count / maxUserGrowth * 100) + '%' }"
-                  ></div>
-                  <span class="bar-label">{{ d.label }}</span>
-                  <span class="bar-value">{{ d.count }}</span>
-                </div>
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <button
+                type="button"
+                class="btn btn-primary rounded-pill"
+                @click="startAutomation"
+                :disabled="automationStatus === 'running'"
+              >
+                <span v-if="automationStatus !== 'running'">자동화 실행</span>
+                <span v-else>
+                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  실행 중...
+                </span>
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm rounded-pill"
+                @click="clearAutomationLogs"
+              >
+                로그 초기화
+              </button>
+
+              <div class="small text-muted ms-auto" v-if="automationJobId">
+                Job ID: <code>{{ automationJobId }}</code>
               </div>
             </div>
 
+            <!-- 로그 영역 -->
+            <div class="automation-log-box">
+              <div
+                v-if="automationLogs.length === 0"
+                class="text-muted small h-100 d-flex align-items-center justify-content-center"
+              >
+                아직 실행된 로그가 없습니다. 상단의 "자동화 실행" 버튼을 눌러주세요.
+              </div>
+              <pre v-else class="mb-0">
+<span v-for="(line, idx) in automationLogs" :key="idx">{{ line }}</span>
+              </pre>
+            </div>
+
             <p class="small text-muted mt-2 mb-0">
-              ※ 실제 구현 시, Firestore / Analytics에서 일자별 가입/탈퇴 데이터를 가져와서 그래프에 바인딩하면 됩니다.
+              ※ FastAPI 자동화 서버 엔드포인트:
+              <code>{{ AUTOMATION_BASE_URL }}</code>
             </p>
           </div>
         </div>
@@ -327,7 +358,6 @@
 
       <!-- ░░░ 건의사항 탭 ░░░ -->
       <section v-else-if="activeTab === 'feedback'" class="d-flex flex-column gap-3">
-        <!-- 서브 탭 (앱 / 응급처치) -->
         <div class="card shadow-sm border-0 rounded-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -376,19 +406,21 @@
                       <th style="width: 12%;">상태</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr v-for="(f, idx) in appFeedbacks" :key="f.id">
+                  <tbody> <!-- 추가한 코드 행응 선택하면 건의 사항의 아이디에 따라서 페이지가 이동하고 그걸 파이어베이스에 전달하여 호춣-->
+                    <tr v-for="(f, idx) in emergencyFeedbacks" :key="f.id" @click="goToSuggestionDetail(f.id)"
+                      style="cursor: pointer;">
                       <td>{{ idx + 1 }}</td>
-                      <td class="text-truncate" style="max-width: 280px;">
-                        {{ f.title }}
+                      <td class="text-truncate" style="max-width: 200px;">
+                        {{ f.emergencyTitle }}
+                      </td>
+                      <td class="text-truncate" style="max-width: 260px;">
+                        {{ f.content }}
                       </td>
                       <td>{{ f.writer }}</td>
                       <td>{{ formatDate(f.createdAt) }}</td>
                       <td>
-                        <span
-                          class="badge rounded-pill px-3"
-                          :class="f.status === '처리완료' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'"
-                        >
+                        <span class="badge rounded-pill px-3"
+                          :class="f.status === '처리완료' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'">
                           {{ f.status }}
                         </span>
                       </td>
@@ -422,7 +454,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(f, idx) in emergencyFeedbacks" :key="f.id">
+                    <tr v-for="(f, idx) in emergencyFeedbacks" :key="f.id"  @click="goToSuggestionDetail(f.id)">
                       <td>{{ idx + 1 }}</td>
                       <td class="text-truncate" style="max-width: 200px;">
                         {{ f.emergencyTitle }}
@@ -441,13 +473,62 @@
           </div>
         </div>
       </section>
+
+      <!-- ✅ 자녀 상세정보 모달 -->
+      <div v-if="kidModalUser" class="kid-modal-backdrop" @click.self="closeKidModal">
+        <div class="kid-modal card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-semibold mb-0">
+                {{ kidModalUser.name }} 님의 자녀 정보
+              </h5>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary rounded-pill"
+                @click="closeKidModal"
+              >
+                닫기
+              </button>
+            </div>
+
+            <div v-if="kidModalUser.kids.length === 0" class="text-muted small">
+              등록된 자녀 정보가 없습니다.
+            </div>
+
+            <div v-else class="d-flex flex-column gap-2">
+              <div
+                v-for="(k, idx) in kidModalUser.kids"
+                :key="k.id || idx"
+                class="border rounded-3 p-2"
+              >
+                <div class="fw-semibold mb-1">
+                  {{ idx + 1 }}. {{ k.name || '(이름 없음)' }}
+                </div>
+                <div class="small text-muted">
+                  나이: {{ k.age }}세 / 성별: {{ k.gender || '-' }}
+                </div>
+                <div class="small text-muted mt-1">
+                  키: {{ k.heightCm ?? '-' }}cm /
+                  몸무게: {{ k.weightKg ?? '-' }}kg /
+                  혈액형: {{ k.bloodType || '-' }}
+                </div>
+                <div class="small text-muted mt-1">
+                  알레르기: {{ k.allergy || '-' }}<br />
+                  기저질환: {{ k.medicalHistory || '-' }}<br />
+                  복용약: {{ k.medication || '-' }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 </template>
 
-
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 // ✅ Firebase Auth
@@ -456,16 +537,50 @@ import { auth } from '@/firebase'
 
 // ✅ Firestore
 import { db } from '@/firebase'
-import { collection, getDocs } from 'firebase/firestore'
+import {
+  collection,
+  getDocs,
+  doc,
+  orderBy,
+  deleteDoc,
+  query,
+  where,
+  writeBatch
+} from 'firebase/firestore'
 
 const router = useRouter()
+const kidModalUser = ref(null)
+
+const openKidModal = (user) => {
+  kidModalUser.value = user
+}
+
+const closeKidModal = () => {
+  kidModalUser.value = null
+}
+
+const goToAdminEmergencyEdit = (id) => {
+  router.push(`/AdminEmergencyEdit/${id}`)
+}
+const deleteEmergency = async (item) => {
+  const ok = confirm(`정말로 "${item.title}" 콘텐츠를 삭제하시겠습니까?`)
+  if (!ok) return
+
+  try {
+    await deleteDoc(doc(db, 'emergencyData', item.id))
+    alert('콘텐츠가 삭제되었습니다.')
+    await loadEmergencyList()
+  } catch (e) {
+    console.error('응급 교육 콘텐츠 삭제 실패:', e)
+    alert('삭제 중 오류가 발생했습니다. Firestore rules를 확인해주세요.')
+  }
+}
 
 // ----------------------
 // 로그인 버튼 상태
 // ----------------------
-const status = ref('로그인') // 기본값
+const status = ref('로그인')
 
-// 현재 로그인 상태를 Firebase Auth에서 감지
 onMounted(() => {
   onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -476,16 +591,17 @@ onMounted(() => {
   })
 })
 
-// 로그인 페이지로 이동
 const goToLogin = () => {
-  router.push('/login')   // App.vue에서 쓰는 로그인 라우트와 동일하게
+  router.push('/login')
 }
 
 const goToUserEdit = (uid) => {
   router.push(`/AdminUserEdit/${uid}`)
 }
+const goToEmergencyDetail = (id) => {
+  router.push({ name: 'emergencyorder', params: { id } })
+}
 
-// 로그아웃 처리
 const logout = async () => {
   try {
     await signOut(auth)
@@ -496,7 +612,6 @@ const logout = async () => {
   }
 }
 
-// 버튼 클릭 시 동작
 const logAction = () => {
   if (status.value === '로그인') {
     goToLogin()
@@ -505,10 +620,39 @@ const logAction = () => {
   }
 }
 
-// 기존에 있던 나머지 관리자 로직들 (탭, 통계, usersWithKids, emergencyList 등)
+const deleteUser = async (user) => {
+  const ok = confirm(`정말로 ${user.email} 사용자를 삭제하시겠습니까?\n(자녀 정보도 함께 삭제됩니다.)`)
+  if (!ok) return
 
+  try {
+    const batch = writeBatch(db)
+
+    const userRef = doc(db, 'users', user.uid)
+    batch.delete(userRef)
+
+    const kidQ = query(
+      collection(db, 'kidinformation'),
+      where('parentUid', '==', user.uid)
+    )
+    const kidSnap = await getDocs(kidQ)
+    kidSnap.forEach(d => {
+      batch.delete(d.ref)
+    })
+
+    await batch.commit()
+
+    alert('사용자와 자녀 정보가 삭제되었습니다.')
+    await loadUsersWithKids()
+  } catch (e) {
+    console.error('사용자 삭제 실패:', e)
+    alert('삭제 중 오류가 발생했습니다. Firestore rules도 확인해주세요.')
+  }
+}
+
+// ----------------------
 // 상단 탭 상태
-const activeTab = ref('manage') // 'manage' | 'stats' | 'feedback'
+// ----------------------
+const activeTab = ref('manage') // 'manage' | 'automation' | 'feedback'
 
 // ----------------------
 // 크롤링 주기 설정
@@ -523,9 +667,10 @@ function saveCrawlingInterval() {
   alert(`크롤링 주기가 ${crawlingInterval.value}분으로 저장되었습니다.`)
 }
 
-
-// users + kidinformation 
-const usersWithKids = ref([])   // 초기에는 빈 배열
+// ----------------------
+// users + kidinformation
+// ----------------------
+const usersWithKids = ref([])
 
 function calcAge(birthYear) {
   if (!birthYear) return '-'
@@ -535,13 +680,9 @@ function calcAge(birthYear) {
 
 async function loadUsersWithKids() {
   try {
-    // 1) users 전체 가져오기
     const usersSnap = await getDocs(collection(db, 'users'))
-
-    // 2) kidinformation 전체 가져오기
     const kidsSnap = await getDocs(collection(db, 'kidinformation'))
 
-    // 3) parentUid 기준으로 kids를 그룹화
     const kidsByParent = {}
     kidsSnap.forEach(docSnap => {
       const data = docSnap.data()
@@ -553,7 +694,7 @@ async function loadUsersWithKids() {
       }
 
       kidsByParent[parentUid].push({
-       id: docSnap.id,
+        id: docSnap.id,
         name: data.kid || '(이름 없음)',
         age: calcAge(data.birthYear),
         gender: data.gender || '-',
@@ -567,20 +708,19 @@ async function loadUsersWithKids() {
       })
     })
 
-    // 4) users에 kids 매핑해서 최종 배열 만들기
     usersWithKids.value = usersSnap.docs.map(docSnap => {
       const u = docSnap.data()
       const uid = docSnap.id
 
       return {
-       uid,
+        uid,
         email: u.email || u.userEmail || '(이메일 없음)',
-        username: u.username || '',              // ✅ 로그인 ID
-        name: u.name || '(이름 없음)',           // ✅ 실명
-        phone: u.phone || '',                    // ✅ 전화번호
-        agreeTerms: u.agreeTerms ?? false,       // ✅ 약관 동의
-        agreeMarketing: u.agreeMarketing ?? false, // ✅ 마케팅 동의
-        createdAt: u.createdAt ? new Date(u.createdAt) : null, // ✅ 가입일 (ISO 문자열 → Date)
+        username: u.username || '',
+        name: u.name || '(이름 없음)',
+        phone: u.phone || '',
+        agreeTerms: u.agreeTerms ?? false,
+        agreeMarketing: u.agreeMarketing ?? false,
+        createdAt: u.createdAt ? new Date(u.createdAt) : null,
         kids: kidsByParent[uid] || []
       }
     })
@@ -588,63 +728,74 @@ async function loadUsersWithKids() {
     console.error('users + kidinformation 조회 실패:', e)
   }
 }
+async function loadSuggestions() { //사용자가 작성한  건의사항 로딩하는 메소
+  try {
+    // Firebase의 suggestions 컬렉션에서 데이터 가져오기
+    // 최신 순으로 정렬 (createdAt 내림차순)
+    const q = query(
+      collection(db, 'suggestions'),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
 
+    // 가져온 데이터를 emergencyFeedbacks 배열에 저장
+    emergencyFeedbacks.value = snapshot.docs.map(docSnap => {
+      const data = docSnap.data()
+      return {
+        id: docSnap.id, // 문서 ID
+        emergencyTitle: data.title || '(제목 없음)', // 건의사항 제목
+        content: data.content || '(내용 없음)', // 건의사항 내용
+        writer: data.fromEmail || '(작성자 없음)', // 작성자 이메일
+        createdAt: data.createdAt ? data.createdAt.toDate() : new Date(), // 작성일
+        status: data.status || '접수', // 상태
+        adminMemo: data.adminMemo || '', // 관리자 메모
+        targetRole: data.targetRole || '', // 대상 역할
+        fromUid: data.fromUid || '' // 작성자 UID
+      }
+    })
 
-// ----------------------
-// emergencyData (더미 데이터)
-// ----------------------
-const emergencyList = ref([
-  {
-    id: 'e1',
-    title: '고열 시 응급처치',
-    createdAt: new Date(),
-    viewCount: 120,
-    hashtags: ['열', '사람감기']
-  },
-  {
-    id: 'e2',
-    title: '화상 응급처치 기본',
-    createdAt: new Date(),
-    viewCount: 250,
-    hashtags: ['화상', '응급처치']
-  },
-  {
-    id: 'e3',
-    title: '기도 막힘 대처법',
-    createdAt: new Date(),
-    viewCount: 80,
-    hashtags: ['기도막힘', '소아응급']
+    console.log('건의사항 로딩 완료:', emergencyFeedbacks.value.length + '건')
+  } catch (e) {
+    console.error('suggestions 조회 실패:', e)
+    alert('건의사항을 불러오는 중 오류가 발생했습니다.')
   }
-])
+}
+// ----------------------
+// emergencyData
+// ----------------------
+const emergencyList = ref([])
+
+async function loadEmergencyList() {
+  try {
+    const q = query(
+      collection(db, 'emergencyData'),
+      orderBy('createdAt', 'desc')
+    )
+    const snap = await getDocs(q)
+
+    emergencyList.value = snap.docs.map(d => {
+      const data = d.data()
+      return {
+        id: d.id,
+        title: data.title || '(제목 없음)',
+        createdAt: data.createdAt ? data.createdAt.toDate() : null,
+        viewCount: data.viewCount ?? 0,
+        hashtags: data.hashtags || [],
+        thumbnailUrl: data.thumbnailUrl || '',
+        youtubeId: data.youtubeId || '',
+        youtubeUrl: data.youtubeUrl || '',
+        raw: data
+      }
+    })
+  } catch (e) {
+    console.error('emergencyData 로딩 실패:', e)
+  }
+}
 
 // ----------------------
-// 사용자 통계 (더미 데이터)
+// 건의사항
 // ----------------------
-const stats = ref({
-  totalUsers: 1234,
-  todayActive: 87,
-  totalContents: 25,
-  totalViews: 9876
-})
-
-const userGrowth = ref([
-  { label: '03-01', count: 3 },
-  { label: '03-02', count: 5 },
-  { label: '03-03', count: 2 },
-  { label: '03-04', count: 7 },
-  { label: '03-05', count: 4 },
-  { label: '03-06', count: 6 },
-  { label: '03-07', count: 5 }
-])
-
-const maxUserGrowth = computed(() =>
-  Math.max(...userGrowth.value.map(d => d.count), 1)
-)
-
-// ----------------------
-// 건의사항 (앱 / 응급처치 화면)
-// ----------------------
-const feedbackTab = ref('app') // 'app' | 'emergency'
+const feedbackTab = ref('app')
 
 const appFeedbacks = ref([
   {
@@ -681,12 +832,117 @@ const emergencyFeedbacks = ref([
 ])
 
 // ----------------------
+// 자동화 실행 + 로그 (FastAPI SSE)
+// ----------------------
+const AUTOMATION_BASE_URL =
+  import.meta.env.VITE_AUTOMATION_BASE_URL || 'http://localhost:8000'
+
+const automationStatus = ref('idle') // 'idle' | 'running' | 'done' | 'error'
+const automationJobId = ref(null)
+const automationLogs = ref([])
+let automationEventSource = null
+
+const automationStatusText = computed(() => {
+  switch (automationStatus.value) {
+    case 'running':
+      return '실행 중'
+    case 'done':
+      return '완료'
+    case 'error':
+      return '오류'
+    default:
+      return '대기 중'
+  }
+})
+
+const automationStatusBadgeClass = computed(() => {
+  switch (automationStatus.value) {
+    case 'running':
+      return 'bg-warning-subtle text-warning'
+    case 'done':
+      return 'bg-success-subtle text-success'
+    case 'error':
+      return 'bg-danger-subtle text-danger'
+    default:
+      return 'bg-secondary-subtle text-muted'
+  }
+})
+
+function clearAutomationLogs() {
+  automationLogs.value = []
+}
+
+async function startAutomation() {
+  if (automationStatus.value === 'running') return
+
+  automationLogs.value = []
+  automationStatus.value = 'running'
+  automationJobId.value = null
+
+  if (automationEventSource) {
+    automationEventSource.close()
+    automationEventSource = null
+  }
+
+  try {
+    const res = await fetch(`${AUTOMATION_BASE_URL}/run`, {
+      method: 'POST'
+    })
+    if (!res.ok) {
+      throw new Error(`실행 요청 실패 (status: ${res.status})`)
+    }
+    const data = await res.json()
+    automationJobId.value = data.jobId
+    connectAutomationLogStream()
+  } catch (e) {
+    console.error('자동화 실행 요청 실패:', e)
+    automationStatus.value = 'error'
+    automationLogs.value.push(`❌ 실행 요청 실패: ${e.message}`)
+  }
+}
+
+function connectAutomationLogStream() {
+  if (!automationJobId.value) return
+
+  if (automationEventSource) {
+    automationEventSource.close()
+  }
+
+  automationEventSource = new EventSource(
+    `${AUTOMATION_BASE_URL}/logs/${automationJobId.value}`
+  )
+
+  automationEventSource.onmessage = (event) => {
+    automationLogs.value.push(event.data + '\n')
+  }
+
+  automationEventSource.onerror = () => {
+    // 서버가 닫히면 여기로 한 번 들어온 뒤 연결 종료
+    if (automationEventSource) {
+      automationEventSource.close()
+      automationEventSource = null
+    }
+    if (automationStatus.value === 'running') {
+      // 상태를 강제로 완료로 전환 (서버 쪽에서 done 처리 후 스트림 종료했다고 가정)
+      automationStatus.value = 'done'
+    }
+  }
+}
+
+onBeforeUnmount(() => {
+  if (automationEventSource) {
+    automationEventSource.close()
+  }
+})
+
+// ----------------------
 // 공통 함수
 // ----------------------
-
-function goToEmergency() {
-  // 이미 구현해둔 응급교육 리스트 라우트로 이동
-  router.push('/emergency') // 실제 라우트명에 맞게 수정
+function goToAdminEmergency() {
+  router.push('/AdminEmergency')
+}
+function goToSuggestionDetail(suggestionId) { //상세 페이지로 가는 메소드 라우트 설정 했습니다
+  router.push(`/AdminEmergencysuggestionsdetail/${suggestionId}`)
 }
 
 function formatDate(date) {
@@ -697,16 +953,17 @@ function formatDate(date) {
     day: '2-digit'
   })
 }
+
 onMounted(() => {
   loadUsersWithKids()
-  // 다른 초기 로딩 함수들 있으면 같이 호출
+  loadEmergencyList()
+  loadSuggestions()
 })
 </script>
 
-
 <style scoped>
 .admin-layout {
-  padding-top: 72px; /* fixed-top 헤더 높이만큼 여백 */
+  padding-top: 72px;
 }
 
 .admin-main {
@@ -725,50 +982,22 @@ onMounted(() => {
   color: #fff;
 }
 
-/* 사용자 증감 그래프 (심플 CSS 막대 그래프) */
-.user-chart-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+/* 자동화 로그 박스 */
+.automation-log-box {
+  background-color: #111;
+  color: #e9ecef;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  height: 260px;
+  overflow-y: auto;
+  border: 1px solid #343a40;
 }
 
-.user-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  height: 160px;
-  padding: 0 4px;
-}
+/* 사용자 증감 그래프 스타일은 삭제함 (stats 탭 제거) */
 
-.user-chart-bar {
-  flex: 1 0 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  font-size: 11px;
-}
-
-.user-chart-bar .bar-inner {
-  width: 100%;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #0d6efd, #6ea8fe);
-  transition: height 0.2s ease-out;
-}
-
-.user-chart-bar .bar-label {
-  margin-top: 4px;
-  color: #666;
-}
-
-.user-chart-bar .bar-value {
-  margin-top: 2px;
-  color: #333;
-  font-weight: 600;
-}
-
-/* 배지 subtle 색상 (Bootstrap 5.3 없을 경우 대비) */
+/* 배지 subtle 색상 */
 .bg-success-subtle {
   background-color: #d1e7dd !important;
 }
@@ -777,5 +1006,26 @@ onMounted(() => {
 }
 .bg-secondary-subtle {
   background-color: #e2e3e5 !important;
+}
+.bg-danger-subtle {
+  background-color: #f8d7da !important;
+}
+
+/* 자녀 모달 */
+.kid-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.kid-modal {
+  max-width: 480px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 </style>

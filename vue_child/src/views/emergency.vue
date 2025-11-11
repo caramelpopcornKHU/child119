@@ -84,7 +84,7 @@ const currentUserUid = ref(null) //현제 uid 사용자 저장 변
 // ✅ 페이지 이동 함수
 // --------------------------------------------
 const goToEdit = (id) => {
-  router.push(`/emergencyEdit/${id}`)
+  router.push(`/AdminEmergencyEdit/${id}`)
 }
 
 const goToWrite = () => {
