@@ -181,12 +181,12 @@ const router = createRouter({
        {
       path: "/emergencysuggestions", //사용자 제안 폼 화면
       name: "emergencysuggestions",
-      component: () => import("../views/emergencysuggetions.vue"),
+      component: () => import("../views/emergencysuggestions.vue"),
     },
     {
       path: "/AdminHomejsb", //성범 연습장
       name: "AdminHomejsb",
-      component: () => import("../views/AdminUserjsb.vue"),
+      component: () => import("../views/AdminHomejsb.vue"),
     },
   ],
 });
