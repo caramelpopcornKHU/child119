@@ -6,22 +6,15 @@
         <!-- 좌측: 로고 + 홈 버튼 -->
         <div class="d-flex align-items-center">
           <button @click="goToHome" class="btn btn-link p-0 border-0">
-            <img
-              src="@/assets/kid_logo.png"
-              alt="logo"
-              class="me-2"
-              style="width:50px;height:50px;vertical-align:middle;"
-            />
+            <img src="@/assets/kid_logo.png" alt="logo" class="me-2"
+              style="width:50px;height:50px;vertical-align:middle;" />
           </button>
           <span class="fw-bold fs-5 text-dark">아이119 관리자</span>
         </div>
 
         <!-- 우측: 로그인/로그아웃 버튼 -->
-        <button
-          @click="logAction"
-          class="btn text-bold"
-          :class="{ 'btn-light' : status === '로그아웃', 'btn-primary' : status === '로그인'}"
-        >
+        <button @click="logAction" class="btn text-bold"
+          :class="{ 'btn-light': status === '로그아웃', 'btn-primary': status === '로그인' }">
           <span>{{ status }}</span>
         </button>
       </div>
@@ -42,29 +35,17 @@
       <!-- 상단 탭 -->
       <ul class="nav nav-pills nav-fill admin-tabs mb-4">
         <li class="nav-item">
-          <button
-            class="nav-link"
-            :class="{ active: activeTab === 'manage' }"
-            @click="activeTab = 'manage'"
-          >
+          <button class="nav-link" :class="{ active: activeTab === 'manage' }" @click="activeTab = 'manage'">
             관리
           </button>
         </li>
         <li class="nav-item">
-          <button
-            class="nav-link"
-            :class="{ active: activeTab === 'stats' }"
-            @click="activeTab = 'stats'"
-          >
+          <button class="nav-link" :class="{ active: activeTab === 'stats' }" @click="activeTab = 'stats'">
             사용자 통계
           </button>
         </li>
         <li class="nav-item">
-          <button
-            class="nav-link"
-            :class="{ active: activeTab === 'feedback' }"
-            @click="activeTab = 'feedback'"
-          >
+          <button class="nav-link" :class="{ active: activeTab === 'feedback' }" @click="activeTab = 'feedback'">
             건의사항
           </button>
         </li>
@@ -84,23 +65,13 @@
 
             <div class="d-flex flex-wrap align-items-center gap-3">
               <div class="d-flex flex-wrap gap-2">
-                <button
-                  v-for="m in crawlingOptions"
-                  :key="m"
-                  type="button"
-                  class="btn btn-sm rounded-pill"
-                  :class="crawlingInterval === m ? 'btn-primary' : 'btn-outline-primary'"
-                  @click="crawlingInterval = m"
-                >
+                <button v-for="m in crawlingOptions" :key="m" type="button" class="btn btn-sm rounded-pill"
+                  :class="crawlingInterval === m ? 'btn-primary' : 'btn-outline-primary'" @click="crawlingInterval = m">
                   {{ m }}분
                 </button>
               </div>
               <div class="ms-auto">
-                <button
-                  type="button"
-                  class="btn btn-success btn-sm rounded-pill"
-                  @click="saveCrawlingInterval"
-                >
+                <button type="button" class="btn btn-success btn-sm rounded-pill" @click="saveCrawlingInterval">
                   저장
                 </button>
               </div>
@@ -153,11 +124,8 @@
                     </div>
                   </td>
                   <td>
-                    <button
-                      type="button"
-                      class="btn btn-outline-primary btn-sm rounded-pill"
-                      @click="goToUserEdit(u.uid)"
-                    >
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill"
+                      @click="goToUserEdit(u.uid)">
                       수정
                     </button>
                   </td>
@@ -178,11 +146,7 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h5 class="fw-semibold mb-0">응급 교육 콘텐츠 (emergencyData)</h5>
-              <button
-                type="button"
-                class="btn btn-outline-primary btn-sm rounded-pill"
-                @click="goToEmergencyList"
-              >
+              <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" @click="goToEmergencyList">
                 콘텐츠 관리 화면으로 이동
               </button>
             </div>
@@ -208,11 +172,8 @@
                     <td>{{ c.viewCount.toLocaleString() }}</td>
                     <td>
                       <div class="small text-muted">
-                        <span
-                          v-for="(tag, tIdx) in c.hashtags"
-                          :key="tIdx"
-                          class="badge bg-light text-secondary border me-1"
-                        >
+                        <span v-for="(tag, tIdx) in c.hashtags" :key="tIdx"
+                          class="badge bg-light text-secondary border me-1">
                           #{{ tag }}
                         </span>
                         <span v-if="!c.hashtags || c.hashtags.length === 0" class="text-muted">
@@ -271,15 +232,8 @@
 
             <div class="user-chart-wrapper">
               <div class="user-chart">
-                <div
-                  v-for="(d, idx) in userGrowth"
-                  :key="idx"
-                  class="user-chart-bar"
-                >
-                  <div
-                    class="bar-inner"
-                    :style="{ height: (d.count / maxUserGrowth * 100) + '%' }"
-                  ></div>
+                <div v-for="(d, idx) in userGrowth" :key="idx" class="user-chart-bar">
+                  <div class="bar-inner" :style="{ height: (d.count / maxUserGrowth * 100) + '%' }"></div>
                   <span class="bar-label">{{ d.label }}</span>
                   <span class="bar-value">{{ d.count }}</span>
                 </div>
@@ -303,20 +257,13 @@
             </div>
 
             <div class="btn-group mb-3">
-              <button
-                type="button"
-                class="btn btn-sm"
-                :class="feedbackTab === 'app' ? 'btn-primary' : 'btn-outline-primary'"
-                @click="feedbackTab = 'app'"
-              >
+              <button type="button" class="btn btn-sm"
+                :class="feedbackTab === 'app' ? 'btn-primary' : 'btn-outline-primary'" @click="feedbackTab = 'app'">
                 앱 건의사항
               </button>
-              <button
-                type="button"
-                class="btn btn-sm"
+              <button type="button" class="btn btn-sm"
                 :class="feedbackTab === 'emergency' ? 'btn-primary' : 'btn-outline-primary'"
-                @click="feedbackTab = 'emergency'"
-              >
+                @click="feedbackTab = 'emergency'">
                 응급처치 화면 건의사항
               </button>
             </div>
@@ -339,6 +286,7 @@
                     <tr>
                       <th style="width: 8%;">No</th>
                       <th>제목</th>
+                      <th>내용</th>
                       <th style="width: 18%;">작성자</th>
                       <th style="width: 18%;">작성일</th>
                       <th style="width: 12%;">상태</th>
@@ -353,10 +301,8 @@
                       <td>{{ f.writer }}</td>
                       <td>{{ formatDate(f.createdAt) }}</td>
                       <td>
-                        <span
-                          class="badge rounded-pill px-3"
-                          :class="f.status === '처리완료' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'"
-                        >
+                        <span class="badge rounded-pill px-3"
+                          :class="f.status === '처리완료' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'">
                           {{ f.status }}
                         </span>
                       </td>
@@ -383,13 +329,13 @@
                   <thead class="table-light">
                     <tr>
                       <th style="width: 8%;">No</th>
-                      <th>관련 콘텐츠</th>
+                      <th>관련 콘텐츠</th> <!--보여지는 상태 컬럼 추가하기 -->
                       <th>내용</th>
                       <th style="width: 18%;">작성자</th>
                       <th style="width: 18%;">작성일</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody> <!--상태 컬럼추가함-->
                     <tr v-for="(f, idx) in emergencyFeedbacks" :key="f.id">
                       <td>{{ idx + 1 }}</td>
                       <td class="text-truncate" style="max-width: 200px;">
@@ -400,6 +346,12 @@
                       </td>
                       <td>{{ f.writer }}</td>
                       <td>{{ formatDate(f.createdAt) }}</td>
+                      <td>
+                        <span class="badge rounded-pill px-3"
+                          :class="f.status === '처리완료' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'">
+                          {{ f.status }}
+                        </span>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -424,7 +376,7 @@ import { auth } from '@/firebase'
 
 // ✅ Firestore
 import { db } from '@/firebase'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 
 const router = useRouter()
 
@@ -551,7 +503,42 @@ async function loadUsersWithKids() {
     console.error('users + kidinformation 조회 실패:', e)
   }
 }
+// query(collection(db, 'suggestions'), orderBy('createdAt', 'desc')): Firebase의 suggestions 컬렉션에서 데이터를 최신순으로 가져옵니다
+// snapshot.docs.map(): 각 문서를 JavaScript 객체로 변환합니다
+// data.createdAt.toDate(): Firebase Timestamp를 JavaScript Date 객체로 변환합니다
+// emergencyFeedbacks.value에 저장하면 자동으로 화면에 반영됩니다
+async function loadSuggestions() { //사용자가 작성한  건의사항 로딩하는 메소
+  try {
+    // Firebase의 suggestions 컬렉션에서 데이터 가져오기
+    // 최신 순으로 정렬 (createdAt 내림차순)
+    const q = query(
+      collection(db, 'suggestions'),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
 
+    // 가져온 데이터를 emergencyFeedbacks 배열에 저장
+    emergencyFeedbacks.value = snapshot.docs.map(docSnap => {
+      const data = docSnap.data()
+      return {
+        id: docSnap.id, // 문서 ID
+        emergencyTitle: data.title || '(제목 없음)', // 건의사항 제목
+        content: data.content || '(내용 없음)', // 건의사항 내용
+        writer: data.fromEmail || '(작성자 없음)', // 작성자 이메일
+        createdAt: data.createdAt ? data.createdAt.toDate() : new Date(), // 작성일
+        status: data.status || '접수', // 상태
+        adminMemo: data.adminMemo || '', // 관리자 메모
+        targetRole: data.targetRole || '', // 대상 역할
+        fromUid: data.fromUid || '' // 작성자 UID
+      }
+    })
+
+    console.log('건의사항 로딩 완료:', emergencyFeedbacks.value.length + '건')
+  } catch (e) {
+    console.error('suggestions 조회 실패:', e)
+    alert('건의사항을 불러오는 중 오류가 발생했습니다.')
+  }
+}
 
 // ----------------------
 // emergencyData (더미 데이터)
@@ -625,23 +612,9 @@ const appFeedbacks = ref([
     status: '처리완료'
   }
 ])
+// 응급처치 화면 건의사항: Firebase에서 실시간으로 가져옵니다
+const emergencyFeedbacks = ref([])
 
-const emergencyFeedbacks = ref([
-  {
-    id: 'ef1',
-    emergencyTitle: '고열 시 응급처치',
-    content: '해열제 종류에 대한 설명도 추가되면 좋겠습니다.',
-    writer: 'parent03@example.com',
-    createdAt: new Date()
-  },
-  {
-    id: 'ef2',
-    emergencyTitle: '기도 막힘 대처법',
-    content: '동영상 속도가 빨라서, 좀 더 천천히 설명된 버전이 있으면 좋겠어요.',
-    writer: 'parent04@example.com',
-    createdAt: new Date()
-  }
-])
 
 // ----------------------
 // 공통 함수
@@ -668,13 +641,15 @@ function formatDate(date) {
 onMounted(() => {
   loadUsersWithKids()
   // 다른 초기 로딩 함수들 있으면 같이 호출
+  loadSuggestions() //건의사항 불러오기
 })
 </script>
 
 
 <style scoped>
 .admin-layout {
-  padding-top: 72px; /* fixed-top 헤더 높이만큼 여백 */
+  padding-top: 72px;
+  /* fixed-top 헤더 높이만큼 여백 */
 }
 
 .admin-main {
@@ -688,6 +663,7 @@ onMounted(() => {
   font-weight: 600;
   color: #555;
 }
+
 .admin-tabs .nav-link.active {
   background-color: #0d6efd;
   color: #fff;
@@ -740,9 +716,11 @@ onMounted(() => {
 .bg-success-subtle {
   background-color: #d1e7dd !important;
 }
+
 .bg-warning-subtle {
   background-color: #fff3cd !important;
 }
+
 .bg-secondary-subtle {
   background-color: #e2e3e5 !important;
 }

@@ -188,6 +188,11 @@ const router = createRouter({
       name: "AdminHomejsb",
       component: () => import("../views/AdminHomejsb.vue"),
     },
+      {
+      path: "/emergencysuggestionsdetail", //응급제안사항 상세화면 페이지
+      name: "emergencysuggestionsdetail",
+      component: () => import("../views/emergencysuggestionsdetail.vue"),
+    },
   ],
 });
 

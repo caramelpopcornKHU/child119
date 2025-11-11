@@ -3,11 +3,7 @@
     <!-- 상단 탭 -->
     <div class="d-flex justify-content-center mb-3" v-if="isAdmin">
       <div></div>
-      <button
-        type="button"
-        class="btn btn-success rounded-pill px-3 fw-semibold"
-        @click="goToWrite"
-      >
+      <button type="button" class="btn btn-success rounded-pill px-3 fw-semibold" @click="goToWrite">
         + 게시물 추가
       </button>
     </div>
@@ -15,21 +11,13 @@
     <!-- 검색 영역 -->
     <div class="mb-3">
       <div class="input-group edu-search rounded-3 px-2">
-        <input
-          type="text"
-          class="form-control border-0 shadow-none p-2"
-          placeholder="검색어를 입력하세요."
-          v-model="keyword"
-        />
+        <input type="text" class="form-control border-0 shadow-none p-2" placeholder="검색어를 입력하세요." v-model="keyword" />
         <span class="input-group-text bg-transparent border-0 p-0">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
-            <path
-              fill="#00b894"
-              d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5
+            <path fill="#00b894" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5
                  6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L19 20.49
                  20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5
-                 11.99 14 9.5 14"
-            />
+                 11.99 14 9.5 14" />
           </svg>
         </span>
       </div>
@@ -41,16 +29,9 @@
     </p>
 
     <!-- 목록 -->
-    <div
-      v-for="item in filteredItems"
-      :key="item.id"
-      class="edu-item border-top d-flex justify-content-between align-items-center"
-    >
-      <div
-        class="py-3 flex-grow-1"
-        @click="goToDetail(item.id)"
-        style="cursor: pointer;"
-      >
+    <div v-for="item in filteredItems" :key="item.id"
+      class="edu-item border-top d-flex justify-content-between align-items-center">
+      <div class="py-3 flex-grow-1" @click="goToDetail(item.id)" style="cursor: pointer;">
         <div class="fw-semibold edu-title text-primary">
           {{ item.title }}
         </div>
@@ -63,32 +44,32 @@
 
       <!-- ✅ 수정/삭제 버튼 -->
       <div class="ms-3 d-flex gap-2" v-if="isAdmin">
-        <button
-          type="button"
-          class="btn btn-outline-secondary btn-sm rounded-pill"
-          @click.stop="goToEdit(item.id)"
-        >
+        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" @click.stop="goToEdit(item.id)">
           수정
         </button>
-        <button
-          type="button"
-          class="btn btn-outline-danger btn-sm rounded-pill"
-          @click.stop="handleDelete(item.id)"
-        >
+        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" @click.stop="handleDelete(item.id)">
           삭제
         </button>
       </div>
     </div>
-     <!-- 채팅 버튼 (오른쪽 아래 고정) -->
-    
+    <!-- 건의사항 버튼 (오른쪽 아래 고정) -->
+    <button class="btn btn-primary rounded-circle position-fixed shadow"
+      style="bottom: 80px; right: 20px; width: 56px; height: 56px; z-index: 100;" @click="goToSuggestions">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <path fill="white"
+          d="M12 8H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h1v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4h3l5 4V4zm3 7.6L13 14H4v-4h9l2-1.6zm6.5-3.6c0 1.71-.96 3.26-2.5 4V8c1.53.75 2.5 2.3 2.5 4" />
+      </svg>
+    </button>
+
+
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { db,auth } from '@/firebase'
-import { collection, getDocs, orderBy, query, deleteDoc, doc,getDoc } from 'firebase/firestore'
+import { db, auth } from '@/firebase'
+import { collection, getDocs, orderBy, query, deleteDoc, doc, getDoc } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'// ←
 // --------------------------------------------
 // ✅ 기본 설정
@@ -112,6 +93,9 @@ const goToWrite = () => {
 
 const goToDetail = (id) => {
   router.push({ name: 'emergencyorder', params: { id } })
+}
+const goToSuggestions = () =>{
+  router.push('/emergencysuggestions') // 누르면 ㅣ동하는 메소드 건의사항 페이지로 이동합니다
 }
 
 // --------------------------------------------
@@ -146,15 +130,15 @@ async function checkAdminStatus() { // 사용자 귄함 확인 매소
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUserUid.value = user.uid
-      
+
       // Firestore users 컬렉션에서 사용자 정보 가져오기
       const userDocRef = doc(db, 'users', user.uid)
       const userDoc = await getDoc(userDocRef)
-      
+
       if (userDoc.exists()) {
         const userData = userDoc.data()
         const username = userData.username || ''
-        
+
         // username에 'admin'이 포함되어 있는지 확인
         isAdmin.value = username.toLowerCase().includes('admin')
       }
