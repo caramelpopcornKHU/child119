@@ -119,16 +119,6 @@ const router = createRouter({
       component: () => import("../views/HomeViewApp.vue"),
     },
     {
-      path: "/HomeView_SH",
-      name: "HomeView_SH",
-      component: () => import("../views/HomeView_SH.vue"),
-    },
-    {
-      path: "/HomeView_nono",
-      name: "HomeView_nono",
-      component: () => import("../views/HomeView_nono.vue"),
-    },
-    {
       path: "/navi",
       name: "navi",
       component: () => import("../views/navi.vue"),
@@ -143,7 +133,7 @@ const router = createRouter({
       name: "hospitalInformationApp",
       component: () => import("../views/hospitalInformationApp.vue"),
     },
-     {
+    {
       path: "/emergencyjsb",
       name: "emergencyjsb",
       component: () => import("../views/emergencyjsb.vue"),
@@ -168,7 +158,7 @@ const router = createRouter({
       name: "HomeViewjsb",
       component: () => import("../views/HomeViewjsb.vue"),
     },
-     {
+    {
       path: "/AdminHome",
       name: "AdminHome",
       component: () => import("../views/AdminHome.vue"),
@@ -178,7 +168,7 @@ const router = createRouter({
       name: "AdminUserEdit",
       component: () => import("../views/AdminUserEdit.vue"),
     },
-       {
+    {
       path: "/emergencysuggestions", //사용자 제안 폼 화면
       name: "emergencysuggestions",
       component: () => import("../views/emergencysuggestions.vue"),
@@ -188,10 +178,15 @@ const router = createRouter({
       name: "AdminHomejsb",
       component: () => import("../views/AdminHomejsb.vue"),
     },
-      {
+    {
       path: "/emergencysuggestionsdetail", //응급제안사항 상세화면 페이지
       name: "emergencysuggestionsdetail",
       component: () => import("../views/emergencysuggestionsdetail.vue"),
+    },
+    {
+      path: "/hospitalInformationDetail", //병의원 디테일뷰
+      name: "hospitalInformationDetail",
+      component: () => import("../views/hospitalInformationDetail.vue"),
     },
   ],
 });
