@@ -139,14 +139,14 @@ const router = createRouter({
       component: () => import("../views/emergencyjsb.vue"),
     },
      {
-      path: "/emergencyWrite",
-      name: "emergencyWrite",
-      component: () => import("../views/emergencyWrite.vue"),
+      path: "/AdminEmergencyWrite",
+      name: "AdminEmergencyWrite",
+      component: () => import("../views/AdminEmergencyWrite.vue"),
     },
     {
-      path: "/emergencyEdit/:id",
-      name: "emergencyEdit",
-      component: () => import("../views/emergencyEdit.vue"),
+      path: "/AdminEmergencyEdit/:id",
+      name: "AdminEmergencyEdit",
+      component: () => import("../views/AdminEmergencyEdit.vue"),
     },
     {
       path: "/emergencyadd",
@@ -179,14 +179,19 @@ const router = createRouter({
       component: () => import("../views/AdminHomejsb.vue"),
     },
     {
-      path: "/emergencysuggestionsdetail", //응급제안사항 상세화면 페이지
-      name: "emergencysuggestionsdetail",
-      component: () => import("../views/emergencysuggestionsdetail.vue"),
+      path: "/AdminEmergencysuggestionsdetail/:id", //응급제안사항 상세화면 페이지
+      name: "AdminEmergencysuggestionsdetail",
+      component: () => import("../views/AdminEmergencysuggestionsdetail.vue"),
     },
     {
       path: "/hospitalInformationDetail", //병의원 디테일뷰
       name: "hospitalInformationDetail",
       component: () => import("../views/hospitalInformationDetail.vue"),
+    },
+    {
+      path: "/AdminEmergency", 
+      name: "AdminEmergency",
+      component: () => import("../views/AdminEmergency.vue"),
     },
   ],
 });

@@ -94,7 +94,8 @@
 
 
         <!-- 응급실 목록 -->
-        <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id">
+        <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id"
+          :ref="el => hospitalRefs[h.id] = el" :class="{ 'card-selected-highlight': h.id === selectedMarkerId }">
           <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
@@ -219,7 +220,7 @@
 
 <script setup>
 // import
-import { ref, computed, onMounted, onBeforeUnmount, onActivated } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, onActivated, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 
 import {
@@ -252,6 +253,31 @@ const useSymptomsMode = ref(false)
 
 // 마커 관련
 let debounceTimer = null
+const selectedMarkerId = ref(null)
+const hospitalRefs = ref({})
+
+// marker click시 실행 함수
+const onMarkerClick = (id) => {
+  selectedMarkerId.value = id;
+  sheetHeightRatio.value = 1;
+  scrollCard(id)
+}
+
+// 스크롤 함수
+const scrollCard = (id) => {
+  nextTick(() => {
+    const el = hospitalRefs.value[id]
+    if (el) {
+      const scrollcontainer = el.closet('.overflow-auto.px-3')
+      if (scrollcontainer) {
+        scrollcontainer.scrollTo({
+          top: el.offsetTop - scrollcontainer.offsetTop - 10,
+          behavior: 'smooth'
+        })
+      }
+    }
+  })
+}
 
 /* 바텀시트 상태 start */
 const bottomSheet = ref(null)
@@ -394,7 +420,7 @@ const loadWFSMarkers = async () => {
 
     // 5. 정제된 데이터(processedHospitals)로 마커 변경
     processedHospitals.forEach((hospital) => {
-      addMarkerEmergency(hospital.lon, hospital.lat, {
+      addMarkerEmergency(hospital.lon, hospital.lat, () => onMarkerClick(hospital.id), {
         id: hospital.id,
         name: hospital.name,
         message: hospital.message,
@@ -470,66 +496,66 @@ const initMapAndCoords = async () => {
       autoFetch: false
     })
 
-    
-    
+
+
     if (!vmap) throw new Error('vmap 초기화 실패')
-    
+
     // 4. 리스너 함수 정의 
     moveEndListener = () => {
       console.log(`지도 이동/줌 감지`)
       if (debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {
-    loadWFSMarkers()
-  }, 300)
-}
-
-vmap.on('moveend', moveEndListener)
-
-// 5. 초기 마커 로드
-setTimeout(() => loadWFSMarkers(), 500)
-
-// 6-1. 현재 위치에서 가장 가까운 응급실 가져오기
-const emergencyRes = await getEmergencyFromWFSSortByDistance(location.lon, location.lat)
-const top3Emergency = emergencyRes.slice(0, 3)
-
-const routeResArray = []
-
-for(const [index, feature] of top3Emergency.entries()) {
-  const [endX, endY] = feature.geometry.coordinates
-
-  try {
-    // 6.2 경로 데이터 불러오기
-    const routeData = await getTmapRoute(location.lon, location.lat, endX, endY)
-    routeResArray.push(routeData)
-  } catch (err) {
-    console.error(`${index + 1}번째 경로 요청 오류`)
-    routeResArray.push(null)
-  }
-
-
-  // api 요청 차레로 보내기
-  if(index < top3Emergency.length -1 ) {
-    await delay(800)
-  }
-
-}
-
-// 6-3. 경로 그리기
-if(routeResArray.length > 0 && vmap) {
-  console.log(`경로 그리기 함수 실행`)
-  routeResArray.forEach((routeData, index) => {
-    if(routeData) {
-      drawRoute(vmap, routeData, index + 1)
-    } else {
-      console.log(`${index + 1 }번째 병원 경로 데이터가 없어 건너 뜁니다.`)
+        loadWFSMarkers()
+      }, 300)
     }
-  })
-}
 
-} catch (error) {
-  console.error('초기화 실패:', error)
-  alert('지도를 초기화할 수 없습니다.')
-}
+    vmap.on('moveend', moveEndListener)
+
+    // 5. 초기 마커 로드
+    setTimeout(() => loadWFSMarkers(), 500)
+
+    // 6-1. 현재 위치에서 가장 가까운 응급실 가져오기
+    const emergencyRes = await getEmergencyFromWFSSortByDistance(location.lon, location.lat)
+    const top3Emergency = emergencyRes.slice(0, 3)
+
+    const routeResArray = []
+
+    for (const [index, feature] of top3Emergency.entries()) {
+      const [endX, endY] = feature.geometry.coordinates
+
+      try {
+        // 6.2 경로 데이터 불러오기
+        const routeData = await getTmapRoute(location.lon, location.lat, endX, endY)
+        routeResArray.push(routeData)
+      } catch (err) {
+        console.error(`${index + 1}번째 경로 요청 오류`)
+        routeResArray.push(null)
+      }
+
+
+      // api 요청 차레로 보내기
+      if (index < top3Emergency.length - 1) {
+        await delay(800)
+      }
+
+    }
+
+    // 6-3. 경로 그리기
+    if (routeResArray.length > 0 && vmap) {
+      console.log(`경로 그리기 함수 실행`)
+      routeResArray.forEach((routeData, index) => {
+        if (routeData) {
+          drawRoute(vmap, routeData, index + 1)
+        } else {
+          console.log(`${index + 1}번째 병원 경로 데이터가 없어 건너 뜁니다.`)
+        }
+      })
+    }
+
+  } catch (error) {
+    console.error('초기화 실패:', error)
+    alert('지도를 초기화할 수 없습니다.')
+  }
 }
 
 
@@ -658,5 +684,14 @@ function bedBadgeClass(h) {
 /* 그립: 제스처는 우리가 처리 (스크롤로 해석되지 않도록) */
 .sheet-grip {
   touch-action: none;
+}
+
+/*선택된 카드 하이라이트*/
+.card-selected-highlight {
+  background-color: #e2ebff; /* 약간 밝은 파란색 계열 */
+  border-color: #0d6efd !important;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, .3);
+  /* 선택되었을 때 기본 카드와 구별되도록 약간의 스케일업 */
+  transform: scale(1.01);
 }
 </style>

@@ -1,18 +1,34 @@
 import axios from "axios";
 import { requestConfig } from "../../app.config";
 
+// tmap API
+export const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8";
+
+// child119 url
 export const api = axios.create({
   baseURL: requestConfig.baseUrl + "/api/post",
   timeout: 15000,
   headers: { "Content-Type": "application/json" },
 });
 
+// docker url
 export const api_ai = axios.create({
   baseURL: requestConfig.baseUrlDocker,
   timeout: 15000,
   headers: { "Content-Type": "multipart/form-data" },
 });
 
+// egen API url
+export const egenApi = axios.create({
+  baseURL: "https://mediboard.nemc.or.kr/api/v1/search",
+  timeout: 15000,
+});
+
+// geoserver WFS API url
+export const WFSApi = axios.create({
+  baseURL: "https://api.child119.com/geoserver/hospital/wfs",
+  timeout: 15000,
+});
 
 // 공공데이터 응급실 기본정보 API
 export const publicApi = axios.create({
@@ -20,7 +36,7 @@ export const publicApi = axios.create({
   timeout: 15000,
 });
 
-// HPID 기반 응급실 정보 조회
+// HPID 기반 공공데이터 정보 조회
 export async function getEmergencyHospitalByHPID(HPID, pageNo = 1, numOfRows = 10) {
   try {
     const res = await publicApi.get("/getEgytBassInfoInqire", {
@@ -57,12 +73,7 @@ export async function getEmergencyHospitalByHPID(HPID, pageNo = 1, numOfRows = 1
   }
 }
 
-// egen API
-export const egenApi = axios.create({
-  baseURL: "https://mediboard.nemc.or.kr/api/v1/search",
-  timeout: 15000,
-});
-
+// 반경으로 e-gen 정보 조회
 export async function searchEgenHospitalByRadius(lat, lon, radius = 1) {
   try {
     const res = await egenApi.get("/handy", {
@@ -80,12 +91,7 @@ export async function searchEgenHospitalByRadius(lat, lon, radius = 1) {
   }
 }
 
-// geoserver WFS API
-export const WFSApi = axios.create({
-  baseURL: "https://api.child119.com/geoserver/hospital/wfs",
-  timeout: 15000,
-});
-
+// bbox로 geoserver:emergency 정보 조회
 export async function getEmergencyFromWFSByBBox(minX, minY, maxX, maxY, options) {
   try {
     // GeoServer WFS 1.1.0 + EPSG:4326 축 순서 혼동 방지용 srsName 명시
@@ -110,6 +116,7 @@ export async function getEmergencyFromWFSByBBox(minX, minY, maxX, maxY, options)
   }
 }
 
+// bbox로 geoserver:Hospital 정보 조회
 export async function getHospitalFromWFSByBBox(minX, minY, maxX, maxY, options) {
   try {
     // GeoServer WFS 1.1.0 + EPSG:4326 축 순서 혼동 방지용 srsName 명시
@@ -134,7 +141,7 @@ export async function getHospitalFromWFSByBBox(minX, minY, maxX, maxY, options) 
   }
 }
 
-
+// hpid로 geoserver:emergency 정보 조회
 export async function getEmergencyFormWFSByFilter(hpid) {
   try {
     const res = await WFSApi.get("", {
@@ -154,7 +161,7 @@ export async function getEmergencyFormWFSByFilter(hpid) {
 
 }
 
-// 현재위치에서 가까운 거리 순으로 응급실 목록 구하기
+// 현재위치에서 가까운 거리 순으로 geoserver:emergency 목록 구하기
 export async function getEmergencyFromWFSSortByDistance(startX, startY) {
   
   const viewparams = `lon:${startX};lat:${startY}`;
@@ -177,9 +184,6 @@ export async function getEmergencyFromWFSSortByDistance(startX, startY) {
     console.error(`getEmergencyFromWFSSortByDistance Error -> ${err}`)
   }
 }
-
-// tmap API
-export const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8";
 
 // Tmap v2 스크립트 로드 (2단계 로딩)
 export function loadTmapScript() {
@@ -240,24 +244,7 @@ export function loadTmapScript() {
   })
 }
 
-// 거리 계산 함수 (Haversine formula)
-export function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371e3 // 지구 반경 (미터)
-  const φ1 = lat1 * Math.PI / 180
-  const φ2 = lat2 * Math.PI / 180
-  const Δφ = (lat2 - lat1) * Math.PI / 180
-  const Δλ = (lon2 - lon1) * Math.PI / 180
-
-  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-
-  return R * c // 미터 단위
-}
-
-
-// 자동차 경로 탐색
+// tmap 자동차 경로 탐색
 export async function findCarRoute(startLat, startLon, endLat, endLon, searchOption = '2', trafficInfo = 'N') {
   const headers = {
     "appKey": TMAP_APP_KEY,
@@ -284,7 +271,7 @@ export async function findCarRoute(startLat, startLon, endLat, endLon, searchOpt
   return response.data.features
 }
 
-// 도보 경로 탐색
+// tmap 도보 경로 탐색
 export async function findWalkRoute(startLat, startLon, endLat, endLon, endName = "도착지") {
   const headers = {
     "appKey": TMAP_APP_KEY,
@@ -311,10 +298,7 @@ export async function findWalkRoute(startLat, startLon, endLat, endLon, endName 
   return response.data.features
 }
 
-
-
-
-/** ✅ Tmap 길찾기 API (출발지~도착지 경로 계산) */
+// tmap 경로 point 검색
 export async function getTmapRoute(startX, startY, endX, endY) {
   try {
     const url = `https://apis.openapi.sk.com/tmap/routes?version=1&format=json&callback=result&appKey=${TMAP_APP_KEY}`
@@ -344,5 +328,21 @@ export async function getTmapRoute(startX, startY, endX, endY) {
     console.error("🚨 Tmap 경로 조회 실패:", e);
     throw e;
   }
+}
+
+// 거리 계산 함수 (Haversine formula)
+export function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3 // 지구 반경 (미터)
+  const φ1 = lat1 * Math.PI / 180
+  const φ2 = lat2 * Math.PI / 180
+  const Δφ = (lat2 - lat1) * Math.PI / 180
+  const Δλ = (lon2 - lon1) * Math.PI / 180
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+  return R * c // 미터 단위
 }
 

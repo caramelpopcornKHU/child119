@@ -1,0 +1,11 @@
+# requirements.txt
+
+# --- update_message.py (배치 스크립트) 의존성 ---
+requests==2.32.3
+psycopg2-binary==2.9.11
+pymongo==4.15.3
+google-generativeai==0.8.5
+
+# --- main.py (FastAPI 서버) 의존성 ---
+fastapi
+uvicorn[standard]

@@ -335,8 +335,9 @@
                       <th style="width: 18%;">작성일</th>
                     </tr>
                   </thead>
-                  <tbody> <!--상태 컬럼추가함-->
-                    <tr v-for="(f, idx) in emergencyFeedbacks" :key="f.id">
+                  <tbody> <!-- 추가한 코드 행응 선택하면 건의 사항의 아이디에 따라서 페이지가 이동하고 그걸 파이어베이스에 전달하여 호춣-->
+                    <tr v-for="(f, idx) in emergencyFeedbacks" :key="f.id" @click="goToSuggestionDetail(f.id)"
+                      style="cursor: pointer;">
                       <td>{{ idx + 1 }}</td>
                       <td class="text-truncate" style="max-width: 200px;">
                         {{ f.emergencyTitle }}
@@ -622,8 +623,9 @@ const emergencyFeedbacks = ref([])
 function goToHome() {
   router.push('/') // 필요에 따라 관리자 홈 라우트로 수정
 }
-
-
+function goToSuggestionDetail(suggestionId) { //상세 페이지로 가는 메소드 라우트 설정 했습니다
+  router.push(`/emergencysuggestionsdetail/${suggestionId}`)
+}
 
 function goToEmergencyList() {
   // 이미 구현해둔 응급교육 리스트 라우트로 이동

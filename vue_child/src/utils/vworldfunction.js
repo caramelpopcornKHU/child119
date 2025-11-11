@@ -1,8 +1,8 @@
 let vmap = null;
 let vectorLayer = null;
 let vectorSource = null;
-let currentLayer = null;
 
+// 지도 초기화
 export function initVworldMap({
   containerId = "vmap",
   defaultCenter,
@@ -64,15 +64,12 @@ export function initVworldMap({
   }
 }
 
-export function getVMap() {
-  return vmap;
-}
-
+// 기존 marker 삭제
 export function clearMarkers() {
   if (vectorSource) vectorSource.clear();
 }
 
-// marker 생성 함수
+// Homeview marker 생성
 export function addMarkerEmergency(lon, lat, props = {}) {
   if (!vectorSource) {
     console.warn("vectorSource가 초기화되지 않았습니다.");
@@ -255,28 +252,7 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
     `);
 };
 
-export function setCurrentLocationMarker(lon, lat, options = {}) {
-  if (!currentLayer) return
-  const src = currentLayer.getSource()
-  src.clear() // 기존 위치 지우고 새로 추가
-
-  const feature = new ol.Feature({
-    geometry: new ol.geom.Point(window.ol.proj.fromLonLat([lon, lat])),
-  })
-
-  feature.setStyle(
-    new ol.style.Style({
-      image: new ol.style.Icon({
-        src: options.iconUrl || '/icons/currentLocation.svg',
-        scale: options.scale || 1,
-        anchor: options.anchor || [0.5, 0.5],
-      }),
-    })
-  )
-
-  src.addFeature(feature)
-}
-
+// HospitalInformation marker 생성 
 export function addMarkerHospital(lon, lat, props = {}) {
   if (!vectorSource) {
     console.warn("vectorSource가 초기화되지 않았습니다.");
@@ -306,85 +282,7 @@ export function addMarkerHospital(lon, lat, props = {}) {
   }
 }
 
-export function initVworldMapUser({ containerId, defaultCenter, defaultZoom }) {
-  if (!window.vw || !window.vw.ol3) {
-    console.error("VWORLD 라이브러리가 로드되지 않았습니다.")
-    return null
-  }
-
-  // 1. 지도 생성
-  const vmap = new window.vw.ol3.Map(containerId, {
-    basemapType: vw.ol3.BasemapType.GRAPHIC,
-    controlDensity: vw.ol3.DensityType.BASIC,
-    interactionDensity: vw.ol3.DensityType.BASIC,
-    controlsAutoArrange: true,
-    homePosition: vw.ol3.CameraPosition,
-    initPosition: vw.ol3.CameraPosition,
-  })
-
-  // 2. 일반 마커용 벡터 레이어
-  const mainSource = new ol.source.Vector({})
-  const mainLayer = new ol.layer.Vector({ source: mainSource })
-  vmap.getMap().addLayer(mainLayer)
-
-  // 3. ✅ 현재 위치 전용 레이어 (내 전용)
-  const currentSource = new ol.source.Vector({})
-  const currentLayer = new ol.layer.Vector({ source: currentSource })
-  vmap.getMap().addLayer(currentLayer)
-
-  // 4. 초기 위치 설정
-  const view = vmap.getView()
-  view.setCenter(defaultCenter)
-  view.setZoom(defaultZoom)
-
-  // 5. 유틸 함수와 함께 반환 (객체 형태)
-  return {
-    vmap,
-    mainLayer,
-    mainSource,
-    currentLayer,
-    currentSource,
-
-    clearMainMarkers() {
-      mainSource.clear()
-    },
-
-    setCurrentMarker(lon, lat, options = {}) {
-      currentSource.clear()
-      const feature = new ol.Feature({
-        geometry: new ol.geom.Point(window.ol.proj.fromLonLat([lon, lat])),
-      })
-      feature.setStyle(
-        new ol.style.Style({
-          image: new ol.style.Icon({
-            src: options.iconUrl || '/icons/currentLocation.svg',
-            scale: options.scale || 1,
-            anchor: options.anchor || [0.5, 0.5],
-          }),
-        })
-      )
-      currentSource.addFeature(feature)
-    },
-
-    addMainMarker(lon, lat, props = {}) {
-      const feature = new ol.Feature({
-        geometry: new ol.geom.Point(window.ol.proj.fromLonLat([lon, lat])),
-      })
-      feature.setStyle(
-        new ol.style.Style({
-          image: new ol.style.Icon({
-            src: props.iconUrl || '/icons/hospital.svg',
-            scale: props.scale || 0.8,
-            anchor: props.anchor || [0.5, 1],
-          }),
-        })
-      )
-      mainSource.addFeature(feature)
-    },
-  }
-}
-
-
+// bbox 계산
 export function getCurrentBBox4326() {
   if (!vmap) {
     console.warn("vmap이 초기화되지 않았습니다.");
@@ -419,22 +317,68 @@ export function getCurrentBBox4326() {
   }
 }
 
-export function move(x, y, z = 15) {
-  if (!vmap) return;
-  const view = vmap.getView();
-  try {
-    view.setCenter([x, y]);
-    view.setZoom(z);
-  } catch (e) {
-    console.error("지도 이동 실패", e);
-  }
+// 기존에 가진 레이어 삭제
+export async function removeRouteLayer(map) {
+  const layersToRemove = map.getLayers().getArray().filter(layer =>
+    layer.get('name') === 'tmap_route_layer'
+  );
+
+  layersToRemove.forEach(layer => {
+    map.removeLayer(layer);
+  });
+
+  console.log("✅ 기존 Tmap 경로 레이어 제거 완료.");
+}
+
+// 경로 그리기
+export async function drawRoute(map, geoJsonData) {
+  // 1. 기존 경로 레이어 제거를 먼저 수행합니다.
+  removeRouteLayer(map);
+
+  // 2. GeoJSON 데이터를 OpenLayers 피처로 변환
+  const format = new ol.format.GeoJSON({
+    // Tmap 응답 좌표계 (EPSG:4326)를 지도 좌표계 (EPSG:3857)로 변환
+    defaultDataProjection: 'EPSG:3857',
+    featureProjection: 'EPSG:3857'
+  });
+
+  const features = format.readFeatures(geoJsonData);
+
+  // 3. 경로를 담을 Vector Source 생성
+  const vectorSource = new ol.source.Vector({
+    features: features
+  });
+
+  // 4. 경로 스타일 정의
+  const routeStyle = new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: 'rgba(0, 0, 255, 0.7)',
+      width: 6,
+    }),
+  });
+
+  // 5. Vector Layer 생성 및 지도에 추가
+  const vectorLayer = new ol.layer.Vector({
+    source: vectorSource,
+    style: routeStyle,
+    name: 'tmap_route_layer' // 제거를 위한 이름 설정
+  });
+
+  map.addLayer(vectorLayer);
+  console.log("✅ 새 Tmap 경로 레이어 추가 완료.");
+
+  // 6. 경로 영역에 맞게 뷰 조정 (이 부분이 moveend 이벤트를 유발할 수 있습니다.)
+  map.getView().fit(vectorSource.getExtent(), {
+    padding: [50, 50, 50, 50],
+    duration: 1000,
+  });
 }
 
 export default {
   initVworldMap,
-  getVMap,
   addMarkerEmergency,
   clearMarkers,
   getCurrentBBox4326,
-  move,
+  drawRoute,
+  removeRouteLayer
 };

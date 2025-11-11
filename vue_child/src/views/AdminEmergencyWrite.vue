@@ -329,7 +329,7 @@ async function handleSubmit() {
     alert('응급 교육 콘텐츠가 등록되었습니다.')
 
     // ✅ 저장 후 목록 페이지로 이동 (emergency.vue)
-    router.push('/emergency') // ← 🔥 여기를 수정
+    router.push('/AdminEmergency') // ← 🔥 여기를 수정
   } catch (error) {
     console.error('저장 중 오류 발생:', error)
     alert('저장 실패: 콘솔을 확인하세요.')

@@ -129,7 +129,8 @@ onMounted(async () => {
 let hospitalData = ref(null)
 let realTimeData = ref(null)
 
-// homeview에서 클릭할때 param 전
+// hpid
+// ex) emergency.A1100001 -> A1100001 
 const props = defineProps({
   hpid: String
 })
@@ -140,8 +141,11 @@ const hpid = parts[1]
 async function getHospitalData(hpid) {
   console.log(hpid)
   try{
-    hospitalData.value = await getEmergencyHospitalByHPID(hpid);
-    console.log( hospitalData.value)
+    const res = await getEmergencyHospitalByHPID(hpid)
+    if( res && res.length > 0 ) {
+      hospitalData.value = res[0]
+    }
+    console.log(hospitalData.value)
   } catch(err) {
     console.error(`병원 정보 조회 실패 -> ${err}`)
   }
@@ -185,19 +189,6 @@ const visibleDepartments = computed(() => {
 const toggleShowAll = () => {
     showAll.value = !showAll.value;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 </script>

@@ -366,7 +366,7 @@ async function handleSubmit() {
     })
 
     alert('응급 교육 콘텐츠가 수정되었습니다.')
-    router.push('/emergency')
+    router.push('/AdminEmergency')
   } catch (e) {
     console.error('응급 교육 콘텐츠 수정 실패:', e)
     alert('수정 중 오류가 발생했습니다. 콘솔을 확인해주세요.')
