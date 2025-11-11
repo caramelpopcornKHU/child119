@@ -228,7 +228,8 @@ import {
   clearMarkers,
   addMarkerEmergency,
   getCurrentBBox4326,
-  drawRoute
+  drawRoute,
+  setupMarkerClick
 } from '@/utils/vworldfunction';
 import { calculateDistance, getEmergencyFromWFSByBBox, getTmapRoute, getEmergencyFromWFSSortByDistance } from '@/utils/api';
 
@@ -268,7 +269,7 @@ const scrollCard = (id) => {
   nextTick(() => {
     const el = hospitalRefs.value[id]
     if (el) {
-      const scrollcontainer = el.closet('.overflow-auto.px-3')
+      const scrollcontainer = el.closest('.overflow-auto.px-3')
       if (scrollcontainer) {
         scrollcontainer.scrollTo({
           top: el.offsetTop - scrollcontainer.offsetTop - 10,
@@ -420,7 +421,7 @@ const loadWFSMarkers = async () => {
 
     // 5. 정제된 데이터(processedHospitals)로 마커 변경
     processedHospitals.forEach((hospital) => {
-      addMarkerEmergency(hospital.lon, hospital.lat, () => onMarkerClick(hospital.id), {
+      addMarkerEmergency(hospital.lon, hospital.lat, {
         id: hospital.id,
         name: hospital.name,
         message: hospital.message,
@@ -496,9 +497,8 @@ const initMapAndCoords = async () => {
       autoFetch: false
     })
 
-
-
     if (!vmap) throw new Error('vmap 초기화 실패')
+
 
     // 4. 리스너 함수 정의 
     moveEndListener = () => {
@@ -545,12 +545,16 @@ const initMapAndCoords = async () => {
       console.log(`경로 그리기 함수 실행`)
       routeResArray.forEach((routeData, index) => {
         if (routeData) {
+          console.log('Tmap 응답 데이터 구조 확인:', routeData);
           drawRoute(vmap, routeData, index + 1)
         } else {
           console.log(`${index + 1}번째 병원 경로 데이터가 없어 건너 뜁니다.`)
         }
       })
     }
+
+    // marker click 함수
+    if(vmap) { setupMarkerClick(onMarkerClick) }
 
   } catch (error) {
     console.error('초기화 실패:', error)

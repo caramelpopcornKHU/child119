@@ -110,6 +110,27 @@ export function addMarkerEmergency(lon, lat, props = {}) {
   }
 }
 
+// Homeview marker click 함수
+export function setupMarkerClick(onMarkerClickCallback) {
+  if(!vmap) {
+    console.warn("VMap이 초기화 되지 않아 클릭 리스너 설정 불가")
+    return;
+  }
+
+  vmap.on('click', function (evt) {
+    const feature = vmap.forEachFeatureAtPixel(evt.pixel, function (feature) {
+      return feature;
+    })
+
+    if(feature) {
+      const featureId = feature.get('id')
+      if(featureId && onMarkerClickCallback) {
+        onMarkerClickCallback(featureId)
+      }
+    }
+  })
+}
+
 // svg url 만들기
 const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, isHover = false) => {
 
@@ -338,7 +359,7 @@ export async function drawRoute(map, geoJsonData) {
   // 2. GeoJSON 데이터를 OpenLayers 피처로 변환
   const format = new ol.format.GeoJSON({
     // Tmap 응답 좌표계 (EPSG:4326)를 지도 좌표계 (EPSG:3857)로 변환
-    defaultDataProjection: 'EPSG:3857',
+    defaultDataProjection: 'EPSG:4326',
     featureProjection: 'EPSG:3857'
   });
 
