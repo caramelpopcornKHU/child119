@@ -10,11 +10,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins(
-                        "http://localhost:5173",  // Vue dev 서버
-                        "https://child119-251868777139.asia-northeast3.run.app"
-                )
+                .allowedOriginPatterns("*") // ✅ 모든 도메인 허용
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowCredentials(true);
+                .allowedHeaders("*")        // ✅ 모든 헤더 허용
+                .allowCredentials(true)     // ✅ 쿠키/인증 정보 허용
+                .maxAge(3600);              // (선택) Pre-flight 캐시 시간 1시간
     }
 }
