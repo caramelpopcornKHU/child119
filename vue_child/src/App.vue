@@ -60,8 +60,8 @@
         <li class="nav-item mb-2">
           <button
               class="nav-link btn-aside text-start w-100"
-              :class="{ 'text-bold text-primary': isActive('/AdminManageUser') }"
-              @click="goTo('/AdminManageUser')"
+              :class="{ 'text-bold text-primary': isActive('/AdminHome') }"
+              @click="goTo('/AdminHome')"
             >
             👥 사용자 정보
           </button>
