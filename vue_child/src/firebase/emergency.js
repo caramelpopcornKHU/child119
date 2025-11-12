@@ -34,13 +34,12 @@ export async function getEmergencyData(id) {
 }
 
 // 조회수 증가
-export async function incrementViews(id) {
+export async function incrementViews(id){
   const ref = doc(db, COLLECTION_NAME, id)
   await updateDoc(ref, {
-    viewCountNumber: increment(1)
+    viewCount: increment(1)
   })
 }
-
 // 새 응급처치 데이터 추가
 export async function addEmergencyData(payload) {
   try {

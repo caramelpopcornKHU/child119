@@ -17,7 +17,7 @@
       <div class="d-flex align-items-center text-muted small mb-4">
         <span>{{ formatDate(item.createdAt) }}</span>
         <span class="mx-2">|</span>
-        <span>조회수 {{ item.viewCountNumber || 0 }}</span>
+        <span>조회수 {{ item.viewCount || 0 }}</span><!--수-->
       </div>
       
       <!-- 유튜브 썸네일 이미지 (클릭 시 동영상으로) -->
@@ -134,12 +134,9 @@ const showVideo = ref(false)
 const id = computed(() => route.params.id)
 
 onMounted(async () => {
-  try {
+  try {//조회수 카운팅이 겨처서 두번 되는거 수정함 11.12
     // emergency.js의 함수 사용
     item.value = await getEmergencyData(id.value)
-    
-    // 조회수 증가
-    await incrementViews(id.value)
   } catch (error) {
     console.error('데이터 로드 실패:', error)
   } finally {

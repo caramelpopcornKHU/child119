@@ -202,6 +202,13 @@ const router = createRouter({
       component: () => import("../views/AdminEmergency.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },   // ✅ 추가
     },
+     {
+      path: "/AdminEmergencyorder/:id", //파라미터 아이디 추가
+      name: "AdminEmergencyorder",
+      component: () => import("../views/AdminEmergencyorder.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },   // ✅ 추가
+      
+    }
   ],
 });
 

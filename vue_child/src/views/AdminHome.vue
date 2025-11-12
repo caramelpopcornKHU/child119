@@ -604,7 +604,7 @@ const goToUserEdit = (uid) => {
   router.push(`/AdminUserEdit/${uid}`)
 }
 const goToEmergencyDetail = (id) => {
-  router.push({ name: 'emergencyorder', params: { id } })
+  router.push({ name: 'AdminEmergencyorder', params: { id } })
 }
 
 const logout = async () => {
