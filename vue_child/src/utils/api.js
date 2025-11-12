@@ -2,7 +2,7 @@ import axios from "axios";
 import { requestConfig } from "../../app.config";
 
 // tmap API
-export const TMAP_APP_KEY = "pAs3duhDpE5cYgopfzzDmw8anJPaBak8HAdTerg8";
+export const TMAP_APP_KEY = "Uu5zk0VYiU3uWWOxrd1zwKwQy0Mhawr6kbUHC8se";
 
 // child119 url
 export const api = axios.create({
@@ -345,4 +345,3 @@ export function calculateDistance(lat1, lon1, lat2, lon2) {
 
   return R * c // 미터 단위
 }
-

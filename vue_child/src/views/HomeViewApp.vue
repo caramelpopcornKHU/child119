@@ -98,7 +98,7 @@
           :ref="el => hospitalRefs[h.id] = el" :class="{ 'card-selected-highlight': h.id === selectedMarkerId }">
           <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
-              <h6 class="card-title fw-bold mb-1">{{ h.name }}</h6>
+              <h6 class="card-title text-bold mb-1">{{ h.name }}</h6>
 
               <!-- ✅ 병상 현황: 'avail/total' -->
               <span v-if="h.bedAvail !== null || h.bedTotal !== null" class="badge rounded-pill"
@@ -149,10 +149,10 @@
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
-              <button class="btn btn-outline-primary w-100" @click.stop>
+              <button class="btn btn-outline-primary w-100" v-if="h.id" @click.stop="callHospital(h.id)">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
-              <button class="btn btn-primary w-100" @click.stop="openRouteModal(h)">
+              <button class="btn btn-primary w-100" v-if="h.lat && h.lon && h.addr && h.name" @click.stop="requestNavi(h.lon, h.lat, h.name, h.addr)">
                 <i class="bi bi-sign-turn-right-fill"></i> 길찾기
               </button>
             </div>
@@ -222,6 +222,15 @@
 // import
 import { ref, computed, onMounted, onBeforeUnmount, onActivated, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
+import proj4 from 'proj4';
+
+// KATEC 정의 (가장 일반적인 비공식 KATEC: Bessel 타원체, 중앙 경선 128도)
+const KATEC_PROJ4_STRING = '+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +units=m +no_defs';
+proj4.defs('KATEC', KATEC_PROJ4_STRING);
+
+// 좌표계 ID
+const WGS84 = 'EPSG:4326';
+const KATEC = 'KATEC';
 
 import {
   initVworldMap,
@@ -229,9 +238,10 @@ import {
   addMarkerEmergency,
   getCurrentBBox4326,
   drawRoute,
-  setupMarkerClick
+  setupMarkerClick,
+  removeRouteLayer
 } from '@/utils/vworldfunction';
-import { calculateDistance, getEmergencyFromWFSByBBox, getTmapRoute, getEmergencyFromWFSSortByDistance } from '@/utils/api';
+import { calculateDistance, getEmergencyFromWFSByBBox, getTmapRoute, getEmergencyFromWFSSortByDistance, getEmergencyHospitalByHPID } from '@/utils/api';
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -346,7 +356,8 @@ const listHospitals = computed(() => {
     distanceKm: (h.distance ?? 0) / 1000,
     etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
     lat: h.lat, lon: h.lon,     // (선택) 모달/길찾기 즉시 사용
-    tel: h.tel || ''
+    tel: h.tel || '',
+    addr: h.addr
   }))
 })
 
@@ -359,6 +370,7 @@ const loadWFSMarkers = async () => {
 
   // 1. bbox 가져오기
   const bbox = getCurrentBBox4326()
+
   if (!bbox) {
     console.warn('bbox를 가져올 수 없습니다.')
     return
@@ -395,6 +407,7 @@ const loadWFSMarkers = async () => {
       const name = p.nickname
       const bedAvail = toInt(p.bed_avail)
       const bedTotal = toInt(p.bed_total)
+      const addr = p.address
 
       // 거리 계산 로직
       const distance = (Number.isFinite(lat) && Number.isFinite(lon))
@@ -413,6 +426,7 @@ const loadWFSMarkers = async () => {
         state,
         bedAvail,
         bedTotal,
+        addr
       };
     });
 
@@ -427,7 +441,7 @@ const loadWFSMarkers = async () => {
         message: hospital.message,
         state: hospital.state,
         bedAvail: hospital.bedAvail,
-        bedTotal: hospital.bedTotal
+        bedTotal: hospital.bedTotal,
       });
     });
 
@@ -540,13 +554,21 @@ const initMapAndCoords = async () => {
 
     }
 
-    // 6-3. 경로 그리기
+    // 6-3. 기존 경로 레이어 삭제
+    await removeRouteLayer(vmap)
+
+    // 6-4. 경로 그리기
     if (routeResArray.length > 0 && vmap) {
       console.log(`경로 그리기 함수 실행`)
+
+
       routeResArray.forEach((routeData, index) => {
         if (routeData) {
           console.log('Tmap 응답 데이터 구조 확인:', routeData);
           drawRoute(vmap, routeData, index + 1)
+
+
+
         } else {
           console.log(`${index + 1}번째 병원 경로 데이터가 없어 건너 뜁니다.`)
         }
@@ -554,7 +576,7 @@ const initMapAndCoords = async () => {
     }
 
     // marker click 함수
-    if(vmap) { setupMarkerClick(onMarkerClick) }
+    if (vmap) { setupMarkerClick(onMarkerClick) }
 
   } catch (error) {
     console.error('초기화 실패:', error)
@@ -612,6 +634,46 @@ function goToemergencyDetail(hpid) {
     params: { hpid: hpid }, // URL엔 필수 키만
   })
 
+}
+
+/* 병원 전화 걸기 */
+async function callHospital(hpid) {
+  const id = hpid.split(".")
+  const res = await getEmergencyHospitalByHPID(id)
+  console.log(`res -> ${res}`)
+
+  // if (!tel) {
+  //   alert('전화번호가 없습니다.')
+  //   return
+  // }
+  // window.location.href = `tel:${tel}`
+}
+
+
+function requestNavi(lon, lat, name, addr = "도착지") {
+  try {
+    // 1. WGS84(EPSG:4326) -> KATEC으로 좌표 변환
+    // proj4(from_proj, to_proj, [x, y])
+    // EPSG:4326은 (경도, 위도) 순서
+    const [Katec_x, Katec_y] = proj4(WGS84, KATEC, [lon, lat]);
+
+    // 2. Android Bridge 호출
+    if (window.AndroidBridge && typeof window.AndroidBridge.startNavigation === 'function') {
+      window.AndroidBridge.startNavigation(
+        name, // 도착지 이름 (병원 이름)
+        Math.round(Katec_x), // Katec X 좌표 (정수로 변환)
+        Math.round(Katec_y), // Katec Y 좌표 (정수로 변환)
+        addr // 도착지 주소 (현재 코드에서는 '도착지'로 하드코딩. 필요 시 데이터 추가 필요)
+      );
+      console.log(`✅ 길찾기 요청: ${name} (KATEC X:${Math.round(Katec_x)}, Y:${Math.round(Katec_y)})`);
+    } else {
+      // 안드로이드 앱이 아닐 경우 (예: PC 웹)
+      alert(`[웹 환경] 안드로이드 앱에서 실행됩니다. 도착지: ${name}, KATEC 좌표: (${Math.round(Katec_x)}, ${Math.round(Katec_y)})`);
+    }
+  } catch (e) {
+    console.error("좌표 변환 또는 네비게이션 호출 실패:", e);
+    alert("네비게이션 실행에 문제가 발생했습니다.");
+  }
 }
 
 
@@ -692,7 +754,8 @@ function bedBadgeClass(h) {
 
 /*선택된 카드 하이라이트*/
 .card-selected-highlight {
-  background-color: #e2ebff; /* 약간 밝은 파란색 계열 */
+  background-color: #e2ebff;
+  /* 약간 밝은 파란색 계열 */
   border-color: #0d6efd !important;
   box-shadow: 0 4px 12px rgba(13, 110, 253, .3);
   /* 선택되었을 때 기본 카드와 구별되도록 약간의 스케일업 */
