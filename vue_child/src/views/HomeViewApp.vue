@@ -638,15 +638,19 @@ function goToemergencyDetail(hpid) {
 
 /* 병원 전화 걸기 */
 async function callHospital(hpid) {
-  const id = hpid.split(".")
-  const res = await getEmergencyHospitalByHPID(id)
-  console.log(`res -> ${res}`)
+  const hpidArray = await hpid.split(".")
+  const id = hpidArray[1]
 
-  // if (!tel) {
-  //   alert('전화번호가 없습니다.')
-  //   return
-  // }
-  // window.location.href = `tel:${tel}`
+  const res = await getEmergencyHospitalByHPID(id)
+  console.log(JSON.stringify(res))
+  const tel = res[0].dutyTel3
+  console.log(`res -> ${tel}`)
+
+  if (!tel) {
+    alert('전화번호가 없습니다.')
+    return
+  }
+  window.location.href = `tel:${tel}`
 }
 
 
