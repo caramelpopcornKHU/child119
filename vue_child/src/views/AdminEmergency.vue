@@ -1,67 +1,190 @@
 <template>
-  <div class="edu-page container-fluid px-3 py-3">
-    <!-- 상단 탭 -->
-    <div class="d-flex justify-content-center mb-3" v-if="isAdmin">
-      <div></div>
-      <button type="button" class="btn btn-success rounded-pill px-3 fw-semibold" @click="goToWrite">
-        + 게시물 추가
-      </button>
-    </div>
+  <div class="admin-edu container-fluid py-3">
+    <!-- 헤더 -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div>
+        <h4 class="fw-bold mb-1">응급 교육 콘텐츠</h4>
+        <div class="text-muted small">총 {{ filteredItems.length }}건</div>
+      </div>
 
-    <!-- 검색 영역 -->
-    <div class="mb-3">
-      <div class="input-group edu-search rounded-3 px-2">
-        <input type="text" class="form-control border-0 shadow-none p-2" placeholder="검색어를 입력하세요." v-model="keyword" />
-        <span class="input-group-text bg-transparent border-0 p-0">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
-            <path fill="#00b894" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5
-                 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L19 20.49
-                 20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5
-                 11.99 14 9.5 14" />
-          </svg>
-        </span>
+      <!-- 우측 퀵 액션 -->
+      <div class="d-flex align-items-center gap-2">
+        <button
+          v-if="isAdmin"
+          type="button"
+          class="btn btn-success rounded-pill fw-semibold"
+          @click="goToWrite"
+        >
+          + 새 게시물
+        </button>
       </div>
     </div>
 
-    <!-- 전체 개수 -->
-    <p class="text-muted small mb-3">
-      전체 {{ filteredItems.length }}건이 등록되어 있습니다.
-    </p>
+    <!-- 컨트롤바 -->
+    <div class="card shadow-sm border-0 rounded-4 mb-3">
+      <div class="card-body d-flex flex-wrap align-items-center gap-2">
+        <!-- 검색 -->
+        <div class="input-group admin-search">
+          <span class="input-group-text bg-transparent border-0 pe-0">
+            <i class="bi bi-search text-primary"></i>
+          </span>
+          <input
+            v-model="keyword"
+            type="text"
+            class="form-control border-0 shadow-none"
+            placeholder="제목으로 검색"
+            @keyup.enter="gotoFirstPage"
+          />
+        </div>
+
+        <!-- 정렬 -->
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <select v-model="sortKey" class="form-select form-select-sm w-auto">
+            <option value="createdAt">작성일</option>
+            <option value="title">제목</option>
+            <option value="viewCount">조회수</option>
+          </select>
+          <button
+            class="btn btn-light btn-sm"
+            @click="toggleSortDir"
+            :title="sortDir === 'desc' ? '내림차순' : '오름차순'"
+          >
+            <i v-if="sortDir==='desc'" class="bi bi-sort-down"></i>
+            <i v-else class="bi bi-sort-up"></i>
+          </button>
+
+          <!-- 페이지 크기 -->
+          <select v-model.number="pageSize" class="form-select form-select-sm w-auto">
+            <option :value="10">10개</option>
+            <option :value="20">20개</option>
+            <option :value="50">50개</option>
+          </select>
+
+          <!-- 내보내기 -->
+          <button class="btn btn-outline-secondary btn-sm" @click="exportCsv">
+            <i class="bi bi-download me-1"></i>CSV
+          </button>
+
+          <!-- 일괄 삭제 -->
+          <button
+            v-if="isAdmin"
+            class="btn btn-outline-danger btn-sm"
+            :disabled="selectedIds.size===0"
+            @click="bulkDelete"
+          >
+            <i class="bi bi-trash me-1"></i>일괄 삭제 ({{ selectedIds.size }})
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 로딩 스켈레톤 -->
+    <div v-if="loading" class="card shadow-sm border-0 rounded-4">
+      <div class="list-group list-group-flush">
+        <div v-for="i in 6" :key="i" class="list-group-item py-3">
+          <div class="placeholder-glow">
+            <span class="placeholder col-7"></span>
+            <span class="placeholder col-4 ms-2"></span>
+            <div class="mt-2">
+              <span class="placeholder col-2"></span>
+              <span class="placeholder col-1 ms-2"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 빈 상태 -->
+    <div v-else-if="pagedItems.length === 0" class="card shadow-sm border-0 rounded-4">
+      <div class="card-body py-5 text-center text-muted">
+        <i class="bi bi-journal-text fs-1 d-block mb-2"></i>
+        검색 결과가 없습니다.
+      </div>
+    </div>
 
     <!-- 목록 -->
-    <div v-for="item in filteredItems" :key="item.id"
-      class="edu-item border-top d-flex justify-content-between align-items-center">
-      <div class="py-3 flex-grow-1" @click="goToDetail(item.id)" style="cursor: pointer;">
-        <div class="fw-semibold edu-title text-primary">
-          {{ item.title }}
-        </div>
-        <div class="text-muted small mt-2">
-          {{ formatDate(item.createdAt) }}
-          <span class="mx-2">|</span>
-          조회수 {{ item.viewCount || 0 }}
-        </div>
+    <div v-else class="card shadow-sm border-0 rounded-4">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0 admin-table">
+          <thead class="table-light">
+            <tr>
+              <th style="width:40px;">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  :checked="allVisibleChecked"
+                  @change="toggleCheckAll($event.target.checked)"
+                />
+              </th>
+              <th>제목</th>
+              <th class="text-nowrap" style="width:140px;">작성일</th>
+              <th class="text-nowrap" style="width:120px;">조회수</th>
+              <th class="text-end" style="width:160px;">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in pagedItems" :key="item.id">
+              <td>
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  :checked="selectedIds.has(item.id)"
+                  @change="toggleSelect(item.id, $event.target.checked)"
+                />
+              </td>
+
+              <td>
+                <button
+                  class="btn btn-link p-0 text-start fw-semibold title-link"
+                  @click="goToDetail(item.id)"
+                >
+                  {{ item.title }}
+                </button>
+              <div v-if="item.hashtags && item.hashtags.length" class="mt-1 small">
+                <span
+                  v-for="(tag, i) in item.hashtags"
+                  :key="i"
+                  class="badge bg-light text-secondary border me-1"
+                >
+                  #{{ tag }}
+                </span>
+              </div>
+              <div v-else class="text-muted small mt-1">태그 없음</div>
+
+              </td>
+
+              <td class="text-muted small">{{ formatDate(item.createdAt) }}</td>
+              <td class="text-muted small">{{ (item.viewCount || 0).toLocaleString() }}</td>
+
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-outline-primary rounded-pill" @click="goToEdit(item.id)">수정</button>
+                  <button class="btn btn-outline-danger rounded-pill" @click="handleDelete(item.id)">삭제</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <!-- ✅ 수정/삭제 버튼 -->
-      <div class="ms-3 d-flex gap-2" v-if="isAdmin">
-        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" @click.stop="goToEdit(item.id)">
-          수정
-        </button>
-        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" @click.stop="handleDelete(item.id)">
-          삭제
-        </button>
+      <!-- 페이지네이션 -->
+      <div class="card-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="text-muted small">
+          표시: {{ startIdx + 1 }}–{{ endIdx }} / 총 {{ filteredItems.length }}
+        </div>
+        <div class="d-flex align-items-center gap-1">
+          <button class="btn btn-light btn-sm" :disabled="page===1" @click="page--">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <span class="px-2 fw-semibold">{{ page }} / {{ totalPages }}</span>
+          <button class="btn btn-light btn-sm" :disabled="page===totalPages" @click="page++">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
       </div>
     </div>
-    <!-- 건의사항 버튼 (오른쪽 아래 고정) -->
-    <button class="btn btn-primary rounded-circle position-fixed shadow"
-      style="bottom: 80px; right: 20px; width: 56px; height: 56px; z-index: 100;" @click="goToSuggestions">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <path fill="white"
-          d="M12 8H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h1v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4h3l5 4V4zm3 7.6L13 14H4v-4h9l2-1.6zm6.5-3.6c0 1.71-.96 3.26-2.5 4V8c1.53.75 2.5 2.3 2.5 4" />
-      </svg>
-    </button>
 
-
+    
   </div>
 </template>
 
@@ -70,49 +193,42 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { db, auth } from '@/firebase'
 import { collection, getDocs, orderBy, query, deleteDoc, doc, getDoc } from 'firebase/firestore'
-import { onAuthStateChanged } from 'firebase/auth'// ←
-// --------------------------------------------
-// ✅ 기본 설정
-// --------------------------------------------
+import { onAuthStateChanged } from 'firebase/auth'
+
 const router = useRouter()
 const keyword = ref('')
 const items = ref([])
 const loading = ref(true)
-const isAdmin = ref(false) // 사용자 확인 변수
-const currentUserUid = ref(null) //현제 uid 사용자 저장 변
-// --------------------------------------------
-// ✅ 페이지 이동 함수
-// --------------------------------------------
-const goToEdit = (id) => {
-  router.push(`/AdminEmergencyEdit/${id}`)
-}
 
-const goToWrite = () => {
-  router.push('/AdminEmergencyWrite')
-}
+const isAdmin = ref(false)
+const currentUserUid = ref(null)
 
-const goToDetail = (id) => {
-  router.push({ name: 'emergencyorder', params: { id } })
-}
-const goToSuggestions = () =>{
-  router.push('/emergencysuggestions') // 누르면 ㅣ동하는 메소드 건의사항 페이지로 이동합니다
-}
+/* 정렬/페이지/선택 상태 */
+const sortKey = ref('createdAt')        // 'createdAt' | 'title' | 'viewCount'
+const sortDir = ref('desc')             // 'asc' | 'desc'
+const page = ref(1)
+const pageSize = ref(10)
+const selectedIds = ref(new Set())
 
-// --------------------------------------------
-// ✅ Firestore에서 데이터 불러오기
-// --------------------------------------------
-async function loadData() {
+/* 이동 */
+const goToEdit = (id) => router.push(`/AdminEmergencyEdit/${id}`)
+const goToWrite = () => router.push('/AdminEmergencyWrite')
+const goToDetail = (id) => router.push({ name: 'AdminEmergencyorder', params: { id } })
+
+
+/* 데이터 */
+async function loadData () {
   try {
     const q = query(collection(db, 'emergencyData'), orderBy('createdAt', 'desc'))
     const snapshot = await getDocs(q)
-
-    items.value = snapshot.docs.map(doc => {
-      const data = doc.data()
+    items.value = snapshot.docs.map(d => {
+      const v = d.data()
       return {
-        id: doc.id,
-        title: data.title || '(제목 없음)',
-        viewCount: data.viewCount || 0,
-        createdAt: data.createdAt ? data.createdAt.toDate() : null,
+        id: d.id,
+        title: v.title || '(제목 없음)',
+        viewCount: v.viewCount || 0,
+        createdAt: v.createdAt ? v.createdAt.toDate() : null,
+        hashtags: v.hashtags || []   // ✅ 추가
       }
     })
   } catch (e) {
@@ -122,26 +238,18 @@ async function loadData() {
   }
 }
 
-onMounted(() => { // 사용자 권환 확인 
+onMounted(() => {
   loadData()
   checkAdminStatus()
 })
-async function checkAdminStatus() { // 사용자 귄함 확인 매소
+
+async function checkAdminStatus () {
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUserUid.value = user.uid
-
-      // Firestore users 컬렉션에서 사용자 정보 가져오기
       const userDocRef = doc(db, 'users', user.uid)
       const userDoc = await getDoc(userDocRef)
-
-      if (userDoc.exists()) {
-        const userData = userDoc.data()
-        const username = userData.username || ''
-
-        // username에 'admin'이 포함되어 있는지 확인
-        isAdmin.value = username.toLowerCase().includes('admin')
-      }
+      isAdmin.value = !!(userDoc.exists() && (userDoc.data().username || '').toLowerCase().includes('admin'))
     } else {
       isAdmin.value = false
       currentUserUid.value = null
@@ -149,67 +257,141 @@ async function checkAdminStatus() { // 사용자 귄함 확인 매소
   })
 }
 
-// --------------------------------------------
-// ✅ 삭제 기능
-// --------------------------------------------
-async function handleDelete(id) {
-  const confirmDelete = confirm('정말로 이 게시물을 삭제하시겠습니까?')
-  if (!confirmDelete) return
+/* 삭제 */
+async function handleDelete (id) {
+  if (!isAdmin.value) return alert('권한이 없습니다.')
+  if (!confirm('정말로 이 게시물을 삭제하시겠습니까?')) return
 
   try {
     await deleteDoc(doc(db, 'emergencyData', id))
+    items.value = items.value.filter(v => v.id !== id)
+    selectedIds.value.delete(id)
     alert('게시물이 삭제되었습니다.')
-    await loadData() // 목록 갱신
   } catch (e) {
     console.error('삭제 실패:', e)
     alert('삭제 중 오류가 발생했습니다.')
   }
 }
 
-// --------------------------------------------
-// ✅ 검색 필터
-// --------------------------------------------
+async function bulkDelete () {
+  if (!isAdmin.value) return alert('권한이 없습니다.')
+  if (selectedIds.value.size === 0) return
+  if (!confirm(`선택한 ${selectedIds.value.size}개 항목을 삭제하시겠습니까?`)) return
+
+  try {
+    const ids = Array.from(selectedIds.value)
+    await Promise.all(ids.map(id => deleteDoc(doc(db, 'emergencyData', id))))
+    items.value = items.value.filter(v => !selectedIds.value.has(v.id))
+    selectedIds.value.clear()
+    alert('삭제되었습니다.')
+  } catch (e) {
+    console.error('일괄 삭제 실패:', e)
+    alert('삭제 중 오류가 발생했습니다.')
+  }
+}
+
+/* 검색/정렬/페이지 */
 const filteredItems = computed(() => {
-  if (!keyword.value.trim()) return items.value
   const q = keyword.value.trim().toLowerCase()
-  return items.value.filter(v => v.title.toLowerCase().includes(q))
+   // ✅ 제목 + 해시태그 검색 포함
+  let list = q
+    ? items.value.filter(v => {
+        const titleMatch = (v.title || '').toLowerCase().includes(q)
+        const hashtagMatch = v.hashtags && v.hashtags.some(tag => tag.toLowerCase().includes(q))
+        return titleMatch || hashtagMatch
+      })
+    : items.value.slice()
+  list.sort((a, b) => {
+    const dir = sortDir.value === 'asc' ? 1 : -1
+    const ak = sortKey.value === 'title' ? (a.title || '') :
+               sortKey.value === 'viewCount' ? (a.viewCount || 0) :
+               (a.createdAt ? a.createdAt.getTime() : 0)
+    const bk = sortKey.value === 'title' ? (b.title || '') :
+               sortKey.value === 'viewCount' ? (b.viewCount || 0) :
+               (b.createdAt ? b.createdAt.getTime() : 0)
+    if (ak < bk) return -1 * dir
+    if (ak > bk) return 1 * dir
+    return 0
+  })
+  return list
 })
 
-// --------------------------------------------
-// ✅ 날짜 포맷 함수
-// --------------------------------------------
-function formatDate(date) {
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredItems.value.length / pageSize.value)))
+const startIdx = computed(() => (page.value - 1) * pageSize.value)
+const endIdx = computed(() => Math.min(filteredItems.value.length, startIdx.value + pageSize.value))
+const pagedItems = computed(() => filteredItems.value.slice(startIdx.value, endIdx.value))
+
+function toggleSortDir () { sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc' }
+function gotoFirstPage () { page.value = 1 }
+
+/* 선택 */
+const allVisibleChecked = computed(() => pagedItems.value.length > 0 && pagedItems.value.every(v => selectedIds.value.has(v.id)))
+function toggleCheckAll (checked) {
+  if (checked) pagedItems.value.forEach(v => selectedIds.value.add(v.id))
+  else pagedItems.value.forEach(v => selectedIds.value.delete(v.id))
+}
+function toggleSelect (id, checked) {
+  if (checked) selectedIds.value.add(id)
+  else selectedIds.value.delete(id)
+}
+
+/* 내보내기 */
+function exportCsv () {
+  const rows = [['id', 'title', 'viewCount', 'createdAt']]
+  filteredItems.value.forEach(v => rows.push([
+    v.id,
+    (v.title || '').replaceAll('"', '""'),
+    String(v.viewCount || 0),
+    v.createdAt ? v.createdAt.toISOString() : ''
+  ]))
+  const csv = rows.map(r => r.map(x => `"${x}"`).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'emergency_contents.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+/* 날짜 포맷 */
+function formatDate (date) {
   if (!date) return ''
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
+  return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 </script>
 
 <style scoped>
-.edu-page {
-  padding-top: calc(var(--header-h, 56px) + 8px);
+/* 페이지 프레임 */
+.admin-edu {
+  /* 상단/하단 고정 네비가 있다면 아래 변수 맞춰 패딩만 주고 내부 스크롤은 만들지 않음 */
+  padding-top: calc(var(--header-h, 64px) + 8px);
   padding-bottom: calc(var(--footer-h, 56px) + 8px);
-  min-height: calc(100vh - var(--header-h, 56px) - var(--footer-h, 56px));
-  background-color: #ffffff;
+  background: #fff;
 }
 
-.edu-search {
-  background-color: #f5f5f5;
+/* 검색 인풋 */
+.admin-search {
+  min-width: 260px;
+  background: #f5f7fb;
+  border: 1px solid #e6e9ef;
+  border-radius: 10px;
 }
 
-.edu-item:last-child {
-  border-bottom: 1px solid #e9ecef;
+/* 테이블 */
+.admin-table th { font-size: 12px; letter-spacing: .2px; color: #6b7280; }
+.title-link { color: #0d6efd; }
+.title-link:hover { text-decoration: underline; }
+
+/* 모바일 대응: 테이블이 너무 좁아질 때 행 간격 보강 */
+@media (max-width: 576px) {
+  .admin-table td { padding-top: .9rem; padding-bottom: .9rem; }
 }
 
-.edu-title {
-  font-size: 17px;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+/* 스켈레톤 */
+.placeholder { display: inline-block; background-color: #e9ecef; border-radius: .25rem; }
+.placeholder.col-7 { width: 60%; height: 16px; }
+.placeholder.col-4 { width: 35%; height: 16px; }
+.placeholder.col-2 { width: 20%; height: 14px; }
+.placeholder.col-1 { width: 10%; height: 14px; }
 </style>
