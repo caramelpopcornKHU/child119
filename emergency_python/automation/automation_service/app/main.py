@@ -2,15 +2,24 @@ import uuid
 import threading
 import subprocess
 import time
-import asyncio  # <--- (수정 1) 파일 최상단으로 이동
+import asyncio  
 from typing import Dict, List
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Child119 Automation Service",
     description="아이119 관리자용 크롤링 자동화 + 로그 스트리밍 서비스",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],       # 허용할 오리진 (출처). "*"는 모든 출처를 의미.
+    allow_credentials=True,    # 쿠키 허용 여부
+    allow_methods=["*"],       # 허용할 HTTP 메소드 (GET, POST 등)
+    allow_headers=["*"],       # 허용할 HTTP 헤더
 )
 
 # 작업 상태/로그 저장용 in-memory 구조
