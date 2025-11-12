@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="d-flex flex-column min-vh-100">
+  <div id="app" class="d-flex flex-column min-vh-100" :class="{ 'admin-full-width': isAdminRoute }">
     <!-- ===============================
          📌 Header (상단 고정 네비게이션)
          =============================== -->
@@ -22,14 +22,14 @@
         </button>
       </div>
     </header>
-
+    
 
      <!-- 👇 관리자용 헤더 -->
     <header
       v-else
       class="navbar navbar-light bg-white shadow-sm fixed-top"
     >
-      <div class="container d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center justify-content-between w-100 px-4">
         <!-- 좌측: 로고 + 텍스트 -->
         <div class="d-flex align-items-center" style="cursor: pointer;" @click="goToAdminHome">
           <img
@@ -51,12 +51,61 @@
         </button>
       </div>
     </header>
+
+
+    <aside v-if="isAdminRoute" class="admin-aside bg-white border-end shadow-sm p-3">
+      <h5 class="fw-bold mb-4 text-center">관리자 메뉴</h5>
+
+      <ul class="nav flex-column">
+        <li class="nav-item mb-2">
+          <button
+              class="nav-link btn-aside text-start w-100"
+              :class="{ 'text-bold text-primary': isActive('/AdminManageUser') }"
+              @click="goTo('/AdminManageUser')"
+            >
+            👥 사용자 정보
+          </button>
+        </li>
+
+        <li class="nav-item mb-2">
+          <button
+              class="nav-link btn-aside text-start w-100"
+              :class="{ 'text-bold text-primary': isActive('/AdminManageContents') }"
+              @click="goTo('/AdminManageContents')"
+            >
+            👥 응급 콘텐츠 관리
+          </button>
+        </li>
+
+        <li class="nav-item mb-2">
+          <button
+              class="nav-link btn-aside text-start w-100"
+              :class="{ 'text-bold text-primary': isActive('/AdminAutomation') }"
+              @click="goTo('/AdminAutomation')"
+            >
+            ⚙️ 자동화 로그
+          </button>
+        </li>
+
+        <li class="nav-item mb-2">
+          <button
+              class="nav-link btn-aside text-start w-100"
+              :class="{ 'text-bold text-primary': isActive('/AdminFeedback') }"
+              @click="goTo('/AdminFeedback')"
+            >
+            💬 건의사항
+          </button>
+        </li>
+      </ul>
+    </aside>
+
     <!-- ===============================
          🧭 Main (헤더/푸터 사이 컨텐츠 영역)
          =============================== -->
     <main id="main" class="flex-grow-1">
       <!-- RouterView는 각 페이지(View) 컴포넌트를 표시 -->
-      <div class="container py-3">
+      <!-- 관리자 페이지는 전체 너비, 일반 페이지는 container 적용 -->
+      <div :class="isAdminRoute ? 'w-100 px-0' : 'container py-3'">
         <RouterView />
       </div>
     </main>
@@ -143,69 +192,116 @@ import { signOut } from 'firebase/auth'
 export default {
   name: 'App',
   components: { RouterView },
-   computed: {
-    // ✅ /admin으로 시작하는 경로는 관리자 페이지로 간주
+
+  computed: {
     isAdminRoute() {
       return this.$route.path.startsWith('/Admin')
     }
   },
+
   methods: {
-    // 라우팅 이동 메서드
     mypage() { this.$router.push('/mypage') },
     hospitalinformation() { this.$router.push('/hospitalInformationApp') },
     aichat() { this.$router.push('/aichat') },
     emergency() { this.$router.push('/emergency') },
     MyKids() { this.$router.push('/MyKids') },
     goToHome() { this.$router.push('/') },
-    goToLogin() { this.$router.push('/login')},
+    goToLogin() { this.$router.push('/login') },
+    goToAdminHome() { this.$router.push('/AdminHome') },
 
-    // ✅ 관리자 홈으로 이동
-  goToAdminHome() {
-    this.$router.push('/AdminHome')
-  },
+    goTo(path) {
+      this.$router.push(path)
+    },
 
-    // 로그인/로그아웃 버튼 이동 메서드
+    isActive(path) {
+      return this.$route.path === path
+    },
+
     async logout() {
-      try{
-        await signOut(auth);
+      try {
+        await signOut(auth)
         alert('로그아웃 되었습니다.')
-         this.$router.push('/login'); // ✅ 로그아웃 후 로그인 페이지로 이동
-      } catch(err) {
-        console.error(`로그아웃 중 오류 발생`)
+        this.$router.push('/login')
+      } catch (err) {
+        console.error('로그아웃 중 오류 발생:', err)
       }
     },
+
     logAction() {
-      if(this.status === '로그인'){ this.goToLogin()} 
-      else{ this.logout() }
+      if (this.status === '로그인') this.goToLogin()
+      else this.logout()
     }
   },
+
   setup() {
-    const status = ref();
+    const status = ref('로그인')
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        status.value = '로그아웃';
-      } else {
-        status.value = '로그인';
-      }
-    });
-    return{
-      status
-    }
+    onMounted(() => {
+      onAuthStateChanged(auth, (user) => {
+        status.value = user ? '로그아웃' : '로그인'
+      })
+    })
+
+    return { status }
   }
-  
 }
-
-
 
 
 </script>
 
 <style>
+
 /* ✅ 부트스트랩 및 아이콘 불러오기 */
 @import "bootstrap/dist/css/bootstrap.min.css";
 @import "bootstrap-icons/font/bootstrap-icons.css";
 
+.admin-full-width {
+  max-width: 100% !important;
+}
+
+.admin-full-width header .container,
+.admin-full-width main > div {
+  max-width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.admin-aside {
+  width: 240px;
+  position: fixed;
+  top: 10px;
+  left: 0;
+  bottom: 0;
+  padding-top: 72px; /* 상단 네비(고정 헤더)가 있으면 높이 맞춤. 없으면 0으로 바꿔도 됨 */
+  z-index: 200;
+}
+
+.btn-aside {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: #333;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.12s, color 0.12s, transform 0.12s;
+}
+
+/* hover */
+.btn-aside:hover {
+  background-color: #f8f9fa;
+  transform: translateX(4px);
+}
+
+/* active */
+.btn-aside.active {
+  background-color: #0d6efd;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(13,110,253,0.12);
+}
 
 @font-face {
   font-family: 'Pretendard';
@@ -300,8 +396,6 @@ body,
   /* 남는 세로공간 계산 */
   padding-top: var(--header-h);
   /* 헤더에 가리지 않게 */
-  overflow: auto;
-  /* 내부 스크롤 허용 */
 }
 
 /* ✅ 헤더가 항상 다른 요소보다 위에 표시되도록 z-index 지정 */

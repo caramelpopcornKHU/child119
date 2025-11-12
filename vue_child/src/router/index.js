@@ -9,7 +9,7 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: () => import("../views/HomeView.vue"),
+      component: () => import("../views/HomeViewApp.vue"),
     },
     {
       path: "/mypage",
@@ -114,11 +114,7 @@ const router = createRouter({
       component: () => import("../views/HomeViewTest.vue"),
     },
     // app 버전 라우팅 ----------------
-    {
-      path: "/HomeViewApp",
-      name: "HomeViewApp",
-      component: () => import("../views/HomeViewApp.vue"),
-    },
+
     {
       path: "/navi",
       name: "navi",
@@ -208,6 +204,30 @@ const router = createRouter({
       component: () => import("../views/AdminEmergencyorder.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },   // ✅ 추가
       
+    },
+    {
+      path: "/AdminManageUser",
+      name: "AdminManageUser",
+      component: () => import("../views/AdminManageUser.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: "/AdminManageContents",
+      name: "AdminManageContents",
+      component: () => import("../views/AdminManageContents.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: "/AdminAutomation",
+      name: "AdminAutomation",
+      component: () => import("../views/AdminAutomation.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: "/AdminFeedback",
+      name: "AdminFeedback",
+      component: () => import("../views/AdminFeedback.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
   ],
 });
