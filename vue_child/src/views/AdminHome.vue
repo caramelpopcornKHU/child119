@@ -47,48 +47,6 @@
 
       <!-- ░░░ 관리 탭 ░░░ -->
       <section v-if="activeTab === 'manage'" class="d-flex flex-column gap-3">
-        <!-- 크롤링 주기 설정 -->
-        <div class="card shadow-sm border-0 rounded-4">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="fw-semibold mb-0">크롤링 주기 설정</h5>
-            </div>
-            <p class="small text-muted">
-              외부 데이터(예: 응급 관련 뉴스, 콘텐츠)를 가져오는 크롤러의 실행 주기를 설정합니다.
-            </p>
-
-            <div class="d-flex flex-wrap align-items-center gap-3">
-              <div class="d-flex flex-wrap gap-2">
-                <button
-                  v-for="m in crawlingOptions"
-                  :key="m"
-                  type="button"
-                  class="btn btn-sm rounded-pill"
-                  :class="crawlingInterval === m ? 'btn-primary' : 'btn-outline-primary'"
-                  @click="crawlingInterval = m"
-                >
-                  {{ m }}분
-                </button>
-              </div>
-              <div class="ms-auto">
-                <button
-                  type="button"
-                  class="btn btn-success btn-sm rounded-pill"
-                  @click="saveCrawlingInterval"
-                >
-                  저장
-                </button>
-              </div>
-            </div>
-
-            <p class="small text-muted mt-2 mb-0">
-              현재 설정된 주기: <strong>{{ crawlingInterval }}분</strong>
-              <span v-if="lastSavedCrawling" class="text-secondary">
-                (마지막 저장: {{ lastSavedCrawling }})
-              </span>
-            </p>
-          </div>
-        </div>
 
         <!-- users + kidinformation 정보 -->
         <div class="card shadow-sm border-0 rounded-4">
@@ -294,6 +252,53 @@
 
       <!-- ░░░ 자동화 로그 탭 ░░░ -->
       <section v-else-if="activeTab === 'automation'" class="d-flex flex-column gap-3">
+        <!-- 크롤링 주기 설정 -->
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-semibold mb-0">크롤링 주기 설정</h5>
+            </div>
+            <p class="small text-muted">
+              외부 데이터(예: 응급 관련 뉴스, 콘텐츠)를 가져오는 크롤러의 실행 주기를 설정합니다.
+            </p>
+
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <div class="d-flex flex-wrap gap-2">
+                <button
+                  v-for="m in crawlingOptions"
+                  :key="m"
+                  type="button"
+                  class="btn btn-sm rounded-pill"
+                  :class="crawlingInterval === m ? 'btn-primary' : 'btn-outline-primary'"
+                  @click="crawlingInterval = m"
+                >
+                  {{ m }}분
+                </button>
+              </div>
+              <div class="ms-auto">
+                <button
+                  type="button"
+                  class="btn btn-success btn-sm rounded-pill"
+                  @click="saveCrawlingInterval"
+                >
+                  저장
+                </button>
+              </div>
+            </div>
+
+            <p class="small text-muted mt-2 mb-0">
+              현재 설정된 주기: <strong>{{ crawlingInterval }}분</strong>
+              <span v-if="lastSavedCrawling" class="text-secondary">
+                (마지막 저장: {{ lastSavedCrawling }})
+              </span>
+            </p>
+          </div>
+        </div>
+
+
+
+
+        <!--자동화 실행+로그 카드-->
         <div class="card shadow-sm border-0 rounded-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
