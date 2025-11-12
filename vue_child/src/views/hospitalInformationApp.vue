@@ -150,7 +150,7 @@
       <div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2 flex-shrink-0">
         <!-- 왼쪽 -->
         <div class="d-flex align-items-center gap-2">
-          <h5 class="fw-bold mb-0">병원 리스트</h5>
+          <h5 class="fw-bold mb-0">{{ currentListType }} 리스트</h5>
           <span v-if="hospitals.length > 0" class="badge bg-white text-black">{{ hospitals.length }}개</span>
         </div>
 
@@ -369,10 +369,12 @@ import axios from 'axios'
 import { useRouter } from 'vue-router';
 
 import { initVworldMap, clearMarkers, addMarkerHospital, getCurrentBBox4326 } from '@/utils/vworldfunction';
-import { getEmergencyFromWFSByBBox } from '@/utils/api';
+import { getEmergencyFromWFSByBBox, calculateDistance } from '@/utils/api';
 
 // vmap 변수
 let vmap = null;
+let labelOverlays = []
+const currentListType = ref("병원")
 
 /* 진료과 필터 상태 */
 const departmentOptions = [
@@ -434,25 +436,8 @@ const loadingHospitals = ref(false)
 const searchAttempted = ref(false)
 let myMapObj = null
 
-/* 경로 탐색 상태 */
-const isRouteMode = ref(false)
-const selectedHospital = ref(null)
-const transportType = ref('car') // car, walk, transit
-const searchOption = ref('2') // 교통최적+최소시간
-const trafficInfo = ref('N')
-const routeDetails = ref({
-  distance: '',
-  time: '',
-  fare: '',
-  taxiFare: '',
-  walkTime: '' // 도보 시간
-})
-
-// 경로 탐색 결과물 (마커, 라인)
-const resultMarkerArr = ref([])
-const resultdrawArr = ref([])
-// ✅ 추가: 출발/도착 라벨도 추적해서 지움
-const resultInfoWindowArr = ref([])
+// 마커 라벨 관련
+let existingLabelPositions = []
 
 /* 바텀시트 드래그 */
 const bottomSheet = ref(null)
@@ -539,6 +524,42 @@ function getCurrentLocation() {
   })
 }
 
+function isHospitalOpen(props) {
+  const now = new Date()
+  const day = now.getDay() === 0 ? 7 : now.getDay()
+
+  const openKey = `duty_time${day}s`
+  const closeKey = `duty_time${day}c`
+  const openTime = String(props[openKey] || '').padStart(4, '0')
+  const closeTime = String(props[closeKey] || '').padStart(4, '0')
+
+  if (!openTime || !closeTime || openTime === 'null' || closeTime === 'null') return false
+
+  // ✅ 24시간 운영 케이스 추가 (모든 변형 커버)
+  if (
+    ['0000', '0'].includes(openTime) &&
+    ['2400', '0000', '0'].includes(closeTime)
+  ) {
+    return true
+  }
+
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+  const openMinutes = parseInt(openTime.slice(0, 2)) * 60 + parseInt(openTime.slice(2))
+  const closeMinutes = parseInt(closeTime.slice(0, 2)) * 60 + parseInt(closeTime.slice(2))
+
+  // ✅ 일반적인 당일 운영
+  if (openMinutes < closeMinutes) {
+    return nowMinutes >= openMinutes && nowMinutes <= closeMinutes
+  }
+
+  // ✅ 자정 넘어가는 운영 (예: 2300 ~ 0700)
+  if (openMinutes > closeMinutes) {
+    return nowMinutes >= openMinutes || nowMinutes <= closeMinutes
+  }
+
+  return false
+}
+
 /** 상단 버튼 요소 별로 함수 호출 */
 /** 상단 버튼 요소별로 GeoServer Layer 조회 후 마커 표시 */
 async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
@@ -549,6 +570,7 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
 
   try {
     clearMarkers()
+    clearLabels()
     refreshUserMarker()
 
     // 현재 bbox 계산
@@ -564,21 +586,34 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
 
     const filtered = selectedDepartments.value.length
       ? geojson.features.filter(f => {
-        const depts = (f.properties?.dgid_id_name || '').split(',').map(d => d.trim())
-        return selectedDepartments.value.some(sel =>
-          depts.some(dept => dept.includes(sel))
-        )
-      })
+          const depts = (f.properties?.dgid_id_name || '').split(',').map(d => d.trim())
+          return selectedDepartments.value.some(sel =>
+            depts.some(dept => dept.includes(sel))
+          )
+        })
       : geojson.features
 
+    // 병원별 마커 & 라벨 추가
     filtered.forEach(f => {
       const [lon, lat] = f.geometry.coordinates
+      const props = f.properties
+      const open = isHospitalOpen(props)
+      const hpid = f.id?.split(".")[1] || props.hpid
+      const name = props?.[nameKey] || listType
+
+      const finalIconUrl = open ? iconUrl : "/icons/grayLocation.svg"
+
       if (!isNaN(lon) && !isNaN(lat)) {
+        // 마커 표시
         addMarkerHospital(lon, lat, {
-          iconUrl,
-          name: f.properties?.[nameKey] || listType,
-          addr: f.properties?.[addrKey] || '',
+          iconUrl: finalIconUrl,
+          name,
+          addr: props?.[addrKey] || '',
+          onClick: () => goToHospitalDetail(hpid)
         })
+
+        // 라벨 표시 (Pretendard 서체 적용됨)
+        addLabelToMarker(lat, lon, name, () => goToHospitalDetail(hpid))
       }
     })
 
@@ -594,7 +629,7 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
 function showMoonlight() {
   showLayerInView({
     url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital:moonlight_hospital&outputFormat=application/json",
-    iconUrl: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjYmNjNDMwIiBkPSJNMTIgMTEuNUEyLjUgMi41IDAgMCAxIDkuNSA5QTIuNSAyLjUgMCAwIDEgMTIgNi41QTIuNSAyLjUgMCAwIDEgMTQuNSA5YTIuNSAyLjUgMCAwIDEtMi41IDIuNU0xMiAyYTcgNyAwIDAgMC03IDdjMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2E3IDcgMCAwIDAtNy03Ii8+PC9zdmc+",
+    iconUrl: "/icons/moonlight.svg",
     nameKey: "duty_name",
     addrKey: "duty_addr",
     listType: "달빛어린이병원"
@@ -605,7 +640,7 @@ function showMoonlight() {
 function showPediatric() {
   showLayerInView({
     url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital%3Achildren_hospital&outputFormat=application%2Fjson&maxFeature=50",
-    iconUrl: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjMDA2MGZmIiBkPSJNMTIgMTEuNUEyLjUgMi41IDAgMCAxIDkuNSA5QTIuNSAyLjUgMCAwIDEgMTIgNi41QTIuNSAyLjUgMCAwIDEgMTQuNSA5YTIuNSAyLjUgMCAwIDEtMi41IDIuNU0xMiAyYTcgNyAwIDAgMC03IDdjMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2E3IDcgMCAwIDAtNy03Ii8+PC9zdmc+",
+    iconUrl: "/icons/children.svg",
     nameKey: "duty_name",
     addrKey: "duty_addr",
     listType: "소아청소년과"
@@ -616,66 +651,25 @@ function showPediatric() {
 async function showPharmacy() {
   showLayerInView({
     url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital%3Apharmacy&outputFormat=application%2Fjson&maxFeature=50",
-    iconUrl: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjOTMwM2VlIiBkPSJNMTIgMTEuNUEyLjUgMi41IDAgMCAxIDkuNSA5QTIuNSAyLjUgMCAwIDEgMTIgNi41QTIuNSAyLjUgMCAwIDEgMTQuNSA5YTIuNSAyLjUgMCAwIDEtMi41IDIuNU0xMiAyYTcgNyAwIDAgMC03IDdjMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2E3IDcgMCAwIDAtNy03Ii8+PC9zdmc+",
+    iconUrl: "/icons/pharmacy.svg",
     nameKey: "duty_name",
     addrKey: "duty_addr",
     listType: "약국"
   })
 }
 
-// ⚡ AED 조회 (공공데이터 API - 1000건씩만 추출)
+// ⚡ AED 조회
 async function showAED() {
-  if (!vmap) {
-    alert("지도가 아직 준비되지 않았습니다.")
-    return
-  }
-
-  try {
-    // ✅ 기존 마커 모두 제거
-    clearMarkers()
-    refreshUserMarker()
-
-    // ✅ 공공데이터 API 호출
-    const key = "d43280d93d2b4881c7d82ace3929e20b5f2dfba72a77687d8ae7347d9f247d99"
-    const url = `https://apis.data.go.kr/B552657/AEDInfoInqireService/getAedLcinfoInqire?serviceKey=${key}&pageNo=1&numOfRows=500`
-    const res = await fetch(url)
-    const text = await res.text()
-    const xml = new DOMParser().parseFromString(text, "application/xml")
-    const items = Array.from(xml.getElementsByTagName("item"))
-
-    if (!items.length) {
-      alert("표시할 AED 정보가 없습니다.")
-      return
-    }
-
-    // ✅ 각 AED 마커 추가
-    let addedCount = 0
-    for (const item of items) {
-      const lat = parseFloat(item.getElementsByTagName("wgs84Lat")[0]?.textContent)
-      const lon = parseFloat(item.getElementsByTagName("wgs84Lon")[0]?.textContent)
-      const place = item.getElementsByTagName("buildPlace")[0]?.textContent || "AED 위치 미상"
-
-      if (!isNaN(lat) && !isNaN(lon)) {
-        addMarkerHospital(lon, lat, {
-          iconUrl: '/icons/aed.svg',
-          scale: 0.8,
-          anchor: [0.5, 1],
-          name: place,
-        })
-        addedCount++
-      }
-    }
-
-    console.log(`✅ AED ${addedCount}개 표시 완료`)
-  } catch (err) {
-    console.error("⚠️ AED 조회 실패:", err)
-    alert("AED 데이터를 불러오는 중 오류가 발생했습니다.")
-  }
+  showLayerInView({
+    url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital%3Aaed&outputFormat=application%2Fjson&maxFeature=50",
+    iconUrl: '/icons/aed.svg',
+    nameKey: "duty_name",
+    addrKey: "duty_addr",
+    listType: "AED"
+  })
 }
 
-/**
- * API 응답을 hospitals 배열로 통일시켜주는 함수
- */
+// API 응답을 hospitals 배열로 통일시켜주는 함수
 function addToHospitalList(list, type) {
   // 1) 선택한 진료과 필터링 (여기서는 fid/hpid 불필요)
   let filteredList = list
@@ -704,7 +698,7 @@ function addToHospitalList(list, type) {
     let distanceKm = null
     let etaMin = null
     if (userLocation.value && Number.isFinite(lat) && Number.isFinite(lon)) {
-      const dist = haversineMeter(userLocation.value.lat, userLocation.value.lon, lat, lon)
+      const dist = calculateDistance(userLocation.value.lat, userLocation.value.lon, lat, lon)
       distanceKm = (dist / 1000).toFixed(1)
       // 대략 시속 24km(분당 0.4km) 가정 → 필요시 조정
       etaMin = Math.max(1, Math.round((dist / 1000) / 0.4))
@@ -738,17 +732,59 @@ function addToHospitalList(list, type) {
   console.log("리스트 데이터 확인:", JSON.parse(JSON.stringify(hospitals.value)))
 }
 
-/* 두 지점 간 거리 계산 (Haversine 공식) - 미터 단위 */
-const toRad = (d) => d * Math.PI / 180
-function haversineMeter(lat1, lon1, lat2, lon2) {
-  const R = 6371000
-  const dLat = toRad(lat2 - lat1)
-  const dLon = toRad(lon2 - lon1)
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
-  return 2 * R * Math.asin(Math.sqrt(a))
+function clearLabels() {
+  if (!vmap) return
+  labelOverlays.forEach(overlay => vmap.removeOverlay(overlay))
+  labelOverlays = []
+  existingLabelPositions = []
 }
 
-let markers = []
+function addLabelToMarker(lat, lon, text, onClick) {
+  if (!vmap) return
+
+  // 위도경도 → 화면 픽셀 좌표 변환
+  const pixel = vmap.getPixelFromCoordinate(window.ol.proj.fromLonLat([lon, lat]))
+
+  // 1️⃣ 기존 라벨들과 거리 계산 (px 단위)
+  const tooCloseIndex = existingLabelPositions.findIndex(p => {
+    const dx = p[0] - pixel[0]
+    const dy = p[1] - pixel[1]
+    return Math.sqrt(dx * dx + dy * dy) < 25 // 25px 이하 → 겹침
+  })
+
+  // 2️⃣ 기존 라벨과 겹치면 → 기존 라벨 제거 + 현재 것도 추가 안 함
+  if (tooCloseIndex !== -1) {
+    const oldOverlay = labelOverlays[tooCloseIndex]
+    if (oldOverlay && vmap) {
+      vmap.removeOverlay(oldOverlay)
+    }
+
+    // 배열에서도 제거
+    labelOverlays.splice(tooCloseIndex, 1)
+    existingLabelPositions.splice(tooCloseIndex, 1)
+    return // 이번 라벨도 추가 안 함 (둘 다 제거)
+  }
+
+  // 3️⃣ 겹치지 않으면 → 새 라벨 추가
+  existingLabelPositions.push(pixel)
+
+  const element = document.createElement("div")
+  element.className = "marker-label"
+  element.textContent = text
+
+  if (onClick) element.addEventListener("click", onClick)
+
+  const overlay = new window.ol.Overlay({
+    position: window.ol.proj.fromLonLat([lon, lat]),
+    positioning: "bottom-center",
+    offset: [0, -25],
+    element,
+  })
+
+  vmap.addOverlay(overlay)
+  labelOverlays.push(overlay)
+  return overlay
+}
 
 /* 거리순 정렬 */
 const distanceAsc = ref(true)
@@ -814,195 +850,6 @@ function closeRouteModal() {
   }
 }
 
-/* 경로 탐색 실행 */
-// async function findRoute() {
-//   if (!vmap || !userLocation.value || !selectedHospital.value) {
-//     alert('위치 정보를 확인할 수 없습니다.')
-//     return
-//   }
-
-//   // 모달 닫기
-//   closeRouteModal()
-
-//   // 기존 병원 마커 숨기기
-//   clearMarkers()
-
-//   // 기존 경로 정보 초기화
-//   clearRouteData()
-
-//   const headers = {
-//     "appKey": TMAP_APP_KEY,
-//     "Content-Type": "application/json"
-//   }
-
-//   try {
-//     let resultData, props
-
-//     // 이동 수단에 따라 다른 API 호출
-//     if (transportType.value === 'car') {
-//       // 자동차 경로
-//       const data = {
-//         "startX": String(userLocation.value.lon),
-//         "startY": String(userLocation.value.lat),
-//         "endX": String(selectedHospital.value.coordinates[0]),
-//         "endY": String(selectedHospital.value.coordinates[1]),
-//         "reqCoordType": "WGS84GEO",
-//         "resCoordType": "WGS84GEO",
-//         "searchOption": searchOption.value,
-//         "trafficInfo": trafficInfo.value
-//       }
-
-//       const response = await axios.post(
-//         "https://apis.openapi.sk.com/tmap/routes?version=1&format=json",
-//         data,
-//         { headers: headers }
-//       )
-
-//       resultData = response.data.features
-//       props = resultData[0].properties
-
-//       routeDetails.value = {
-//         distance: `${(props.totalDistance / 1000).toFixed(1)}km`,
-//         time: `${(props.totalTime / 60).toFixed(0)}분`,
-//         fare: `${props.totalFare}원`,
-//         taxiFare: `${props.taxiFare}원`,
-//         walkTime: ''
-//       }
-//     } else if (transportType.value === 'walk') {
-//       // 도보 경로
-//       const data = {
-//         "startX": String(userLocation.value.lon),
-//         "startY": String(userLocation.value.lat),
-//         "endX": String(selectedHospital.value.coordinates[0]),
-//         "endY": String(selectedHospital.value.coordinates[1]),
-//         "reqCoordType": "WGS84GEO",
-//         "resCoordType": "WGS84GEO",
-//         "startName": "출발지",
-//         "endName": selectedHospital.value.properties.hospital_name || "도착지"
-//       }
-
-//       const response = await axios.post(
-//         "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json",
-//         data,
-//         { headers: headers }
-//       )
-
-//       resultData = response.data.features
-//       props = resultData[0].properties
-
-//       routeDetails.value = {
-//         distance: `${(props.totalDistance / 1000).toFixed(1)}km`,
-//         time: `${(props.totalTime / 60).toFixed(0)}분`,
-//         fare: '',
-//         taxiFare: '',
-//         walkTime: `${(props.totalTime / 60).toFixed(0)}분`
-//       }
-//     } else if (transportType.value === 'transit') {
-//       // 대중교통 경로 (간단한 직선 거리로 대체 - TMAP 대중교통 API는 별도 상품)
-//       alert('대중교통 경로는 현재 지원하지 않습니다. 도보 또는 자동차를 선택해주세요.')
-//       return
-//     }
-
-//     isRouteMode.value = true
-
-//     // 경로 및 마커 그리기 - 파란색 라인
-//     for (const i in resultData) {
-//       const geometry = resultData[i].geometry
-//       const properties = resultData[i].properties
-
-//       if (geometry.type === "LineString") {
-//         const drawInfoArr = []
-//         for (const coord of geometry.coordinates) {
-//           drawInfoArr.push(new window.Tmapv3.LatLng(coord[1], coord[0]))
-//         }
-//         drawLine(drawInfoArr) // 파란색 라인으로 그리기
-//       } else {
-//         // 출발지(S)와 도착지(E) 마커만 표시
-//         if (properties.pointType === "S" || properties.pointType === "E") {
-//           const [lng, lat] = geometry.coordinates
-//           const position = new window.Tmapv3.LatLng(lat, lng)
-
-//           const label = properties.pointType === "S" ? "출발" : "도착"
-//           const color = properties.pointType === "S" ? "#0d6efd" : "#dc3545"
-
-//           const marker = new window.Tmapv3.Marker({
-//             position: position,
-//             map: vmap,
-//             title: label
-//           })
-
-//           // 커스텀 라벨 추가
-//           const infoWindow = new window.Tmapv3.InfoWindow({
-//             position: position,
-//             content: `<div style="padding:5px 10px;background:${color};color:white;border-radius:5px;font-weight:bold;font-size:12px;">${label}</div>`,
-//             type: 2,
-//             map: vmap,
-//             offset: new window.Tmapv3.Point(0, -10)
-//           })
-
-//           resultMarkerArr.value.push(marker)
-//           // ✅ 추가: 라벨도 기록
-//           resultInfoWindowArr.value.push(infoWindow)
-
-//         }
-//       }
-//     }
-
-//     // 바텀시트 올리기
-//     sheetHeightRatio.value = 0.5
-
-//   } catch (error) {
-//     console.error("경로 탐색 API 오류:", error)
-//     alert("경로 탐색에 실패했습니다.")
-//     if (error.response) {
-//       console.error("응답 데이터:", error.response.data)
-//     }
-//   }
-// }
-
-/* 경로 라인 그리기 - 깔끔한 파란색 */
-// function drawLine(arrPoint) {
-//   if (!window.Tmapv3) return
-
-//   // 파란색 경로 라인
-//   const polyline_ = new window.Tmapv3.Polyline({
-//     path: arrPoint,
-//     strokeColor: "#0d6efd", // Bootstrap primary 파란색
-//     strokeWeight: 6,
-//     map: vmap
-//   })
-//   resultdrawArr.value.push(polyline_)
-// }
-
-/* 경로 데이터 초기화 */
-function clearRouteData() {
-  resultMarkerArr.value.forEach(marker => marker.setMap(null))
-  resultMarkerArr.value = []
-
-  resultdrawArr.value.forEach(line => line.setMap(null))
-  resultdrawArr.value = []
-
-  resultInfoWindowArr.value.forEach(iw => iw.setMap(null))
-  resultInfoWindowArr.value = []
-
-}
-
-/* 경로 모드 종료 */
-function exitRouteMode() {
-  isRouteMode.value = false
-  selectedHospital.value = null
-  clearRouteData()
-}
-
-// /* 경로 정보 토글 */
-// function toggleRouteInfo() {
-//   isRouteInfoExpanded.value = !isRouteInfoExpanded.value
-// }
-
-// 내 위치 마커와 정보창을 저장하는 변수
-const currentLocationMarker = ref(null)
-const currentLocationInfoWindow = ref(null)
-
 async function updateUserLocation(zoom = 16) {
   try {
     const position = await getCurrentLocation()
@@ -1013,7 +860,7 @@ async function updateUserLocation(zoom = 16) {
     vmap.getView().setCenter(center)
     vmap.getView().setZoom(zoom)
 
-    clearMarkers()
+    //clearMarkers()
     addMarkerHospital(lon, lat, {
       name: '현재 위치',
       iconUrl: 'icons/currentLocation.svg',
@@ -1035,7 +882,6 @@ async function refreshUserMarker() {
     userLocation.value = { lat, lon }
 
     // 기존 마커만 교체
-    clearMarkers()
     addMarkerHospital(lon, lat, {
       name: '현재 위치',
       iconUrl: 'icons/currentLocation.svg',
@@ -1048,8 +894,41 @@ async function refreshUserMarker() {
 }
 
 /* 내 위치 새로고침 */
-function refreshLocation() {
-  updateUserLocation(16)
+async function refreshLocation() {
+  try {
+    const position = await getCurrentLocation()
+    const { lat, lon } = position
+    userLocation.value = { lat, lon }
+
+    const center = window.ol.proj.fromLonLat([lon, lat])
+    const view = vmap.getView()
+
+    // 부드럽게 중앙으로 이동
+    if (!view.animate) {
+      const start = view.getCenter()
+      const steps = 20
+      let i = 0
+      const timer = setInterval(() => {
+        const t = ++i / steps
+        const lon = start[0] + (center[0] - start[0]) * t
+        const lat = start[1] + (center[1] - start[1]) * t
+        view.setCenter([lon, lat])
+        if (i >= steps) clearInterval(timer)
+      }, 10)
+    }
+
+    // 현재 위치 마커 갱신
+    addMarkerHospital(lon, lat, {
+      name: '현재 위치',
+      iconUrl: 'icons/currentLocation.svg',
+      anchor: [0.5, 0.5]
+    })
+
+    console.log(`화면 중심만 내 위치로 이동: ${lat}, ${lon}`)
+  } catch (err) {
+    console.error('moveToUserLocation 실패:', err)
+    alert('현재 위치를 가져올 수 없습니다.')
+  }
 }
 
 /* 바텀시트 제스처 */
@@ -1113,6 +992,8 @@ onMounted(async () => {
   } catch (err) {
     console.error('초기화 실패:', err)
   }
+
+  
 })
 
 onActivated(async () => {
@@ -1146,16 +1027,13 @@ onActivated(async () => {
 
 onBeforeUnmount(() => {
   clearMarkers()
-  clearRouteData()
   if (vmap && vmap.getView) {
     vmap.setTarget(null)
     vmap = null
   }
 })
 
-
 </script>
-
 <style scoped>
 /* 카드 기본/호버/클릭 */
 .card {
@@ -1205,4 +1083,28 @@ onBeforeUnmount(() => {
 .sheet-grip {
   touch-action: none;
 }
+
+:deep(.marker-label) {
+  font-family: 'Pretendard', sans-serif;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  transition: all 0.2s ease;
+}
+
+:deep(.marker-label:hover) {
+  background: #0d6efd;
+  color: #fff;
+}
+
 </style>

@@ -35,6 +35,17 @@
           </div>
         </div>
 
+        <div v-if="hospitalType == 'aed'" class="py-2">
+          <div class="d-flex flex-column justify-content-start gap-2 mb-2">
+            <div>
+              <div class="mb-2 text-bold">상세위치 정보</div>
+            </div>
+            <div class="d-flex text-plight">
+              {{ hospitalData.duty_detail }}
+            </div>
+          </div>
+        </div>
+
         <div class="d-flex flex-column justify-content-start">
           <div class="d-felx text-bold fs-7 mb-2">진료 시간</div>
           <table class="table table-striped table-bordered text-plight ms-2">
@@ -71,24 +82,37 @@
           </table>
         </div>
 
-        <div class="info-block">
-          <div class="mb-2 text-bold">진료과목</div>
-
-          <div class="departments d-flex flex-wrap gap-2 mb-4">
-            <span v-for="(dept, i) in visibleDepartments" :key="i"
-              class="badge rounded-pill text-black text-plight px-3 py-2 dept-badge">
-              {{ dept }}
-            </span>
+        <div v-if="hospitalData.duty_inf" class="py-2">
+          <div class="d-flex flex-column justify-content-start gap-2 mb-2">
+            <div>
+              <div class="mb-2 text-bold">안내</div>
+            </div>
+            <div class="d-flex text-plight">
+              {{ hospitalData.duty_inf }}
+            </div>
           </div>
+        </div>
 
-          <div class="text-center pb-5">
-            <button v-if="departments.length > 12"
-              class="btn btn-sm btn-outline-primary rounded-pill px-3  text-bold" @click="toggleShowAll"><svg
-                xmlns="http://www.w3.org/2000/svg" width="10" height="20" viewBox="0 0 24 24">
-                <path fill="#0D6EFD" d="M1 3h22L12 22" />
-              </svg>
-              {{ showAll ? '접기' : '더보기' }}
-            </button>
+        <div v-if="hospitalType !== 'pharmacy' && hospitalType !=='aed'">
+          <div class="info-block">
+            <div class="mb-2 text-bold">진료과목</div>
+
+            <div class="departments d-flex flex-wrap gap-2 mb-4">
+              <span v-for="(dept, i) in visibleDepartments" :key="i"
+                class="badge rounded-pill text-black text-plight px-3 py-2 dept-badge">
+                {{ dept }}
+              </span>
+            </div>
+
+            <div class="text-center pb-5">
+              <button v-if="departments.length > 12"
+                class="btn btn-sm btn-outline-primary rounded-pill px-3  text-bold" @click="toggleShowAll"><svg
+                  xmlns="http://www.w3.org/2000/svg" width="10" height="20" viewBox="0 0 24 24">
+                  <path fill="#0D6EFD" d="M1 3h22L12 22" />
+                </svg>
+                {{ showAll ? '접기' : '더보기' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -105,6 +129,7 @@ const goBack = () => router.back();
 
 const hospitalData = ref(null);
 const showAll = ref(false);
+const hospitalType = ref("hospital");
 
 // props에서 hpid 받아오기
 const props = defineProps({ hpid: String });
@@ -127,7 +152,8 @@ async function getHospitalAllByHPID(hpid) {
   const layers = [
     "hospital:moonlight_hospital",
     "hospital:children_hospital",
-    "hospital:pharmacy"
+    "hospital:pharmacy",
+    "hospital:aed"
   ];
 
   try {
@@ -140,6 +166,10 @@ async function getHospitalAllByHPID(hpid) {
 
       const res = await fetch(url);
       const data = await res.json().catch(() => null);
+      if (data?.features?.[0]) {
+        // ✅ 찾은 레이어 종류를 기록
+        hospitalType.value = layer.split(":")[1];
+      }
       return data?.features?.[0] || null;
     });
 
