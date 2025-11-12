@@ -835,8 +835,9 @@ const emergencyFeedbacks = ref([
 // 자동화 실행 + 로그 (FastAPI SSE)
 // ----------------------
 const AUTOMATION_BASE_URL =
-  import.meta.env.VITE_AUTOMATION_BASE_URL || 'http://localhost:8000'
+  'https://child119messageauto-251868777139.asia-northeast3.run.app'
 
+  console.log('AUTOMATION_BASE_URL =>', AUTOMATION_BASE_URL)
 const automationStatus = ref('idle') // 'idle' | 'running' | 'done' | 'error'
 const automationJobId = ref(null)
 const automationLogs = ref([])
