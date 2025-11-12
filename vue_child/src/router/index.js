@@ -208,7 +208,12 @@ const router = createRouter({
       component: () => import("../views/AdminEmergencyorder.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },   // ✅ 추가
       
-    }
+    },
+    {
+      path: "/emegencyorderlook", //응급정보 상세 이식할연습화면
+      name: "emegencyorderlook",
+      component: () => import("../views/emegencyorderlook.vue"),
+    },
   ],
 });
 
