@@ -1,186 +1,112 @@
 <template>
-  <div class="admin-layout bg-light min-vh-100">
-    <!-- 고정 헤더 (생략되어 있음) -->
-
+  <div class="admin-layout d-flex min-vh-100">
     <!-- 메인 영역 -->
-    <main class="admin-main container">
+    <main class="admin-main">
       <!-- 상단 타이틀 & 설명 -->
-      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
+      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3 px-4 pt-3">
         <div>
-          <h3 class="fw-bold mb-1">관리자 대시보드</h3>
-          <p class="text-muted mb-0 small">
+          <h3 class="text-bold mb-1">관리자 대시보드</h3>
+          <p class="text-medium mb-0 small">
             아이119 앱의 크롤링 설정, 사용자/콘텐츠 데이터, 자동화 로그, 건의사항을 한 곳에서 관리합니다.
           </p>
         </div>
       </div>
 
-      <!-- 상단 탭 -->
-      <ul class="nav nav-pills nav-fill admin-tabs mb-4">
-        <li class="nav-item">
-          <button
-            class="nav-link"
-            :class="{ active: activeTab === 'manage' }"
-            @click="activeTab = 'manage'"
-          >
-            관리
-          </button>
-        </li>
-        <li class="nav-item">
-          <button
-            class="nav-link"
-            :class="{ active: activeTab === 'automation' }"
-            @click="activeTab = 'automation'"
-          >
-            자동화 로그
-          </button>
-        </li>
-        <li class="nav-item">
-          <button
-            class="nav-link"
-            :class="{ active: activeTab === 'feedback' }"
-            @click="activeTab = 'feedback'"
-          >
-            건의사항
-          </button>
-        </li>
-      </ul>
-
       <!-- ░░░ 관리 탭 ░░░ -->
-      <section v-if="activeTab === 'manage'" class="d-flex flex-column gap-3">
-        <!-- 크롤링 주기 설정 -->
-        <div class="card shadow-sm border-0 rounded-4">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="fw-semibold mb-0">크롤링 주기 설정</h5>
-            </div>
-            <p class="small text-muted">
-              외부 데이터(예: 응급 관련 뉴스, 콘텐츠)를 가져오는 크롤러의 실행 주기를 설정합니다.
-            </p>
-
-            <div class="d-flex flex-wrap align-items-center gap-3">
-              <div class="d-flex flex-wrap gap-2">
-                <button
-                  v-for="m in crawlingOptions"
-                  :key="m"
-                  type="button"
-                  class="btn btn-sm rounded-pill"
-                  :class="crawlingInterval === m ? 'btn-primary' : 'btn-outline-primary'"
-                  @click="crawlingInterval = m"
-                >
-                  {{ m }}분
-                </button>
-              </div>
-              <div class="ms-auto">
-                <button
-                  type="button"
-                  class="btn btn-success btn-sm rounded-pill"
-                  @click="saveCrawlingInterval"
-                >
-                  저장
-                </button>
-              </div>
-            </div>
-
-            <p class="small text-muted mt-2 mb-0">
-              현재 설정된 주기: <strong>{{ crawlingInterval }}분</strong>
-              <span v-if="lastSavedCrawling" class="text-secondary">
-                (마지막 저장: {{ lastSavedCrawling }})
-              </span>
-            </p>
-          </div>
-        </div>
+      <section v-if="activeTab === 'manage'" class="d-flex flex-column gap-3 px-4 pb-4">
 
         <!-- users + kidinformation 정보 -->
         <div class="card shadow-sm border-0 rounded-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="fw-semibold mb-0">사용자 정보 (users + kidinformation)</h5>
-              <span class="badge bg-secondary-subtle text-dark small">
+              <h5 class="text-bold mb-0">사용자 정보 (users + kidinformation)</h5>
+              <span class="badge bg-secondary-subtle text-dark text-plight small">
                 총 {{ usersWithKids.length }}명
               </span>
             </div>
 
             <div class="table-responsive">
-              <!-- 원래 코드에 table 태그가 없었는데, 기존 구조 유지 -->
-              <thead class="table-light">
-                <tr>
-                  <th style="width: 4%;">No</th>
-                  <th style="width: 18%;">이메일</th>
-                  <th style="width: 12%;">아이디</th>
-                  <th style="width: 12%;">이름</th>
-                  <th style="width: 12%;">전화번호</th>
-                  <th style="width: 10%;">자녀 수</th>
-                  <th style="width: 12%;">가입일</th>
-                  <th style="width: 10%;">동의</th>
-                  <th style="width: 10%;">관리</th>
-                </tr>
-              </thead>
+              <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 4%;">No</th>
+                    <th style="width: 18%;">이메일</th>
+                    <th style="width: 12%;">아이디</th>
+                    <th style="width: 12%;">이름</th>
+                    <th style="width: 12%;">전화번호</th>
+                    <th style="width: 10%;">자녀 수</th>
+                    <th style="width: 12%;">가입일</th>
+                    <th style="width: 10%;">동의</th>
+                    <th style="width: 10%;">관리</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                <tr v-for="(u, idx) in usersWithKids" :key="u.uid">
-                  <td>{{ idx + 1 }}</td>
-                  <td>{{ u.email }}</td>
-                  <td>{{ u.username || '-' }}</td>
-                  <td>{{ u.name }}</td>
-                  <td>{{ u.phone || '-' }}</td>
+                <tbody>
+                  <tr v-for="(u, idx) in usersWithKids" :key="u.uid">
+                    <td>{{ idx + 1 }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.username || '-' }}</td>
+                    <td>{{ u.name }}</td>
+                    <td>{{ u.phone || '-' }}</td>
 
-                  <td>
-                    <div class="small">
-                      <div v-if="u.kids.length">
-                        <strong>{{ u.kids.length }}명</strong>
+                    <td>
+                      <div class="small">
+                        <div v-if="u.kids.length">
+                          <strong>{{ u.kids.length }}명</strong>
+                          <button
+                            type="button"
+                            class="btn btn-link btn-sm p-0 ms-1"
+                            @click="openKidModal(u)"
+                          >
+                            상세보기
+                          </button>
+                        </div>
+                        <div v-else class="text-muted">
+                          등록된 자녀 정보 없음
+                        </div>
+                      </div>
+                    </td>
+
+                    <td>{{ formatDate(u.createdAt) }}</td>
+
+                    <td>
+                      <div class="d-flex flex-column gap-1 small">
+                        <span
+                          class="badge rounded-pill px-2"
+                          :class="u.agreeTerms ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-muted'"
+                        >
+                          이용약관 {{ u.agreeTerms ? '동의' : '미동의' }}
+                        </span>
+                        <span
+                          class="badge rounded-pill px-2"
+                          :class="u.agreeMarketing ? 'bg-info-subtle text-info' : 'bg-secondary-subtle text-muted'"
+                        >
+                          마케팅 {{ u.agreeMarketing ? '동의' : '미동의' }}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td>
+                      <div class="d-flex flex-column gap-1">
                         <button
                           type="button"
-                          class="btn btn-link btn-sm p-0 ms-1"
-                          @click="openKidModal(u)"
+                          class="btn btn-outline-primary btn-sm rounded-pill"
+                          @click="goToUserEdit(u.uid)"
                         >
-                          상세보기
+                          수정
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-danger btn-sm rounded-pill"
+                          @click="deleteUser(u)"
+                        >
+                          삭제
                         </button>
                       </div>
-                      <div v-else class="text-muted">
-                        등록된 자녀 정보 없음
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>{{ formatDate(u.createdAt) }}</td>
-
-                  <td>
-                    <div class="d-flex flex-column gap-1 small">
-                      <span
-                        class="badge rounded-pill px-2"
-                        :class="u.agreeTerms ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-muted'"
-                      >
-                        이용약관 {{ u.agreeTerms ? '동의' : '미동의' }}
-                      </span>
-                      <span
-                        class="badge rounded-pill px-2"
-                        :class="u.agreeMarketing ? 'bg-info-subtle text-info' : 'bg-secondary-subtle text-muted'"
-                      >
-                        마케팅 {{ u.agreeMarketing ? '동의' : '미동의' }}
-                      </span>
-                    </div>
-                  </td>
-
-                  <td>
-                    <div class="d-flex flex-column gap-1">
-                      <button
-                        type="button"
-                        class="btn btn-outline-primary btn-sm rounded-pill"
-                        @click="goToUserEdit(u.uid)"
-                      >
-                        수정
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-outline-danger btn-sm rounded-pill"
-                        @click="deleteUser(u)"
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <p class="small text-muted mt-2 mb-0">
@@ -293,7 +219,51 @@
       </section>
 
       <!-- ░░░ 자동화 로그 탭 ░░░ -->
-      <section v-else-if="activeTab === 'automation'" class="d-flex flex-column gap-3">
+      <section v-else-if="activeTab === 'automation'" class="d-flex flex-column gap-3 px-4 pb-4">
+        <!-- 크롤링 주기 설정 -->
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-semibold mb-0">크롤링 주기 설정</h5>
+            </div>
+            <p class="small text-muted">
+              외부 데이터(예: 응급 관련 뉴스, 콘텐츠)를 가져오는 크롤러의 실행 주기를 설정합니다.
+            </p>
+
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <div class="d-flex flex-wrap gap-2">
+                <button
+                  v-for="m in crawlingOptions"
+                  :key="m"
+                  type="button"
+                  class="btn btn-sm rounded-pill"
+                  :class="crawlingInterval === m ? 'btn-primary' : 'btn-outline-primary'"
+                  @click="crawlingInterval = m"
+                >
+                  {{ m }}분
+                </button>
+              </div>
+              <div class="ms-auto">
+                <button
+                  type="button"
+                  class="btn btn-success btn-sm rounded-pill"
+                  @click="saveCrawlingInterval"
+                >
+                  저장
+                </button>
+              </div>
+            </div>
+
+            <p class="small text-muted mt-2 mb-0">
+              현재 설정된 주기: <strong>{{ crawlingInterval }}분</strong>
+              <span v-if="lastSavedCrawling" class="text-secondary">
+                (마지막 저장: {{ lastSavedCrawling }})
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <!--자동화 실행+로그 카드-->
         <div class="card shadow-sm border-0 rounded-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -357,7 +327,7 @@
       </section>
 
       <!-- ░░░ 건의사항 탭 ░░░ -->
-      <section v-else-if="activeTab === 'feedback'" class="d-flex flex-column gap-3">
+      <section v-else-if="activeTab === 'feedback'" class="d-flex flex-column gap-3 px-4 pb-4">
         <div class="card shadow-sm border-0 rounded-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -406,7 +376,7 @@
                       <th style="width: 12%;">상태</th>
                     </tr>
                   </thead>
-                  <tbody> <!-- 추가한 코드 행응 선택하면 건의 사항의 아이디에 따라서 페이지가 이동하고 그걸 파이어베이스에 전달하여 호춣-->
+                  <tbody>
                     <tr v-for="(f, idx) in emergencyFeedbacks" :key="f.id" @click="goToSuggestionDetail(f.id)"
                       style="cursor: pointer;">
                       <td>{{ idx + 1 }}</td>
@@ -454,7 +424,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(f, idx) in emergencyFeedbacks" :key="f.id"  @click="goToSuggestionDetail(f.id)">
+                    <tr v-for="(f, idx) in emergencyFeedbacks" :key="f.id"  @click="goToSuggestionDetail(f.id)" style="cursor: pointer;">
                       <td>{{ idx + 1 }}</td>
                       <td class="text-truncate" style="max-width: 200px;">
                         {{ f.emergencyTitle }}
@@ -576,49 +546,14 @@ const deleteEmergency = async (item) => {
   }
 }
 
-// ----------------------
-// 로그인 버튼 상태
-// ----------------------
-const status = ref('로그인')
-
-onMounted(() => {
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      status.value = '로그아웃'
-    } else {
-      status.value = '로그인'
-    }
-  })
-})
-
-const goToLogin = () => {
-  router.push('/login')
-}
 
 const goToUserEdit = (uid) => {
   router.push(`/AdminUserEdit/${uid}`)
 }
 const goToEmergencyDetail = (id) => {
-  router.push({ name: 'emergencyorder', params: { id } })
+  router.push({ name: 'AdminEmergencyorder', params: { id } })
 }
 
-const logout = async () => {
-  try {
-    await signOut(auth)
-    alert('로그아웃 되었습니다.')
-  } catch (err) {
-    console.error('로그아웃 중 오류 발생:', err)
-    alert('로그아웃 중 오류가 발생했습니다.')
-  }
-}
-
-const logAction = () => {
-  if (status.value === '로그인') {
-    goToLogin()
-  } else {
-    logout()
-  }
-}
 
 const deleteUser = async (user) => {
   const ok = confirm(`정말로 ${user.email} 사용자를 삭제하시겠습니까?\n(자녀 정보도 함께 삭제됩니다.)`)
@@ -835,8 +770,9 @@ const emergencyFeedbacks = ref([
 // 자동화 실행 + 로그 (FastAPI SSE)
 // ----------------------
 const AUTOMATION_BASE_URL =
-  import.meta.env.VITE_AUTOMATION_BASE_URL || 'http://localhost:8000'
+  'https://child119messageauto-251868777139.asia-northeast3.run.app'
 
+  console.log('AUTOMATION_BASE_URL =>', AUTOMATION_BASE_URL)
 const automationStatus = ref('idle') // 'idle' | 'running' | 'done' | 'error'
 const automationJobId = ref(null)
 const automationLogs = ref([])
@@ -971,15 +907,19 @@ onMounted(() => {
   padding-bottom: 2.5rem;
 }
 
-/* 상단 탭 */
-.admin-tabs .nav-link {
-  border-radius: 999px;
-  font-weight: 600;
-  color: #555;
+/* 메인 영역: 사이드바 너비만큼 밀기, 좌우 여백 제거 */
+.admin-main {
+  margin-left: 240px; /* 사이드바 width와 일치해야 함 */
+  padding-top: 1.5rem;
+  padding-bottom: 2.5rem;
+  padding-left: 0;  /* 왼쪽 여백 없는 상태로 시작 */
+  padding-right: 0; /* 오른쪽 여백 없음 (필요하면 수정) */
+  min-height: 100vh;
+  background-color: transparent;
 }
-.admin-tabs .nav-link.active {
-  background-color: #0d6efd;
-  color: #fff;
+
+.admin-layout {
+  padding-top: 0; /* 필요 시 헤더 높이에 맞춰 조정 */
 }
 
 /* 자동화 로그 박스 */

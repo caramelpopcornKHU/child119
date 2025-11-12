@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 //import HomeView from '../views/HomeView.vue'
-import { auth } from "../firebase/index";
+import { auth,db } from "../firebase/index";
+import { doc, getDoc } from "firebase/firestore";  // ✅ Firestore에서 유저정보 읽기
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,7 +9,7 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: () => import("../views/HomeView.vue"),
+      component: () => import("../views/HomeViewApp.vue"),
     },
     {
       path: "/mypage",
@@ -113,11 +114,7 @@ const router = createRouter({
       component: () => import("../views/HomeViewTest.vue"),
     },
     // app 버전 라우팅 ----------------
-    {
-      path: "/HomeViewApp",
-      name: "HomeViewApp",
-      component: () => import("../views/HomeViewApp.vue"),
-    },
+
     {
       path: "/navi",
       name: "navi",
@@ -142,11 +139,13 @@ const router = createRouter({
       path: "/AdminEmergencyWrite",
       name: "AdminEmergencyWrite",
       component: () => import("../views/AdminEmergencyWrite.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },   // ✅ 관리자만 접근 가능
     },
     {
       path: "/AdminEmergencyEdit/:id",
       name: "AdminEmergencyEdit",
       component: () => import("../views/AdminEmergencyEdit.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },  // ✅ 관리자만 접근 가능
     },
     {
       path: "/emergencyadd",
@@ -162,11 +161,13 @@ const router = createRouter({
       path: "/AdminHome",
       name: "AdminHome",
       component: () => import("../views/AdminHome.vue"),
+       meta: { requiresAuth: true, requiresAdmin: true },   // 관리자만 접근 가능
     },
     {
       path: "/AdminUserEdit/:uid",
       name: "AdminUserEdit",
       component: () => import("../views/AdminUserEdit.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },   // ✅ 관리자만 접근 가능
     },
     {
       path: "/emergencysuggestions", //사용자 제안 폼 화면
@@ -177,11 +178,13 @@ const router = createRouter({
       path: "/AdminHomejsb", //성범 연습장
       name: "AdminHomejsb",
       component: () => import("../views/AdminHomejsb.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },   // ✅ 관리자만 접근 가능
     },
     {
       path: "/AdminEmergencysuggestionsdetail/:id", //응급제안사항 상세화면 페이지
       name: "AdminEmergencysuggestionsdetail",
       component: () => import("../views/AdminEmergencysuggestionsdetail.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },   // ✅ 추가
     },
     {
       path: "/hospitalInformationDetail/:hpid", //병의원 디테일뷰
@@ -193,22 +196,94 @@ const router = createRouter({
       path: "/AdminEmergency", 
       name: "AdminEmergency",
       component: () => import("../views/AdminEmergency.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },   // ✅ 추가
+    },
+     {
+      path: "/AdminEmergencyorder/:id", //파라미터 아이디 추가
+      name: "AdminEmergencyorder",
+      component: () => import("../views/AdminEmergencyorder.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },   // ✅ 추가
+      
+    },
+    {
+      path: "/AdminManageUser",
+      name: "AdminManageUser",
+      component: () => import("../views/AdminManageUser.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: "/AdminManageContents",
+      name: "AdminManageContents",
+      component: () => import("../views/AdminManageContents.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: "/AdminAutomation",
+      name: "AdminAutomation",
+      component: () => import("../views/AdminAutomation.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: "/AdminFeedback",
+      name: "AdminFeedback",
+      component: () => import("../views/AdminFeedback.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
   ],
 });
 
-// 로그인이 필요한 페이지 보호
-router.beforeEach((to, from, next) => {
+// ✅ 관리자 여부 확인 함수 (username에 'admin' 포함인지 확인)
+async function isAdminUser(firebaseUser) {
+  if (!firebaseUser) return false;
+
+  try {
+    const userDocRef = doc(db, "users", firebaseUser.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) return false;
+
+    const data = userDoc.data();
+    const username = data.username || "";
+
+    // Firestore rules에서처럼 username에 'admin' 포함 여부로 판단
+    return username.includes("admin");
+  } catch (e) {
+    console.error("관리자 권한 확인 중 오류:", e);
+    return false;
+  }
+}
+
+// 🔐 전역 라우터 가드
+router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+  const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin);
+
   const currentUser = auth.currentUser;
 
+  // 1) 로그인 필수인데 로그인 안 되어 있을 때
   if (requiresAuth && !currentUser) {
-    // 로그인이 필요한 페이지인데 로그인하지 않은 경우
     alert("로그인이 필요합니다.");
-    next("/login");
-  } else {
-    next();
+    return next("/login");
   }
+
+  // 2) 관리자 전용 페이지 접근 시
+  if (requiresAdmin) {
+    // 로그인은 되어 있겠지만 혹시 모르니 한 번 더
+    if (!currentUser) {
+      alert("관리자 페이지입니다. 로그인 후 이용해주세요.");
+      return next("/login");
+    }
+
+    const admin = await isAdminUser(currentUser);
+
+    if (!admin) {
+      alert("관리자만 접근할 수 있는 페이지입니다.");
+      return next("/"); // 일반 홈으로 돌려보내기
+    }
+  }
+
+  // 3) 문제 없으면 통과
+  return next();
 });
 
 export default router;

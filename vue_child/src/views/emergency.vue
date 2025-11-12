@@ -52,16 +52,14 @@
         </button>
       </div>
     </div>
-    <!-- 건의사항 버튼 (오른쪽 아래 고정) -->
-    <button class="btn btn-primary rounded-circle position-fixed shadow"
-      style="bottom: 80px; right: 20px; width: 56px; height: 56px; z-index: 100;" @click="goToSuggestions">
+    <!-- 건의사항 버튼 (오른쪽 아래 고정) 바텀이랑 조정 width 조정했습니다 -->
+    <button class="btn btn-primary rounded position-fixed shadow"
+      style="bottom: 100px; right: 20px; width: 170px; height: 56px; z-index: 100;" @click="goToSuggestions">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
         <path fill="white"
-          d="M12 8H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h1v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4h3l5 4V4zm3 7.6L13 14H4v-4h9l2-1.6zm6.5-3.6c0 1.71-.96 3.26-2.5 4V8c1.53.75 2.5 2.3 2.5 4" />
-      </svg>
+          d="M17 14h2v3h3v2h-3v3h-2v-3h-3v-2h3zM5 3h14c1.11 0 2 .89 2 2v7.8c-.61-.35-1.28-.6-2-.72V5H5v14h7.08c.12.72.37 1.39.72 2H5c-1.11 0-2-.89-2-2V5c0-1.11.89-2 2-2m2 4h10v2H7zm0 4h10v1.08c-.85.14-1.63.46-2.32.92H7zm0 4h5v2H7z" />
+      </svg> 건의사항 추가
     </button>
-
-
   </div>
 </template>
 
@@ -71,6 +69,8 @@ import { useRouter } from 'vue-router'
 import { db, auth } from '@/firebase'
 import { collection, getDocs, orderBy, query, deleteDoc, doc, getDoc } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'// ←
+import {incrementViews} from '@/firebase/emergency.js'
+
 // --------------------------------------------
 // ✅ 기본 설정
 // --------------------------------------------
@@ -90,10 +90,18 @@ const goToEdit = (id) => {
 const goToWrite = () => {
   router.push('/emergencyWrite')
 }
-
-const goToDetail = (id) => {
-  router.push({ name: 'emergencyorder', params: { id } })
+//조회수 증가 함수 추가
+const goToDetail = async (id) => {
+  try{
+    //조회수 증가
+    await incrementViews(id)
+  }catch (e) {
+    console.error('조회수 증가 실패:', e)
+  }
+  //상세 페이지 이동
+  router.push({name: 'emergencyorder', params: {id}})
 }
+
 const goToSuggestions = () =>{
   router.push('/emergencysuggestions') // 누르면 ㅣ동하는 메소드 건의사항 페이지로 이동합니다
 }
@@ -106,13 +114,14 @@ async function loadData() {
     const q = query(collection(db, 'emergencyData'), orderBy('createdAt', 'desc'))
     const snapshot = await getDocs(q)
 
-    items.value = snapshot.docs.map(doc => {
+    items.value = snapshot.docs.map(doc => { //파이어베이스 헤시태그 추가
       const data = doc.data()
       return {
         id: doc.id,
         title: data.title || '(제목 없음)',
         viewCount: data.viewCount || 0,
         createdAt: data.createdAt ? data.createdAt.toDate() : null,
+        hashtags: data.hashtags || [],
       }
     })
   } catch (e) {
@@ -170,12 +179,22 @@ async function handleDelete(id) {
 // ✅ 검색 필터
 // --------------------------------------------
 const filteredItems = computed(() => {
-  if (!keyword.value.trim()) return items.value
-  const q = keyword.value.trim().toLowerCase()
-  return items.value.filter(v => v.title.toLowerCase().includes(q))
+  if (!keyword.value.trim()) return items.value // 검색어 없으면 전체 반환
+  const q = keyword.value.trim().toLowerCase() // 검색어 소문자 변환
+  
+  return items.value.filter(v => {
+    // 제목에서 검색
+    const titleMatch = v.title.toLowerCase().includes(q)
+    
+    // 해시태그에서 검색
+    const hashtagMatch = v.hashtags && v.hashtags.some(tag => 
+      tag.toLowerCase().includes(q)
+    )
+    
+    // 제목 또는 해시태그에 포함되면 true
+    return titleMatch || hashtagMatch
+  })
 })
-
-// --------------------------------------------
 // ✅ 날짜 포맷 함수
 // --------------------------------------------
 function formatDate(date) {
