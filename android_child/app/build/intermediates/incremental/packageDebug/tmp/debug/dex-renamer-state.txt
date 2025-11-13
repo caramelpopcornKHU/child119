@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #Wed Nov 05 12:01:11 KST 2025
+=======
+#Wed Oct 29 11:45:15 KST 2025
+>>>>>>> 04826599d3f3c14ac76ab585242be8720f435ba9
 base.0=C\:\\lx_final_project\\android_child\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
 base.1=C\:\\lx_final_project\\android_child\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
 base.10=C\:\\lx_final_project\\android_child\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes5.dex

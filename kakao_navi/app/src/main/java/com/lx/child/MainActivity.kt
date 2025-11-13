@@ -175,25 +175,33 @@ class MainActivity : AppCompatActivity() {
 
         /**
          * 웹에서 이 함수를 호출하면 NaviActivity를 시작시킵니다.
+         * @param startName 출발지 이름 (예: "내 위치")
+         * @param startX 출발지 X좌표 (Katec)
+         * @param startY 출발지 Y좌표 (Katec)
          * @param goalName 목적지 이름 (예: "카카오판교오피스")
          * @param goalX 목적지 X좌표 (Katec) (예: 321497)
          * @param goalY 목적지 Y좌표 (Katec) (예: 532896)
          * @param goalAddress 목적지 주소 (예: "경기 성남시 분당구...")
          */
         @JavascriptInterface
-        fun startNavigation(goalName: String, goalX: Int, goalY: Int, goalAddress: String) {
+        fun startNavigation(
+            startName: String, startX: Int, startY: Int,
+            goalName: String, goalX: Int, goalY: Int, goalAddress: String) {
 
             // (참고) 현위치는 NaviActivity에서 하드코딩된 값을 사용한다고 가정합니다.
             // val startPoi = KNPOI("현위치", 309840, 552483, "현위치")
 
             // 웹에서 받은 정보로 KNPOI 객체 생성
-            val goalPoi = KNPOI(goalName, goalX, goalY, goalAddress)
+            //val goalPoi = KNPOI(goalName, goalX, goalY, goalAddress)
 
             // NaviActivity로 정보를 전달하며 시작
             val intent = Intent(context, NaviActivity::class.java).apply {
                 // (중요) NaviActivity가 받을 수 있도록 POI 객체를 직렬화하여 전달
+
                 // KNPOI가 Serializable 또는 Parcelable이어야 합니다.
-                // 만약 아니라면, 아래처럼 개별 데이터로 전달해야 합니다.
+                putExtra("START_NAME", startName)
+                putExtra("START_X", startX)
+                putExtra("START_Y", startY)
                 putExtra("GOAL_NAME", goalName)
                 putExtra("GOAL_X", goalX)
                 putExtra("GOAL_Y", goalY)

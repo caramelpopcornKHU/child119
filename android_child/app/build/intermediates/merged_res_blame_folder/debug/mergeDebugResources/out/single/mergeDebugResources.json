@@ -1,17 +1,23 @@
 [
     {
+<<<<<<< HEAD
         "merged": "C:\\Users\\LX\\.gradle\\daemon\\8.13\\com.lx.savechild.app-debug-77:\\drawable_ic_launcher_background.xml.flat",
         "source": "C:\\Users\\LX\\.gradle\\daemon\\8.13\\com.lx.savechild.app-main-79:\\drawable\\ic_launcher_background.xml"
     },
     {
         "merged": "C:\\Users\\LX\\.gradle\\daemon\\8.13\\com.lx.savechild.app-debug-77:\\mipmap-xxxhdpi_ic_launcher_foreground.webp.flat",
         "source": "C:\\Users\\LX\\.gradle\\daemon\\8.13\\com.lx.savechild.app-main-79:\\mipmap-xxxhdpi\\ic_launcher_foreground.webp"
+=======
+        "merged": "com.lx.savechild.app-debug-77:/drawable_logo.png.flat",
+        "source": "com.lx.savechild.app-main-79:/drawable/logo.png"
+>>>>>>> 04826599d3f3c14ac76ab585242be8720f435ba9
     },
     {
         "merged": "com.lx.savechild.app-debug-77:/layout_activity_web.xml.flat",
         "source": "com.lx.savechild.app-main-79:/layout/activity_web.xml"
     },
     {
+<<<<<<< HEAD
         "merged": "C:\\Users\\LX\\.gradle\\daemon\\8.13\\com.lx.savechild.app-debug-77:\\layout_activity_main.xml.flat",
         "source": "C:\\Users\\LX\\.gradle\\daemon\\8.13\\com.lx.savechild.app-main-79:\\layout\\activity_main.xml"
     },
@@ -102,5 +108,97 @@
     {
         "merged": "C:\\Users\\LX\\.gradle\\daemon\\8.13\\com.lx.savechild.app-debug-77:\\mipmap-xxhdpi_ic_launcher.webp.flat",
         "source": "C:\\Users\\LX\\.gradle\\daemon\\8.13\\com.lx.savechild.app-main-79:\\mipmap-xxhdpi\\ic_launcher.webp"
+=======
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-hdpi_ic_launcher_round.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-hdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-xhdpi_ic_launcher.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-xhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/layout_activity_main.xml.flat",
+        "source": "com.lx.savechild.app-main-79:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-xxxhdpi_ic_launcher_round.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-xxxhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-hdpi_ic_launcher.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-hdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-mdpi_ic_launcher_round.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-mdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-xxhdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-xxhdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-hdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-hdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/xml_backup_rules.xml.flat",
+        "source": "com.lx.savechild.app-main-79:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/drawable-v24_ic_launcher_foreground.xml.flat",
+        "source": "com.lx.savechild.app-main-79:/drawable-v24/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-xhdpi_ic_launcher_round.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-xhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.lx.savechild.app-main-79:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-mdpi_ic_launcher.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-mdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-xhdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-xhdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-mdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-mdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-xxhdpi_ic_launcher_round.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-xxhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-xxxhdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-xxxhdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-xxhdpi_ic_launcher.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-xxhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/xml_data_extraction_rules.xml.flat",
+        "source": "com.lx.savechild.app-main-79:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/drawable_poi.png.flat",
+        "source": "com.lx.savechild.app-main-79:/drawable/poi.png"
+    },
+    {
+        "merged": "com.lx.savechild.app-debug-77:/mipmap-xxxhdpi_ic_launcher.webp.flat",
+        "source": "com.lx.savechild.app-main-79:/mipmap-xxxhdpi/ic_launcher.webp"
+>>>>>>> 04826599d3f3c14ac76ab585242be8720f435ba9
     }
 ]
