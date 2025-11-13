@@ -53,13 +53,13 @@
     </header>
 
 
-    <aside v-if="isAdminRoute" class="admin-aside bg-white border-end shadow-sm p-3">
+    <aside v-if="isAdminRoute" class="admin-aside bg-light border-end shadow-sm p-3" >
       <h5 class="fw-bold mb-4 text-center">관리자 메뉴</h5>
 
       <ul class="nav flex-column text-bold">
         <li class="nav-item mb-2">
           <button
-              class="nav-link btn-aside text-start w-100"
+              class="nav-link btn-aside text-start w-100 d-flex align-items-center gap-2"
               :class="{ 'text-bold text-primary': isActive('/AdminHome') }"
               @click="goTo('/AdminHome')"
               style="color: black;"
@@ -71,7 +71,7 @@
 
         <li class="nav-item mb-2">
           <button
-              class="nav-link btn-aside text-start w-100"
+              class="nav-link btn-aside text-start w-100 d-flex align-items-center gap-2"
               :class="{ 'text-bold text-primary': isActive('/AdminManageContents') }"
               @click="goTo('/AdminManageContents')"
               style="color: black;"
@@ -83,7 +83,7 @@
 
         <li class="nav-item mb-2">
           <button
-              class="nav-link btn-aside text-start w-100 text-bold"
+              class="nav-link btn-aside text-start w-100 text-bold d-flex align-items-center gap-2"
               :class="{ 'text-bold text-primary': isActive('/AdminAutomation') }"
               @click="goTo('/AdminAutomation')"
               style="color: black;"
@@ -95,7 +95,7 @@
 
         <li class="nav-item mb-2">
           <button
-              class="nav-link btn-aside text-start w-100"
+              class="nav-link btn-aside text-start w-100 d-flex align-items-center gap-2"
               :class="{ 'text-bold text-primary': isActive('/AdminFeedback') }"
               @click="goTo('/AdminFeedback')"
               style="color: black;"
