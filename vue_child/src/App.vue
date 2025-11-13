@@ -94,7 +94,7 @@
           <button
               class="nav-link btn-aside text-start w-100"
               :class="{ 'text-bold text-primary': isActive('/AdminFeedback') }"
-              @click="goTo('/AdminFedback')"
+              @click="goTo('/AdminFeedback')"
               style="color: black;"
             >
             💬 건의사항
