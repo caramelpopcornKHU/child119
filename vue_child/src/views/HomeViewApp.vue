@@ -636,7 +636,7 @@ function goToemergencyDetail(hpid) {
 
 }
 
-/* 병원 전화 걸기 */
+// 병원 전화 걸기 
 async function callHospital(hpid) {
   const hpidArray = await hpid.split(".")
   const id = hpidArray[1]
@@ -653,7 +653,7 @@ async function callHospital(hpid) {
   window.location.href = `tel:${tel}`
 }
 
-
+// 네비 실행 함수
 function requestNavi(lon, lat, name, addr = "도착지") {
   try {
     // 1. WGS84(EPSG:4326) -> KATEC으로 좌표 변환
