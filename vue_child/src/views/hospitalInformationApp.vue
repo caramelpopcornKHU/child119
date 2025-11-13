@@ -210,7 +210,7 @@
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
               <button class="btn btn-primary w-100" v-if="hospital.lat && hospital.lon && hospital.addr && hospital.name" 
-                      @click.stop="requestNavi(hospital.lon, hospital.lat, hospital.name, hospital.addr)">
+                      @click.stop="requestNavi(hospital.lon, hospital.lat, hospital.name, hospital.addr, hospital.id)">
                 <i class="bi bi-sign-turn-right-fill"></i> 길찾기
               </button>
             </div>
@@ -373,7 +373,7 @@ import { getEmergencyFromWFSByBBox, calculateDistance } from '@/utils/api';
 import proj4 from 'proj4';
 
 // KATEC 정의 (가장 일반적인 비공식 KATEC: Bessel 타원체, 중앙 경선 128도)
-const KATEC_PROJ4_STRING = '+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +units=m +no_defs';
+const KATEC_PROJ4_STRING = '+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +units=m +no_defs +towgs84=-115.80,474.99,674.11,1.16,-2.31,-1.63,6.43';
 proj4.defs('KATEC', KATEC_PROJ4_STRING);
 
 // 좌표계 ID
@@ -825,25 +825,54 @@ function callHospital(tel) {
   window.location.href = `tel:${tel}`
 }
 
-function requestNavi(lon, lat, name, addr = "도착지") {
+async function requestNavi(endX, endY, name, addr, hpid) {
   try {
+
+    // 기본 위치 설정
+    let location = { lon: 126.978, lat: 37.5665 };
+
+    let startX = null
+    let startY = null
+    const startName = "내위치"
+
+    // hpid 수정
+    const hpidArray = await hpid.split(".")
+    const id = hpidArray[1]
+    console.log(`✨ hpid -> ${id}`)
+
+    // 현재 위치 불러오기
+    try {
+      location = await getCurrentLocation()
+      startX = location.lon
+      startY = location.lat
+
+      console.log(`requestNavi 현재 위치 불러오기 성공 X: ${startX}, Y: ${startY}`)
+
+    } catch (err) {
+      console.error(`requestNavi 현재 위치 불러오기 실패 -> ${err}`)
+    }
+
     // 1. WGS84(EPSG:4326) -> KATEC으로 좌표 변환
-    // proj4(from_proj, to_proj, [x, y])
-    // EPSG:4326은 (경도, 위도) 순서
-    const [Katec_x, Katec_y] = proj4(WGS84, KATEC, [lon, lat]);
+    const [start_x, start_y] = proj4(WGS84, KATEC, [startX, startY])
+    const [end_x, end_y] = proj4(WGS84, KATEC, [endX, endY]);
 
     // 2. Android Bridge 호출
     if (window.AndroidBridge && typeof window.AndroidBridge.startNavigation === 'function') {
       window.AndroidBridge.startNavigation(
+        startName, // 현위치
+        Math.round(start_x),
+        Math.round(start_y),
         name, // 도착지 이름 (병원 이름)
-        Math.round(Katec_x), // Katec X 좌표 (정수로 변환)
-        Math.round(Katec_y), // Katec Y 좌표 (정수로 변환)
-        addr // 도착지 주소 (현재 코드에서는 '도착지'로 하드코딩. 필요 시 데이터 추가 필요)
+        Math.round(end_x),
+        Math.round(end_y),
+        addr,
+        id
       );
-      console.log(`✅ 길찾기 요청: ${name} (KATEC X:${Math.round(Katec_x)}, Y:${Math.round(Katec_y)})`);
+      console.log(`✅ 길찾기 요청: ${name} (KATEC X:${Math.round(end_x)}, Y:${Math.round(end_y)})`);
+
     } else {
       // 안드로이드 앱이 아닐 경우 (예: PC 웹)
-      alert(`[웹 환경] 안드로이드 앱에서 실행됩니다. 도착지: ${name}, KATEC 좌표: (${Math.round(Katec_x)}, ${Math.round(Katec_y)})`);
+      alert(`[웹 환경] 안드로이드 앱에서 실행됩니다. 도착지: ${name}, KATEC 좌표: (${Math.round(end_x)}, ${Math.round(end_y)})`);
     }
   } catch (e) {
     console.error("좌표 변환 또는 네비게이션 호출 실패:", e);
