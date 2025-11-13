@@ -26,8 +26,16 @@
             </span>
           </div>
 
+          <!-- 로딩 중 -->
+          <div v-if="loading" class="text-center py-4 small text-muted">
+            건의사항을 불러오는 중입니다...
+          </div>
+
           <!-- 건의사항 없음 -->
-          <div v-if="emergencyFeedbacks.length === 0" class="text-muted small py-3 text-center">
+          <div
+            v-else-if="!loading && emergencyFeedbacks.length === 0"
+            class="text-muted small py-3 text-center"
+          >
             아직 응급처치 화면 건의사항이 없습니다.
           </div>
 
@@ -72,30 +80,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { db } from '@/firebase'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 
 const router = useRouter()
 
-// ----------------------
-// 🔹 응급처치 건의사항만 남김
-// ----------------------
-const emergencyFeedbacks = ref([
-  {
-    id: 'ef1',
-    emergencyTitle: '고열 시 응급처치',
-    content: '해열제 종류에 대한 설명도 추가되면 좋겠습니다.',
-    writer: 'parent03@example.com',
-    createdAt: new Date()
-  },
-  {
-    id: 'ef2',
-    emergencyTitle: '기도 막힘 대처법',
-    content: '동영상 속도가 빨라서 좀 더 느린 버전이 필요합니다.',
-    writer: 'parent04@example.com',
-    createdAt: new Date()
-  }
-])
+// 🔹 Firestore에서 불러온 건의사항 리스트
+const emergencyFeedbacks = ref([])
+const loading = ref(true)
 
 // 날짜 포맷
 function formatDate(date) {
@@ -111,8 +105,44 @@ function formatDate(date) {
 function goToSuggestionDetail(id) {
   router.push(`/AdminEmergencysuggestionsdetail/${id}`)
 }
-</script>
 
+// 🔹 Firestore에서 suggestions 컬렉션 불러오기
+async function loadSuggestions() {
+  try {
+    loading.value = true
+
+    // createdAt 기준 최신순 정렬
+    const q = query(
+      collection(db, 'suggestions'),
+      orderBy('createdAt', 'desc')
+    )
+    const snap = await getDocs(q)
+
+    emergencyFeedbacks.value = snap.docs.map(d => {
+      const data = d.data()
+      return {
+        id: d.id,
+        emergencyTitle: data.title || '(제목 없음)',
+        content: data.content || '(내용 없음)',
+        writer: data.fromEmail || '(이메일 없음)',
+        createdAt: data.createdAt ? data.createdAt.toDate() : null,
+        // 필요하면 여기서 status, adminMemo 등도 들고갈 수 있음
+        status: data.status || '',
+        targetRole: data.targetRole || '',
+        adminMemo: data.adminMemo || ''
+      }
+    })
+  } catch (e) {
+    console.error('suggestions 로딩 실패:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadSuggestions()
+})
+</script>
 
 <style scoped>
 .admin-layout {

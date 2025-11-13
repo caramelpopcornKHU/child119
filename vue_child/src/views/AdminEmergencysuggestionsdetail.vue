@@ -1,168 +1,130 @@
 <template>
-  <!-- 전체 페이지 배경 -->
-  <main class="bg-body-tertiary min-vh-100">
-    <!-- 컨테이너: 좌우 여백과 상하 여백 적용 -->
-    <div class="container-fluid py-4 px-3">
+  <!-- 관리자 공통 레이아웃과 동일 -->
+  <div class="card shadow-sm border-0 rounded-4">
+    <main class="admin-main">
 
-      <!-- 상단 헤더: 뒤로가기 버튼과 제목 -->
-      <div class="d-flex align-items-center mb-4 gap-2">
-        <!-- 뒤로가기 버튼 -->
-        <button 
-          class="btn btn-link p-0 text-decoration-none" 
-          style="color: #0D6EFD;" 
-          @click="goBack"
-        >
-          <!-- 왼쪽 화살표 아이콘 -->
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-          </svg>
-        </button>
-        <!-- 페이지 제목 -->
-        <h5 class="mb-0" style="font-family: 'Pretendard', sans-serif; font-weight: 600; color: #212529;">
-          건의사항 상세
-        </h5>
-      </div>
-
-      <!-- 로딩 중 표시 -->
-      <div v-if="loading" class="text-center py-5">
-        <div class="spinner-border" style="color: #0D6EFD;" role="status">
-          <span class="visually-hidden">로딩 중...</span>
+      <!-- 상단 관리자 타이틀(통일된 구조) -->
+      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3 px-4 pt-3">
+        <div>
+          <h3 class="text-bold mb-1">관리자 대시보드</h3>
+          <p class="text-medium mb-0 small">
+            아이119 앱의 크롤링 설정, 사용자/콘텐츠 데이터, 자동화 로그, 건의사항을 한 곳에서 관리합니다.
+          </p>
         </div>
       </div>
 
-      <!-- 건의사항이 없을 때 -->
-      <div v-else-if="!suggestion" class="alert alert-warning" role="alert">
-        <h5 class="alert-heading">건의사항을 찾을 수 없습니다</h5>
-        <p class="mb-0">존재하지 않거나 삭제된 건의사항입니다.</p>
-      </div>
+      <!-- 상세 화면 컨테이너 (AdminHome과 동일한 폭/여백) -->
+      <div class="px-4 pb-4">
 
-      <!-- 건의사항 상세 내용 -->
-      <div v-else>
-        <!-- 제목 카드 -->
-        <div class="card border-0 shadow-sm rounded-4 mb-3">
-          <div class="card-body p-4">
-            <label 
-              class="form-label fw-semibold mb-3" 
-              style="font-family: 'Pretendard', sans-serif; color: #0D6EFD;"
-            >
-              제목
-            </label>
-            <div 
-              class="p-3 bg-light rounded-3" 
-              style="font-family: 'Pretendard', sans-serif; font-size: 16px;"
-            >
-              {{ suggestion.title }}
-            </div>
+        <!-- 뒤로가기 + 제목 -->
+        <div class="d-flex align-items-center mb-4 gap-2">
+          <button 
+            class="btn btn-link p-0 text-decoration-none" 
+            style="color: #0D6EFD;" 
+            @click="goBack"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+          </button>
+
+          <h5 class="mb-0 fw-semibold">
+            건의사항 상세
+          </h5>
+        </div>
+
+        <!-- 로딩 -->
+        <div v-if="loading" class="text-center py-5">
+          <div class="spinner-border" style="color: #0D6EFD;" role="status">
+            <span class="visually-hidden">로딩 중...</span>
           </div>
         </div>
 
-        <!-- 내용 카드 -->
-        <div class="card border-0 shadow-sm rounded-4 mb-3">
-          <div class="card-body p-4">
-            <label 
-              class="form-label fw-semibold mb-3" 
-              style="font-family: 'Pretendard', sans-serif; color: #0D6EFD;"
-            >
-              내용
-            </label>
-            <div 
-              class="p-3 bg-light rounded-3" 
-              style="font-family: 'Pretendard', sans-serif; font-size: 16px; white-space: pre-wrap;"
-            >
-              {{ suggestion.content }}
-            </div>
-          </div>
+        <!-- 없음 -->
+        <div v-else-if="!suggestion" class="alert alert-warning" role="alert">
+          <h5 class="alert-heading">건의사항을 찾을 수 없습니다</h5>
+          <p class="mb-0">존재하지 않거나 삭제된 건의사항입니다.</p>
         </div>
 
-        <!-- 작성자 정보 카드 -->
-        <div class="card border-0 shadow-sm rounded-4 mb-3">
-          <div class="card-body p-4">
-            <label 
-              class="form-label fw-semibold mb-3" 
-              style="font-family: 'Pretendard', sans-serif; color: #0D6EFD;"
-            >
-              작성자 정보
-            </label>
-            <div class="row g-3">
-              <div class="col-md-6">
-                <div class="small text-muted mb-1" style="font-family: 'Pretendard', sans-serif;">이메일</div>
-                <div class="p-2 bg-light rounded-2" style="font-family: 'Pretendard', sans-serif;">
-                  {{ suggestion.fromEmail }}
-                </div>
+        <!-- 상세 -->
+        <div v-else>
+
+          <!-- 제목 -->
+          <div class="card border-0 shadow-sm rounded-4 mb-3">
+            <div class="card-body p-4">
+              <label class="form-label fw-semibold mb-3" style="color:#0D6EFD;">제목</label>
+              <div class="p-3 bg-light rounded-3">{{ suggestion.title }}</div>
+            </div>
+          </div>
+
+          <!-- 내용 -->
+          <div class="card border-0 shadow-sm rounded-4 mb-3">
+            <div class="card-body p-4">
+              <label class="form-label fw-semibold mb-3" style="color:#0D6EFD;">내용</label>
+              <div class="p-3 bg-light rounded-3" style="white-space: pre-wrap;">
+                {{ suggestion.content }}
               </div>
-              <div class="col-md-6">
-                <div class="small text-muted mb-1" style="font-family: 'Pretendard', sans-serif;">작성일</div>
-                <div class="p-2 bg-light rounded-2" style="font-family: 'Pretendard', sans-serif;">
-                  {{ formatDate(suggestion.createdAt) }}
+            </div>
+          </div>
+
+          <!-- 작성자 정보 -->
+          <div class="card border-0 shadow-sm rounded-4 mb-3">
+            <div class="card-body p-4">
+              <label class="form-label fw-semibold mb-3" style="color:#0D6EFD;">작성자 정보</label>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="small text-muted mb-1">이메일</div>
+                  <div class="p-2 bg-light rounded-2">{{ suggestion.fromEmail }}</div>
+                </div>
+                <div class="col-md-6">
+                  <div class="small text-muted mb-1">작성일</div>
+                  <div class="p-2 bg-light rounded-2">
+                    {{ formatDate(suggestion.createdAt) }}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 상태 카드 -->
-        <div class="card border-0 shadow-sm rounded-4 mb-3">
-          <div class="card-body p-4">
-            <label 
-              class="form-label fw-semibold mb-3" 
-              style="font-family: 'Pretendard', sans-serif; color: #0D6EFD;"
-            >
-              처리 상태
-            </label>
-            <div class="d-flex align-items-center gap-3">
-              <span 
-                class="badge rounded-pill px-4 py-2"
-                style="font-family: 'Pretendard', sans-serif; font-size: 14px;"
-                :class="suggestion.status === '처리완료' ? 'bg-success' : 'bg-warning text-dark'"
-              >
-                {{ suggestion.status }}
-              </span>
-              <div class="small text-muted" style="font-family: 'Pretendard', sans-serif;">
-                대상: {{ suggestion.targetRole }}
+          <!-- 처리 상태 -->
+          <div class="card border-0 shadow-sm rounded-4 mb-3">
+            <div class="card-body p-4">
+              <label class="form-label fw-semibold mb-3" style="color:#0D6EFD;">처리 상태</label>
+              <div class="d-flex align-items-center gap-3">
+                <span 
+                  class="badge rounded-pill px-4 py-2"
+                  :class="suggestion.status === '처리완료' ? 'bg-success' : 'bg-warning text-dark'"
+                >{{ suggestion.status }}</span>
+                <div class="small text-muted">대상: {{ suggestion.targetRole }}</div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 관리자 메모 카드 (관리자만 보임) -->
-        <div v-if="suggestion.adminMemo" class="card border-0 shadow-sm rounded-4 mb-4">
-          <div class="card-body p-4">
-            <label 
-              class="form-label fw-semibold mb-3" 
-              style="font-family: 'Pretendard', sans-serif; color: #dc3545;"
-            >
-              관리자 메모
-            </label>
-            <div 
-              class="p-3 bg-light rounded-3" 
-              style="font-family: 'Pretendard', sans-serif; font-size: 16px; white-space: pre-wrap;"
-            >
-              {{ suggestion.adminMemo }}
+          <!-- 관리자 메모 -->
+          <div v-if="suggestion.adminMemo" class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+              <label class="form-label fw-semibold mb-3" style="color:#dc3545;">관리자 메모</label>
+              <div class="p-3 bg-light rounded-3" style="white-space: pre-wrap;">
+                {{ suggestion.adminMemo }}
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 하단 버튼 영역 -->
-        <div
-          class="position-sticky bottom-0 bg-body-tertiary pt-2 pb-3"
-          style="z-index: 1; margin-bottom: var(--footer-h, 70px);"
-        >
-          <div class="d-flex gap-2">
-            <!-- 뒤로가기 버튼 -->
-            <button
-              type="button"
-              class="btn flex-fill rounded-pill"
-              style="font-family: 'Pretendard', sans-serif; background-color: #0D6EFD; color: white; border: none;"
-              @click="goBack"
-            >
+          <!-- 하단 버튼 -->
+          <div class="d-grid mt-4">
+            <button class="btn btn-primary rounded-pill py-2 fw-semibold" @click="goBack">
               목록으로 돌아가기
             </button>
           </div>
+
         </div>
-      </div>
-    </div>
-  </main>
+
+      </div><!-- /px-4 -->
+
+    </main>
+  </div>
 </template>
+
 
 <script setup>
 // Vue의 반응형 데이터를 위한 ref 함수 가져오기
@@ -270,5 +232,16 @@ onMounted(() => {
 /* 전역 폰트 설정 */
 * {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ✅ 관리자 메인 영역 크기: 다른 관리자 화면과 동일하게 */
+.admin-main {
+  margin-left: 240px;          /* 사이드바 너비와 동일 */
+  padding-top: 1.5rem;
+  padding-bottom: 2.5rem;
+  padding-left: 0;
+  padding-right: 0;
+  min-height: 100vh;
+  background-color: transparent;
 }
 </style>
