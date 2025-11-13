@@ -866,7 +866,8 @@ async function requestNavi(endX, endY, name, addr, hpid) {
         Math.round(end_x),
         Math.round(end_y),
         addr,
-        id
+        //id //하드코딩 
+        'emergency.A1100029'
       );
       console.log(`✅ 길찾기 요청: ${name} (KATEC X:${Math.round(end_x)}, Y:${Math.round(end_y)})`);
 
