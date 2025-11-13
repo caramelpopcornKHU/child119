@@ -4,10 +4,13 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.webkit.GeolocationPermissions
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -29,18 +32,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main2)
 
 
-
-
-
-
-
-
-
         // 1. WebView 초기화
         webView = findViewById(R.id.webView)
         setupWebView()
 
-        // 2. m.naver.com 로드
+        // 2. www.child119.com 로드
         webView.loadUrl("https://www.child119.com/hospitalInformationApp")
 
         // 3. 앱 시작 시 자동으로 권한 확인 및 인증 시작 (기존 onClick에서 이동)
@@ -55,8 +51,55 @@ class MainActivity : AppCompatActivity() {
      */
     private fun setupWebView() {
         webView.apply {
-            // 1. WebViewClient 설정 (외부 브라우저로 열리는 것 방지)
-            webViewClient = WebViewClient()
+            // 1. [수정] WebViewClient 상세 설정
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): Boolean {
+                    val url = request?.url.toString()
+
+                    // "tel:", "sms:", "mailto:" 등 웹 URL이 아닌 스킴 처리
+                    if (url.startsWith("tel:")) {
+                        try {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse(url))
+                            // 'this@MainActivity'는 현재 Activity Context를 의미합니다.
+                            this@MainActivity.startActivity(intent)
+                        } catch (e: Exception) {
+                            Log.e("WebView", "전화 앱 열기 실패", e)
+                        }
+                        return true // WebView가 로드하지 않음
+                    }
+
+                    // "intent:" 스킴 처리 (안드로이드 앱 링크)
+                    if (url.startsWith("intent:")) {
+                        try {
+                            val intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
+                            val existPackage = packageManager.getLaunchIntentForPackage(intent.getPackage()!!)
+                            if (existPackage != null) {
+                                startActivity(intent)
+                            } else {
+                                // 마켓으로 이동
+                                val marketIntent = Intent(Intent.ACTION_VIEW)
+                                marketIntent.data = Uri.parse("market://details?id=" + intent.getPackage()!!)
+                                startActivity(marketIntent)
+                            }
+                            return true
+                        } catch (e: Exception) {
+                            Log.e("WebView", "인텐트 처리 실패", e)
+                        }
+                    }
+
+                    // http, https 등 일반 웹 링크는 WebView가 처리
+                    return false
+                }
+            }
+
+
+
+
+
+
 
             // (NEW) 3. WebChromeClient 설정 (위치 정보 권한 요청 처리)
             webChromeClient = object : WebChromeClient() {
