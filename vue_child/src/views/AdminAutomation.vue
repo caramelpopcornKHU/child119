@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-layout d-flex min-vh-100">
+  <div class="card shadow-sm border-0 rounded-4">
     <!-- 메인 영역 -->
     <main class="admin-main">
       <!-- 상단 타이틀 & 설명 -->
@@ -12,10 +12,10 @@
         </div>
       </div>
         <!-- 크롤링 주기 설정 -->
-        <div class="card shadow-sm border-0 rounded-4">
+        <div class="card shadow-sm border-0 rounded-4 text-plight">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="fw-semibold mb-0">크롤링 주기 설정</h5>
+              <h5 class="text-bold mb-0">크롤링 주기 설정</h5>
             </div>
             <p class="small text-muted">
               외부 데이터(예: 응급 관련 뉴스, 콘텐츠)를 가져오는 크롤러의 실행 주기를 설정합니다.
@@ -35,13 +35,13 @@
                 </button>
               </div>
               <div class="ms-auto">
-                <button
-                  type="button"
-                  class="btn btn-success btn-sm rounded-pill"
-                  @click="saveCrawlingInterval"
-                >
-                  저장
-                </button>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm rounded-3 px-3"
+                @click="saveCrawlingInterval"
+              >
+                설정 저장
+              </button>                
               </div>
             </div>
 
@@ -55,10 +55,10 @@
         </div>
 
         <!--자동화 실행+로그 카드-->
-        <div class="card shadow-sm border-0 rounded-4">
+        <div class="card shadow-sm border-0 rounded-4 text-plight">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="fw-semibold mb-0">데이터 크롤링 자동화</h5>
+              <h5 class="text-bold mb-0 ">데이터 크롤링 자동화</h5>
               <span class="badge rounded-pill px-3"
                     :class="automationStatusBadgeClass">
                 {{ automationStatusText }}
