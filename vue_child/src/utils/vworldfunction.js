@@ -371,9 +371,7 @@ export async function drawRoute(map, geoJsonData, routeIndex = 1) {
 
     // 2. OpenLayers 포맷터 정의 (좌표계 설정 수정)
     const format = new ol.format.GeoJSON({
-        // Tmap 데이터가 이미 EPSG:3857이므로, 별도의 변환을 하지 않도록 설정합니다.
-        // featureProjection만 지도 좌표계인 'EPSG:3857'로 설정합니다.
-        // defaultDataProjection을 설정하지 않거나 'EPSG:3857'로 설정하면 변환을 건너뜁니다.
+        defaultProjection: 'EPSG:4326',
         featureProjection: 'EPSG:3857'
     });
 
