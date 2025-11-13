@@ -137,81 +137,88 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
     const message = emergencyMessage || '';
 
     const svgWidth = 100;
-    const svgHeight = 100;
-    const rectWidth = 100;
-    const rectHeight = 90;
-    const rectX = (svgWidth - rectWidth) / 2;
-    const rectY = 0;
+    const baseRectWidth = 100;
     const borderRadius = 10;
 
-    const cirRadius = rectHeight / 2 * 0.6;
-    const cirCenterX = svgWidth / 2;
-    const cirCenterY = rectY + cirRadius + rectHeight / 2 * 0.1;
+    // === 폰트 사이즈 ===
+    const messageFontSize = 12;
+    const nameFontSize = 13;
+    const messageColor = '#333';
 
-    const messageFontSize = 16;
-    const messageY = rectY + rectHeight - 20;
-
-    const badgeHeight = 24;
-    const badgeX = svgWidth / 2;
-
-    const messageCenterY = cirCenterY + cirRadius + 20;
-
-    const iconBaseSize = 24;
-    const iconScale = 24 / iconBaseSize;
-    const gap = 2;
-    const iconRenderedHeight = iconBaseSize * iconScale;
-    const bedTextFontSize = 18;
-    const textRenderedHeight = bedTextFontSize;
-    const contentTotalHeight = iconRenderedHeight + gap + textRenderedHeight;
-    const iconCenterYOffset = -((contentTotalHeight / 2) - (iconRenderedHeight / 2));
-    const textCenterYOffset = iconCenterYOffset + iconRenderedHeight + gap;
-
-    // === 병상 정보 및 색상 로직 ===
+    // === 병상 정보 색상 로직 ===
     let bedText = '';
-    let badgeBgColor = '#16a085'; // 기본 초록
+    let badgeBgColor = '#16a085';
     let badgeTextColor = 'white';
-    let displayFontSize = bedTextFontSize;
+    let displayFontSize = 18;
 
-    if (
-        !Number.isFinite(bedAvail) || 
-        !Number.isFinite(bedTotal) || 
-        bedTotal <= 0 || 
-        bedAvail <= 0
-    ) {
-        // 병상 정보 없음 or 0 이하
+    if (!Number.isFinite(bedAvail) || !Number.isFinite(bedTotal) || bedTotal <= 0 || bedAvail <= 0) {
         badgeBgColor = '#95a5a6';
         bedText = '정보없음';
         displayFontSize = 12;
     } else {
         const ratio = bedAvail / bedTotal;
         bedText = `${bedAvail}/${bedTotal}`;
-        if (ratio <= 0.5) {
-            badgeBgColor = '#e74c3c'; // 빨강
-        } else {
-            badgeBgColor = '#16a085'; // 초록
-        }
+        badgeBgColor = ratio <= 0.5 ? '#e74c3c' : '#16a085';
     }
 
+    // === 아이콘 세부 설정 ===
+    const cirRadius = 25;
     const strokeWidth = isHover ? '4' : '3';
+    const bedIconPath = "M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3";
+    const iconScale = 0.9;
+    const textGap = 4;
+
+    // === 메시지 줄바꿈 ===
+    const wrapText = (text, maxCharsPerLine) => {
+        if (!text) return [];
+        const words = text.split(' ');
+        let lines = [];
+        let currentLine = '';
+        for (let word of words) {
+            if ((currentLine + word).length > maxCharsPerLine) {
+                lines.push(currentLine.trim());
+                currentLine = word + ' ';
+            } else {
+                currentLine += word + ' ';
+            }
+        }
+        if (currentLine.trim()) lines.push(currentLine.trim());
+        return lines;
+    };
+    const wrappedMessageLines = wrapText(message, 13);
+
+    // === Y 좌표 계산 ===
+    const nameY = 20;                     // 병원이름
+    const cirCenterY = nameY +5 + cirRadius; // 병상원 (이름과 간격 30px)
+    const messageStartY = cirCenterY + cirRadius + 18; // 메시지 시작
+    const totalMessageHeight = wrappedMessageLines.length * (messageFontSize + 3);
+    const rectHeight = messageStartY + totalMessageHeight + 5; // 전체 높이 계산
+    const svgHeight = rectHeight + 20;
+
+    const cirCenterX = svgWidth / 2;
+
+    // === 핀 ===
     const pinSvgPath = "M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7";
     const pinColor = "#000000";
-    const pinWidth = 24;
-    const pinHeight = 24;
     const pinScaleFactor = 1.3;
-    const scaledPinWidth = pinWidth * pinScaleFactor;
-    const scaledPinHeight = pinHeight * pinScaleFactor;
-    const pinY = rectY + rectHeight - 10;
-
-    const messageColor = '#333';
+    const pinY = rectHeight - 5;
 
     return 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight + scaledPinHeight - 20}" viewBox="0 0 ${svgWidth} ${svgHeight + scaledPinHeight - 20}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+            <!-- 흰 배경 -->
             <rect 
-                x="${rectX}" y="${rectY}" 
-                width="${rectWidth}" height="${rectHeight}" 
+                x="0" y="0" 
+                width="${baseRectWidth}" height="${rectHeight}" 
                 rx="${borderRadius}" ry="${borderRadius}" 
                 fill="white" stroke="#ddd" stroke-width="1.5"/>
 
+            <!-- 병원이름 -->
+            <text x="${svgWidth / 2}" y="${nameY}" text-anchor="middle" dominant-baseline="middle"
+                fill="#333" font-size="${nameFontSize}" font-weight="600" font-family="pretendard">
+                ${name}
+            </text>
+
+            <!-- 동그라미 (병상정보) -->
             <circle 
                 cx="${cirCenterX}" cy="${cirCenterY}" 
                 r="${cirRadius - (strokeWidth / 2)}" 
@@ -219,36 +226,39 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
                 stroke="white" 
                 stroke-width="${strokeWidth}"/>
 
+            <!-- 병상 아이콘 + 텍스트 -->
             <g transform="translate(${cirCenterX}, ${cirCenterY})">
                 <path 
-                    transform="translate(${-iconBaseSize / 2 * iconScale}, ${-iconBaseSize / 2 * iconScale}) translate(0, ${iconCenterYOffset})"
+                    transform="translate(-10, -10) scale(${iconScale})"
                     fill="white"
-                    d="M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3"/>
-                
-                <text x="0" y="${textCenterYOffset}" text-anchor="middle" dominant-baseline="central"
+                    d="${bedIconPath}"
+                />
+                <text x="0" y="${cirRadius / 2}" text-anchor="middle" dominant-baseline="middle"
                     fill="${badgeTextColor}" font-size="${displayFontSize}" font-weight="500" font-family="pretendard">
                     ${bedText}
                 </text>
             </g>
 
-            ${message ? `
-                <text x="${badgeX}" y="${messageCenterY}" text-anchor="middle" dominant-baseline="central"
-                    fill="${messageColor}" font-weight="500" font-family="pretendard">
-                    ${message}
-                </text>
-            ` : ''}
+            <!-- 메시지 (줄바꿈 지원) -->
+            ${wrappedMessageLines.length > 0
+                ? wrappedMessageLines
+                    .map((line, i) => `
+                        <text x="${svgWidth / 2}" y="${messageStartY + i * (messageFontSize + 3)}"
+                            text-anchor="middle" fill="${messageColor}"
+                            font-size="${messageFontSize}" font-family="pretendard">
+                            ${line}
+                        </text>`)
+                    .join('')
+                : ''}
 
-            <text x="${svgWidth / 2}" y="${messageY}" text-anchor="middle" dominant-baseline="central"
-                fill="#333" font-size="${messageFontSize}" font-weight="500" font-family="pretendard">
-                ${name || ''}
-            </text>
-
-            <g transform="translate(${svgWidth / 2 - scaledPinWidth / 2}, ${pinY}) scale(${pinScaleFactor})">
+            <!-- 핀 -->
+            <g transform="translate(${svgWidth / 2 - 12 * pinScaleFactor}, ${pinY}) scale(${pinScaleFactor})">
                 <path fill="${pinColor}" d="${pinSvgPath}"/>
             </g>
         </svg>
     `);
 };
+
 
 
 // HospitalInformation marker 생성 
