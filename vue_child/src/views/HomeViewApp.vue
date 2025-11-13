@@ -152,8 +152,8 @@
               <button class="btn btn-outline-primary w-100" v-if="h.id" @click.stop="callHospital(h.id)">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
-              <button class="btn btn-primary w-100" v-if="h.lat && h.lon && h.addr && h.name"
-                @click.stop="requestNavi(h.lon, h.lat, h.name, h.addr)">
+              <button class="btn btn-primary w-100" v-if="h.lat && h.lon && h.addr && h.name && h.id"
+                @click.stop="requestNavi(h.lon, h.lat, h.name, h.addr, h.id)">
                 <i class="bi bi-sign-turn-right-fill"></i> 길찾기
               </button>
             </div>
@@ -223,6 +223,21 @@
 // import
 import { ref, computed, onMounted, onBeforeUnmount, onActivated, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
+
+
+import {
+  initVworldMap,
+  clearMarkers,
+  addMarkerEmergency,
+  getCurrentBBox4326,
+  drawRoute,
+  setupMarkerClick,
+  removeRouteLayer,
+} from '@/utils/vworldfunction';
+import { calculateDistance, getEmergencyFromWFSByBBox, getTmapRoute, getEmergencyFromWFSSortByDistance, getEmergencyHospitalByHPID } from '@/utils/api';
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 import proj4 from 'proj4';
 
 // KATEC 정의 (가장 일반적인 비공식 KATEC: Bessel 타원체, 중앙 경선 128도)
@@ -233,18 +248,8 @@ proj4.defs('KATEC', KATEC_PROJ4_STRING);
 const WGS84 = 'EPSG:4326';
 const KATEC = 'KATEC';
 
-import {
-  initVworldMap,
-  clearMarkers,
-  addMarkerEmergency,
-  getCurrentBBox4326,
-  drawRoute,
-  setupMarkerClick,
-  removeRouteLayer
-} from '@/utils/vworldfunction';
-import { calculateDistance, getEmergencyFromWFSByBBox, getTmapRoute, getEmergencyFromWFSSortByDistance, getEmergencyHospitalByHPID } from '@/utils/api';
-
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+// 현재 위치
+const cur = ref({ lat: null, lon: null })
 
 
 // vmap 변수
@@ -256,8 +261,6 @@ const symptomOptions = ['발열', '감기', '기침', '호흡곤란', '구토', 
 const selectedSymptoms = ref([])
 const removeSymptom = (sym) => { selectedSymptoms.value = selectedSymptoms.value.filter(s => s !== sym) }
 
-// 현재 위치
-const cur = ref({ lat: null, lon: null })
 
 const hospitals = ref([])
 const loadingHospitals = ref(false)
@@ -457,25 +460,7 @@ const loadWFSMarkers = async () => {
   }
 }
 
-// 🔹 현재 위치 가져오기
-function getCurrentLocation() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation not supported'))
-      return
-    }
 
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        cur.value.lat = position.coords.latitude
-        cur.value.lon = position.coords.longitude
-        resolve({ lat: cur.value.lat, lon: cur.value.lon })
-      },
-      error => reject(error),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    )
-  })
-}
 
 // 지도 초기화 및 최초 실행시 마커 표출
 const initMapAndCoords = async () => {
@@ -585,6 +570,83 @@ const initMapAndCoords = async () => {
   }
 }
 
+// 네비 실행 함수
+async function requestNavi(endX, endY, name, addr, hpid) {
+  try {
+
+    // 기본 위치 설정
+    let location = { lon: 126.978, lat: 37.5665 };
+
+    let startX = null
+    let startY = null
+    const startName = "내위치"
+
+    // hpid 수정
+    const hpidArray = await hpid.split(".")
+    const id = hpidArray[1]
+    console.log(`✨ hpid -> ${id}`)
+
+    // 현재 위치 불러오기
+    try {
+      location = await getCurrentLocation()
+      startX = location.lon
+      startY = location.lat
+
+      console.log(`requestNavi 현재 위치 불러오기 성공 X: ${startX}, Y: ${startY}`)
+
+    } catch (err) {
+      console.error(`requestNavi 현재 위치 불러오기 실패 -> ${err}`)
+    }
+
+    // 1. WGS84(EPSG:4326) -> KATEC으로 좌표 변환
+    const [start_x, start_y] = proj4(WGS84, KATEC, [startX, startY])
+    const [end_x, end_y] = proj4(WGS84, KATEC, [endX, endY]);
+
+    // 2. Android Bridge 호출
+    if (window.AndroidBridge && typeof window.AndroidBridge.startNavigation === 'function') {
+      window.AndroidBridge.startNavigation(
+        startName, // 현위치
+        Math.round(start_x),
+        Math.round(start_y),
+        name, // 도착지 이름 (병원 이름)
+        Math.round(end_x),
+        Math.round(end_y),
+        addr,
+        id
+      );
+      console.log(`✅ 길찾기 요청: ${name} (KATEC X:${Math.round(end_x)}, Y:${Math.round(end_y)})`);
+
+    } else {
+      // 안드로이드 앱이 아닐 경우 (예: PC 웹)
+      alert(`[웹 환경] 안드로이드 앱에서 실행됩니다. 도착지: ${name}, KATEC 좌표: (${Math.round(end_x)}, ${Math.round(end_y)})`);
+    }
+  } catch (e) {
+    console.error("좌표 변환 또는 네비게이션 호출 실패:", e);
+    alert("네비게이션 실행에 문제가 발생했습니다.");
+  }
+}
+
+// 🔹 현재 위치 가져오기
+function getCurrentLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation not supported'))
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        cur.value.lat = position.coords.latitude
+        cur.value.lon = position.coords.longitude
+        resolve({ lat: cur.value.lat, lon: cur.value.lon })
+      },
+      error => reject(error),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    )
+  })
+}
+
+
 
 
 
@@ -654,54 +716,7 @@ async function callHospital(hpid) {
   window.location.href = `tel:${tel}`
 }
 
-// 네비 실행 함수
-async function requestNavi(endX, endY, name, addr) {
-  try {
 
-    // 기본 위치 설정
-    let location = { lon: 126.978, lat: 37.5665 };
-    
-    let startX = null
-    let startY = null
-    const startName = "내위치"
-
-    // 현재 위치 불러오기
-    try {
-      location = await getCurrentLocation()
-      startX = location.lon
-      startY = location.lat
-
-      console.log(`requestNavi 현재 위치 불러오기 성공 X: ${startX}, Y: ${startY}`)
-
-    } catch(err) {
-      console.error(`requestNavi 현재 위치 불러오기 실패 -> ${err}`)
-    }
-
-    // 1. WGS84(EPSG:4326) -> KATEC으로 좌표 변환
-    const [start_x, start_y] = proj4(WGS84, KATEC, [startX, startY])
-    const [end_x, end_y] = proj4(WGS84, KATEC, [endX, endY]);
-
-    // 2. Android Bridge 호출
-    if (window.AndroidBridge && typeof window.AndroidBridge.startNavigation === 'function') {
-      window.AndroidBridge.startNavigation(
-        startName, // 현위치
-        Math.round(start_x),
-        Math.round(start_y),
-        name, // 도착지 이름 (병원 이름)
-        Math.round(end_x),
-        Math.round(end_y),
-        addr
-      );
-      console.log(`✅ 길찾기 요청: ${name} (KATEC X:${Math.round(end_x)}, Y:${Math.round(end_y)})`);
-    } else {
-      // 안드로이드 앱이 아닐 경우 (예: PC 웹)
-      alert(`[웹 환경] 안드로이드 앱에서 실행됩니다. 도착지: ${name}, KATEC 좌표: (${Math.round(end_x)}, ${Math.round(end_y)})`);
-    }
-  } catch (e) {
-    console.error("좌표 변환 또는 네비게이션 호출 실패:", e);
-    alert("네비게이션 실행에 문제가 발생했습니다.");
-  }
-}
 
 
 // 바텀시트 오른쪽 병상 badge

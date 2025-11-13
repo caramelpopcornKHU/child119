@@ -2,6 +2,8 @@ let vmap = null;
 let vectorLayer = null;
 let vectorSource = null;
 
+
+
 // 지도 초기화
 export function initVworldMap({
   containerId = "vmap",
@@ -38,8 +40,8 @@ export function initVworldMap({
     const internalMap = vmap.getMap
       ? vmap.getMap()
       : vmap.map
-      ? vmap.map
-      : null;
+        ? vmap.map
+        : null;
     if (internalMap && internalMap.addLayer) {
       internalMap.addLayer(vectorLayer);
     } else if (vmap.addLayer) {
@@ -83,7 +85,7 @@ export function addMarkerEmergency(lon, lat, props = {}) {
       geometry: new ol.geom.Point(p3857),
       ...props,
     });
-    
+
     const svgUrl = createMarkerIcon(
       props.bedAvail,
       props.bedTotal,
@@ -103,7 +105,7 @@ export function addMarkerEmergency(lon, lat, props = {}) {
     feature.setStyle(style);
     vectorSource.addFeature(feature);
     return feature;
-    
+
   } catch (e) {
     console.error("마커 추가 실패", e);
     return null;
@@ -112,7 +114,7 @@ export function addMarkerEmergency(lon, lat, props = {}) {
 
 // Homeview marker click 함수
 export function setupMarkerClick(onMarkerClickCallback) {
-  if(!vmap) {
+  if (!vmap) {
     console.warn("VMap이 초기화 되지 않아 클릭 리스너 설정 불가")
     return;
   }
@@ -122,9 +124,9 @@ export function setupMarkerClick(onMarkerClickCallback) {
       return feature;
     })
 
-    if(feature) {
+    if (feature) {
       const featureId = feature.get('id')
-      if(featureId && onMarkerClickCallback) {
+      if (featureId && onMarkerClickCallback) {
         onMarkerClickCallback(featureId)
       }
     }
@@ -133,77 +135,77 @@ export function setupMarkerClick(onMarkerClickCallback) {
 
 // svg url 만들기
 const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, isHover = false) => {
-    const name = hospitalName || '';
-    const message = emergencyMessage || '';
+  const name = hospitalName || '';
+  const message = emergencyMessage || '';
 
-    const svgWidth = 100;
-    const baseRectWidth = 100;
-    const borderRadius = 10;
+  const svgWidth = 100;
+  const baseRectWidth = 100;
+  const borderRadius = 10;
 
-    // === 폰트 사이즈 ===
-    const messageFontSize = 12;
-    const nameFontSize = 13;
-    const messageColor = '#333';
+  // === 폰트 사이즈 ===
+  const messageFontSize = 12;
+  const nameFontSize = 13;
+  const messageColor = '#333';
 
-    // === 병상 정보 색상 로직 ===
-    let bedText = '';
-    let badgeBgColor = '#16a085';
-    let badgeTextColor = 'white';
-    let displayFontSize = 18;
+  // === 병상 정보 색상 로직 ===
+  let bedText = '';
+  let badgeBgColor = '#16a085';
+  let badgeTextColor = 'white';
+  let displayFontSize = 18;
 
-    if (!Number.isFinite(bedAvail) || !Number.isFinite(bedTotal) || bedTotal <= 0 || bedAvail <= 0) {
-        badgeBgColor = '#95a5a6';
-        bedText = '정보없음';
-        displayFontSize = 12;
-    } else {
-        const ratio = bedAvail / bedTotal;
-        bedText = `${bedAvail}/${bedTotal}`;
-        badgeBgColor = ratio <= 0.5 ? '#e74c3c' : '#16a085';
+  if (!Number.isFinite(bedAvail) || !Number.isFinite(bedTotal) || bedTotal <= 0 || bedAvail <= 0) {
+    badgeBgColor = '#95a5a6';
+    bedText = '정보없음';
+    displayFontSize = 12;
+  } else {
+    const ratio = bedAvail / bedTotal;
+    bedText = `${bedAvail}/${bedTotal}`;
+    badgeBgColor = ratio <= 0.5 ? '#e74c3c' : '#16a085';
+  }
+
+  // === 아이콘 세부 설정 ===
+  const cirRadius = 25;
+  const strokeWidth = isHover ? '4' : '3';
+  const bedIconPath = "M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3";
+  const iconScale = 0.9;
+  const textGap = 4;
+
+  // === 메시지 줄바꿈 ===
+  const wrapText = (text, maxCharsPerLine) => {
+    if (!text) return [];
+    const words = text.split(' ');
+    let lines = [];
+    let currentLine = '';
+    for (let word of words) {
+      if ((currentLine + word).length > maxCharsPerLine) {
+        lines.push(currentLine.trim());
+        currentLine = word + ' ';
+      } else {
+        currentLine += word + ' ';
+      }
     }
+    if (currentLine.trim()) lines.push(currentLine.trim());
+    return lines;
+  };
+  const wrappedMessageLines = wrapText(message, 13);
 
-    // === 아이콘 세부 설정 ===
-    const cirRadius = 25;
-    const strokeWidth = isHover ? '4' : '3';
-    const bedIconPath = "M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3";
-    const iconScale = 0.9;
-    const textGap = 4;
+  // === Y 좌표 계산 ===
+  const nameY = 20;                     // 병원이름
+  const cirCenterY = nameY + 5 + cirRadius; // 병상원 (이름과 간격 30px)
+  const messageStartY = cirCenterY + cirRadius + 18; // 메시지 시작
+  const totalMessageHeight = wrappedMessageLines.length * (messageFontSize + 3);
+  const rectHeight = messageStartY + totalMessageHeight + 5; // 전체 높이 계산
+  const svgHeight = rectHeight + 20;
 
-    // === 메시지 줄바꿈 ===
-    const wrapText = (text, maxCharsPerLine) => {
-        if (!text) return [];
-        const words = text.split(' ');
-        let lines = [];
-        let currentLine = '';
-        for (let word of words) {
-            if ((currentLine + word).length > maxCharsPerLine) {
-                lines.push(currentLine.trim());
-                currentLine = word + ' ';
-            } else {
-                currentLine += word + ' ';
-            }
-        }
-        if (currentLine.trim()) lines.push(currentLine.trim());
-        return lines;
-    };
-    const wrappedMessageLines = wrapText(message, 13);
+  const cirCenterX = svgWidth / 2;
 
-    // === Y 좌표 계산 ===
-    const nameY = 20;                     // 병원이름
-    const cirCenterY = nameY +5 + cirRadius; // 병상원 (이름과 간격 30px)
-    const messageStartY = cirCenterY + cirRadius + 18; // 메시지 시작
-    const totalMessageHeight = wrappedMessageLines.length * (messageFontSize + 3);
-    const rectHeight = messageStartY + totalMessageHeight + 5; // 전체 높이 계산
-    const svgHeight = rectHeight + 20;
+  // === 핀 ===
+  const pinSvgPath = "M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7";
+  const pinColor = "#000000";
+  const pinScaleFactor = 1.3;
+  const pinY = rectHeight - 5;
 
-    const cirCenterX = svgWidth / 2;
-
-    // === 핀 ===
-    const pinSvgPath = "M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7";
-    const pinColor = "#000000";
-    const pinScaleFactor = 1.3;
-    const pinY = rectHeight - 5;
-
-    return 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(`
         <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
             <!-- 흰 배경 -->
             <rect 
@@ -241,15 +243,15 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
 
             <!-- 메시지 (줄바꿈 지원) -->
             ${wrappedMessageLines.length > 0
-                ? wrappedMessageLines
-                    .map((line, i) => `
+      ? wrappedMessageLines
+        .map((line, i) => `
                         <text x="${svgWidth / 2}" y="${messageStartY + i * (messageFontSize + 3)}"
                             text-anchor="middle" fill="${messageColor}"
                             font-size="${messageFontSize}" font-family="pretendard">
                             ${line}
                         </text>`)
-                    .join('')
-                : ''}
+        .join('')
+      : ''}
 
             <!-- 핀 -->
             <g transform="translate(${svgWidth / 2 - 12 * pinScaleFactor}, ${pinY}) scale(${pinScaleFactor})">
@@ -305,8 +307,8 @@ export function getCurrentBBox4326() {
     const internalMap = vmap.getMap
       ? vmap.getMap()
       : vmap.map
-      ? vmap.map
-      : null;
+        ? vmap.map
+        : null;
 
     const size = internalMap
       ? internalMap.getSize()
@@ -321,10 +323,10 @@ export function getCurrentBBox4326() {
     const [minX, minY, maxX, maxY] = extent4326;
 
     // bbox NaN 값 확인
-    if(isNaN(minX) && isNaN(minY) && isNaN(maxX) && isNaN(maxY)  ) {
+    if (isNaN(minX) && isNaN(minY) && isNaN(maxX) && isNaN(maxY)) {
       console.warn(`bbox 계산 실패 `)
       return;
-    } 
+    }
 
     console.log("📦 현재 bbox:", { minX, minY, maxX, maxY });
     return [minX, minY, maxX, maxY];
@@ -349,72 +351,74 @@ export async function removeRouteLayer(map) {
 
 // 경로 그리기
 export async function drawRoute(map, geoJsonData, routeIndex = 1) {
-    // 1. GeoJSON 데이터를 파싱합니다. (안전하게 객체로 변환)
-    const data = typeof geoJsonData === 'string' ? JSON.parse(geoJsonData) : geoJsonData;
-    
-    // LineString 지오메트리를 가진 GeoJSON Feature만 수동으로 필터링
-    const lineStringGeoJSONs = data.features.filter(feature => 
-        feature.geometry && feature.geometry.type === 'LineString'
-    );
+  // 1. GeoJSON 데이터를 파싱합니다. (안전하게 객체로 변환)
+  const data = typeof geoJsonData === 'string' ? JSON.parse(geoJsonData) : geoJsonData;
 
-    // 2. OpenLayers 포맷터 정의 (좌표계 설정 수정)
-    const format = new ol.format.GeoJSON({
-        defaultProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857'
-    });
+  // LineString 지오메트리를 가진 GeoJSON Feature만 수동으로 필터링
+  const lineStringGeoJSONs = data.features.filter(feature =>
+    feature.geometry && feature.geometry.type === 'LineString'
+  );
 
-    const featuresToAdd = [];
+  // 2. OpenLayers 포맷터 정의 (좌표계 설정 수정)
+  const format = new ol.format.GeoJSON({
+    defaultProjection: 'EPSG:4326',
+    featureProjection: 'EPSG:3857'
+  });
 
-    // 3. LineString GeoJSON 객체 각각을 OpenLayers Feature로 변환
-    lineStringGeoJSONs.forEach(lineFeatureGeoJSON => {
-        try {
-            // readFeature를 사용하여 개별 LineString Feature를 변환
-            const olFeature = format.readFeature(lineFeatureGeoJSON);
-            featuresToAdd.push(olFeature);
-        } catch (e) {
-            console.error("LineString Feature 변환 실패:", e, lineFeatureGeoJSON);
-        }
-    });
+  const featuresToAdd = [];
 
-    // 4. 디버그 로그 및 유효성 검사
-    console.log(`[DrawRoute Debug] 원본 LineString GeoJSON 개수: ${lineStringGeoJSONs.length}개`);
-    console.log(`[DrawRoute Debug] 최종 OpenLayers Feature 개수: ${featuresToAdd.length}개`);
-    
-    if (featuresToAdd.length === 0) {
-        console.error("경로를 그릴 수 있는 유효한 OpenLayers Feature가 없습니다. 데이터 구조를 확인하세요.");
-        return;
+  // 3. LineString GeoJSON 객체 각각을 OpenLayers Feature로 변환
+  lineStringGeoJSONs.forEach(lineFeatureGeoJSON => {
+    try {
+      // readFeature를 사용하여 개별 LineString Feature를 변환
+      const olFeature = format.readFeature(lineFeatureGeoJSON);
+      featuresToAdd.push(olFeature);
+    } catch (e) {
+      console.error("LineString Feature 변환 실패:", e, lineFeatureGeoJSON);
     }
+  });
 
-    // 5. 경로를 담을 Vector Source 생성
-    const vectorSource = new ol.source.Vector({
-        features: featuresToAdd // LineString만 담긴 배열 사용
-    });
+  // 4. 디버그 로그 및 유효성 검사
+  console.log(`[DrawRoute Debug] 원본 LineString GeoJSON 개수: ${lineStringGeoJSONs.length}개`);
+  console.log(`[DrawRoute Debug] 최종 OpenLayers Feature 개수: ${featuresToAdd.length}개`);
 
-    // 6. 경로 스타일 정의 (보이는 문제 해결을 위해 불투명하고 두꺼운 스타일 유지)
-    const routeStyle = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            // 경로 순번에 따라 색상 또는 투명도를 조절할 수 있습니다.
-            color: 'rgba(0, 0, 255, 1)', // 불투명 파란색
-            width: 6,
-        }),
-    });
+  if (featuresToAdd.length === 0) {
+    console.error("경로를 그릴 수 있는 유효한 OpenLayers Feature가 없습니다. 데이터 구조를 확인하세요.");
+    return;
+  }
 
-    // 7. Vector Layer 생성 및 지도에 추가
-    const vectorLayer = new ol.layer.Vector({
-        source: vectorSource,
-        style: routeStyle,
-        name: `tmap_route_layer_${routeIndex}`
-    });
+  // 5. 경로를 담을 Vector Source 생성
+  const vectorSource = new ol.source.Vector({
+    features: featuresToAdd // LineString만 담긴 배열 사용
+  });
 
-    map.addLayer(vectorLayer);
-    
-    // 8. 레이어 순서 강제 설정 (다른 레이어 위에 표시되도록 Z-Index 높임)
-    vectorLayer.setZIndex(999);
-    console.log("✅ 새 Tmap 경로 레이어 추가 완료.");
+  // 6. 경로 스타일 정의 (보이는 문제 해결을 위해 불투명하고 두꺼운 스타일 유지)
+  const routeStyle = new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      // 경로 순번에 따라 색상 또는 투명도를 조절할 수 있습니다.
+      color: 'rgba(0, 0, 255, 1)', // 불투명 파란색
+      width: 6,
+    }),
+  });
 
-    
+  // 7. Vector Layer 생성 및 지도에 추가
+  const vectorLayer = new ol.layer.Vector({
+    source: vectorSource,
+    style: routeStyle,
+    name: `tmap_route_layer_${routeIndex}`
+  });
+
+  map.addLayer(vectorLayer);
+
+  // 8. 레이어 순서 강제 설정 (다른 레이어 위에 표시되도록 Z-Index 높임)
+  vectorLayer.setZIndex(999);
+  console.log("✅ 새 Tmap 경로 레이어 추가 완료.");
+
+
 
 }
+
+
 
 
 
@@ -424,5 +428,6 @@ export default {
   clearMarkers,
   getCurrentBBox4326,
   drawRoute,
-  removeRouteLayer
+  removeRouteLayer,
+ 
 };
