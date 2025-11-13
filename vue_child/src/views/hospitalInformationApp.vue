@@ -209,8 +209,8 @@
                 style="pointer-events: auto; z-index: 10;">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
-              <button class="btn btn-primary w-100" @click.stop="openRouteModal(hospital)"
-                style="pointer-events: auto; z-index: 10;">
+              <button class="btn btn-primary w-100" v-if="hospital.lat && hospital.lon && hospital.addr && hospital.name" 
+                      @click.stop="requestNavi(hospital.lon, hospital.lat, hospital.name, hospital.addr)">
                 <i class="bi bi-sign-turn-right-fill"></i> 길찾기
               </button>
             </div>
@@ -370,6 +370,15 @@ import { useRouter } from 'vue-router';
 
 import { initVworldMap, clearMarkers, addMarkerHospital, getCurrentBBox4326 } from '@/utils/vworldfunction';
 import { getEmergencyFromWFSByBBox, calculateDistance } from '@/utils/api';
+import proj4 from 'proj4';
+
+// KATEC 정의 (가장 일반적인 비공식 KATEC: Bessel 타원체, 중앙 경선 128도)
+const KATEC_PROJ4_STRING = '+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +units=m +no_defs';
+proj4.defs('KATEC', KATEC_PROJ4_STRING);
+
+// 좌표계 ID
+const WGS84 = 'EPSG:4326';
+const KATEC = 'KATEC';
 
 // vmap 변수
 let vmap = null;
@@ -593,6 +602,13 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
         })
       : geojson.features
 
+   // OPEN 병원 먼저 정렬
+    filtered.sort((a, b) => {
+      const openA = isHospitalOpen(a.properties) ? 1 : 0
+      const openB = isHospitalOpen(b.properties) ? 1 : 0
+      return openB - openA  // open=true 먼저
+    })
+
     // 병원별 마커 & 라벨 추가
     filtered.forEach(f => {
       const [lon, lat] = f.geometry.coordinates
@@ -613,7 +629,9 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
         })
 
         // 라벨 표시 (Pretendard 서체 적용됨)
-        addLabelToMarker(lat, lon, name, () => goToHospitalDetail(hpid))
+        if (open) {
+          addLabelToMarker(lat, lon, name, () => goToHospitalDetail(hpid))
+        }
       }
     })
 
@@ -807,49 +825,31 @@ function callHospital(tel) {
   window.location.href = `tel:${tel}`
 }
 
-/* 길찾기 모달 열기 */
-function openRouteModal(hospital) {
-  selectedHospital.value = hospital
+function requestNavi(lon, lat, name, addr = "도착지") {
+  try {
+    // 1. WGS84(EPSG:4326) -> KATEC으로 좌표 변환
+    // proj4(from_proj, to_proj, [x, y])
+    // EPSG:4326은 (경도, 위도) 순서
+    const [Katec_x, Katec_y] = proj4(WGS84, KATEC, [lon, lat]);
 
-  // Bootstrap 5 Modal API 사용
-  const modalEl = document.getElementById('routeModal')
-  if (modalEl) {
-    // Bootstrap이 로드되어 있는지 확인
-    if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
-      const modal = new window.bootstrap.Modal(modalEl)
-      modal.show()
+    // 2. Android Bridge 호출
+    if (window.AndroidBridge && typeof window.AndroidBridge.startNavigation === 'function') {
+      window.AndroidBridge.startNavigation(
+        name, // 도착지 이름 (병원 이름)
+        Math.round(Katec_x), // Katec X 좌표 (정수로 변환)
+        Math.round(Katec_y), // Katec Y 좌표 (정수로 변환)
+        addr // 도착지 주소 (현재 코드에서는 '도착지'로 하드코딩. 필요 시 데이터 추가 필요)
+      );
+      console.log(`✅ 길찾기 요청: ${name} (KATEC X:${Math.round(Katec_x)}, Y:${Math.round(Katec_y)})`);
     } else {
-      // Bootstrap이 없으면 직접 모달 표시 (fallback)
-      modalEl.classList.add('show')
-      modalEl.style.display = 'block'
-      document.body.classList.add('modal-open')
-
-      // 백드롭 추가
-      const backdrop = document.createElement('div')
-      backdrop.className = 'modal-backdrop fade show'
-      backdrop.id = 'route-modal-backdrop'
-      document.body.appendChild(backdrop)
+      // 안드로이드 앱이 아닐 경우 (예: PC 웹)
+      alert(`[웹 환경] 안드로이드 앱에서 실행됩니다. 도착지: ${name}, KATEC 좌표: (${Math.round(Katec_x)}, ${Math.round(Katec_y)})`);
     }
+  } catch (e) {
+    console.error("좌표 변환 또는 네비게이션 호출 실패:", e);
+    alert("네비게이션 실행에 문제가 발생했습니다.");
   }
 }
-
-/* 길찾기 모달 닫기 */
-function closeRouteModal() {
-  const modalEl = document.getElementById('routeModal')
-  if (modalEl) {
-    if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
-      const modal = window.bootstrap.Modal.getInstance(modalEl)
-      if (modal) modal.hide()
-    } else {
-      modalEl.classList.remove('show')
-      modalEl.style.display = 'none'
-      document.body.classList.remove('modal-open')
-      const backdrop = document.getElementById('route-modal-backdrop')
-      if (backdrop) backdrop.remove()
-    }
-  }
-}
-
 async function updateUserLocation(zoom = 16) {
   try {
     const position = await getCurrentLocation()
@@ -994,35 +994,6 @@ onMounted(async () => {
   }
 
   
-})
-
-onActivated(async () => {
-  await new Promise((resolve) => {
-    const checkVworld = setInterval(() => {
-      if (window.vw && window.vw.ol3 && window.ol) {
-        clearInterval(checkVworld)
-        resolve()
-      }
-    }, 100)
-  })
-
-  try {
-    // 1️⃣ 지도 초기화
-    const defaultCenter = window.ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
-    vmap = initVworldMap({
-      containerId: 'map_div',
-      defaultCenter,
-      defaultZoom: 15,
-      autoFetch: false
-    })
-    clearMarkers()
-    if (!vmap) throw new Error('vmap 초기화 실패')
-
-    // 2️⃣ 현재 위치 표시
-    await updateUserLocation(16)
-  } catch (err) {
-    console.error('초기화 실패:', err)
-  }
 })
 
 onBeforeUnmount(() => {
