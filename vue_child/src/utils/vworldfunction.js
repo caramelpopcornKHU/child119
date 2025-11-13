@@ -338,86 +338,57 @@ export function getCurrentBBox4326() {
 
 // 기존에 가진 레이어 삭제
 export async function removeRouteLayer(map) {
-  const layersToRemove = map.getLayers().getArray().filter(layer =>
-    layer.get('name') && layer.get('name').startsWith('tmap_route_layer')
+ const layersToRemove = map.getLayers().getArray().filter(layer => 
+    layer.get('name') === 'tmap_route_layer'
   );
-
+  
   layersToRemove.forEach(layer => {
     map.removeLayer(layer);
-  });
-
-  console.log("✅ 기존 Tmap 경로 레이어 제거 완료.");
+    });
+    
+    console.log("✅ 기존 Tmap 경로 레이어 제거 완료.");
 }
 
-// 경로 그리기
-export async function drawRoute(map, geoJsonData, routeIndex = 1) {
-  // 1. GeoJSON 데이터를 파싱합니다. (안전하게 객체로 변환)
-  const data = typeof geoJsonData === 'string' ? JSON.parse(geoJsonData) : geoJsonData;
 
-  // LineString 지오메트리를 가진 GeoJSON Feature만 수동으로 필터링
-  const lineStringGeoJSONs = data.features.filter(feature =>
-    feature.geometry && feature.geometry.type === 'LineString'
-  );
+ // 경로 그리기
+  export async function drawRoute(map, geoJsonData) {
+    // 1. 기존 경로 레이어 제거를 먼저 수행합니다.
+    removeRouteLayer(map);
+    
+    // 2. GeoJSON 데이터를 OpenLayers 피처로 변환
+    const format = new ol.format.GeoJSON({
+      // Tmap 응답 좌표계 (EPSG:4326)를 지도 좌표계 (EPSG:3857)로 변환
+      defaultDataProjection: 'EPSG:3857', 
+      featureProjection: 'EPSG:3857'     
+    });
+    
+    const features = format.readFeatures(geoJsonData);
+    
+    // 3. 경로를 담을 Vector Source 생성
+    const vectorSource = new ol.source.Vector({
+      features: features
+    });
+    
+    // 4. 경로 스타일 정의
+    const routeStyle = new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: 'rgba(0, 0, 255, 0.7)', 
+        width: 6,
+      }),
+    });
+    
+    // 5. Vector Layer 생성 및 지도에 추가
+    const vectorLayer = new ol.layer.Vector({
+      source: vectorSource,
+      style: routeStyle,
+      name: 'tmap_route_layer' // 제거를 위한 이름 설정
+    });
+    
+    map.addLayer(vectorLayer);
+    console.log("✅ 새 Tmap 경로 레이어 추가 완료.");
+    
 
-  // 2. OpenLayers 포맷터 정의 (좌표계 설정 수정)
-  const format = new ol.format.GeoJSON({
-    defaultProjection: 'EPSG:4326',
-    featureProjection: 'EPSG:3857'
-  });
-
-  const featuresToAdd = [];
-
-  // 3. LineString GeoJSON 객체 각각을 OpenLayers Feature로 변환
-  lineStringGeoJSONs.forEach(lineFeatureGeoJSON => {
-    try {
-      // readFeature를 사용하여 개별 LineString Feature를 변환
-      const olFeature = format.readFeature(lineFeatureGeoJSON);
-      featuresToAdd.push(olFeature);
-    } catch (e) {
-      console.error("LineString Feature 변환 실패:", e, lineFeatureGeoJSON);
-    }
-  });
-
-  // 4. 디버그 로그 및 유효성 검사
-  console.log(`[DrawRoute Debug] 원본 LineString GeoJSON 개수: ${lineStringGeoJSONs.length}개`);
-  console.log(`[DrawRoute Debug] 최종 OpenLayers Feature 개수: ${featuresToAdd.length}개`);
-
-  if (featuresToAdd.length === 0) {
-    console.error("경로를 그릴 수 있는 유효한 OpenLayers Feature가 없습니다. 데이터 구조를 확인하세요.");
-    return;
   }
-
-  // 5. 경로를 담을 Vector Source 생성
-  const vectorSource = new ol.source.Vector({
-    features: featuresToAdd // LineString만 담긴 배열 사용
-  });
-
-  // 6. 경로 스타일 정의 (보이는 문제 해결을 위해 불투명하고 두꺼운 스타일 유지)
-  const routeStyle = new ol.style.Style({
-    stroke: new ol.style.Stroke({
-      // 경로 순번에 따라 색상 또는 투명도를 조절할 수 있습니다.
-      color: 'rgba(0, 0, 255, 1)', // 불투명 파란색
-      width: 6,
-    }),
-  });
-
-  // 7. Vector Layer 생성 및 지도에 추가
-  const vectorLayer = new ol.layer.Vector({
-    source: vectorSource,
-    style: routeStyle,
-    name: `tmap_route_layer_${routeIndex}`
-  });
-
-  map.addLayer(vectorLayer);
-
-  // 8. 레이어 순서 강제 설정 (다른 레이어 위에 표시되도록 Z-Index 높임)
-  vectorLayer.setZIndex(999);
-  console.log("✅ 새 Tmap 경로 레이어 추가 완료.");
-
-
-
-}
-
 
 
 

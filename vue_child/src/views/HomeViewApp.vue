@@ -241,7 +241,7 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 import proj4 from 'proj4';
 
 // KATEC 정의 (가장 일반적인 비공식 KATEC: Bessel 타원체, 중앙 경선 128도)
-const KATEC_PROJ4_STRING = '+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +units=m +no_defs';
+const KATEC_PROJ4_STRING = '+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +units=m +no_defs +towgs84=-115.80,474.99,674.11,1.16,-2.31,-1.63,6.43';
 proj4.defs('KATEC', KATEC_PROJ4_STRING);
 
 // 좌표계 ID
@@ -473,96 +473,129 @@ const initMapAndCoords = async () => {
       }
     }, 100)
   })
-
+  
   try {
     // 2. 현재 위치 가져오기
     let centerCoords
-
+    
     let location = { lon: 126.978, lat: 37.5665 };
-
+    
     try {
       const userLocation = await getCurrentLocation()
       location = userLocation; // 위치 획득 성공 시 값 업데이트
+      location.lon = 127.727366
+      location.lat = 37.891997
       centerCoords = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
     } catch {
       console.log(`위치 가져오기 실패, 기본 위치 사용`)
       // 실패 시, 위에서 설정한 기본 location 값(126.978, 37.5665)이 사용됨
       centerCoords = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
     }
-
+    
     // 3. 지도 초기화
     vmap = initVworldMap({
       containerId: 'vmap',
       defaultCenter: centerCoords,
       autoFetch: false
     })
-
+    
     if (!vmap) throw new Error('vmap 초기화 실패')
-
-
+    
+    
     // 4. 리스너 함수 정의 
     moveEndListener = () => {
       console.log(`지도 이동/줌 감지`)
       if (debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {
-        loadWFSMarkers()
-      }, 300)
+    loadWFSMarkers()
+  }, 300)
+}
+
+vmap.on('moveend', moveEndListener)
+
+// 5. 초기 마커 로드
+setTimeout(() => loadWFSMarkers(), 500)
+
+// 6-1. 현재 위치에서 가장 가까운 응급실 가져오기
+const emergencyRes = await getEmergencyFromWFSSortByDistance(location.lon, location.lat)
+const top3Emergency = emergencyRes.slice(0, 3)
+
+const routeResArray = []
+
+for (const [index, feature] of top3Emergency.entries()) {
+  const [endX, endY] = feature.geometry.coordinates
+  
+  try {
+    // 6.2 경로 데이터 불러오기
+    const routeData = await getTmapRoute(location.lon, location.lat, endX, endY)
+    routeResArray.push(routeData)
+  } catch (err) {
+    console.error(`${index + 1}번째 경로 요청 오류`)
+    routeResArray.push(null)
+  }
+  
+  
+  // // api 요청 차레로 보내기
+  // if (index < top3Emergency.length - 1) {
+    //   await delay(800)
+    // }
+    
+  }
+  
+// 6-3. 기존 경로 레이어 삭제
+await removeRouteLayer(vmap);
+
+// ⭐ 6-4-1. 줌 맞추기를 위한 Extent (영역) 계산 (출발지 + Top 3 병원) ⭐
+let totalExtent = ol.extent.createEmpty();
+
+// 1) 현재 위치 (출발지) Extent 포함
+const startPoint3857 = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857');
+ol.extent.extend(totalExtent, startPoint3857);
+
+// 2) Top 3 병원의 Extent 포함
+top3Emergency.forEach(feature => {
+    const [endX, endY] = feature.geometry.coordinates; // 병원 좌표 (4326)
+    const endPoint3857 = ol.proj.transform([endX, endY], 'EPSG:4326', 'EPSG:3857');
+    ol.extent.extend(totalExtent, endPoint3857);
+});
+
+
+// ⭐ 6-4-2. 지도 뷰를 전체 영역에 맞춥니다. (fit 완료 보장) ⭐
+if (!ol.extent.isEmpty(totalExtent)) {
+    // moveend 완료를 await로 대기하여 bbox 감지 성공률을 높입니다.
+    await new Promise(resolve => {
+        const view = vmap.getView();
+        
+        const listener = view.on('moveend', () => {
+            ol.Observable.unByKey(listener);
+            console.log("✅ [initMapAndCoords] Top 3 Extent fit 애니메이션 종료 확인.");
+            resolve();
+        });
+
+        // 뷰를 계산된 현재 위치 + Top 3 병원 영역에 맞춥니다.
+        view.fit(totalExtent, {
+            size: vmap.getSize(),
+            padding: [150, 150, 150, 150], // 여백 설정
+            duration: 1000 
+        });
+    });
+}
+
+
+// ⭐ 6-4-3. 경로 그리기 (하나의 경로만 유지) ⭐
+if (routeResArray.length > 0 && vmap) {
+    console.log(`경로 그리기 함수 실행`)
+    
+    // Top 1 병원의 경로 데이터만 drawRoute에 전달하여 하나만 표시합니다.
+    if (routeResArray[0]) {
+        drawRoute(vmap, routeResArray[0], 1) 
     }
-
-    vmap.on('moveend', moveEndListener)
-
-    // 5. 초기 마커 로드
-    setTimeout(() => loadWFSMarkers(), 500)
-
-    // 6-1. 현재 위치에서 가장 가까운 응급실 가져오기
-    const emergencyRes = await getEmergencyFromWFSSortByDistance(location.lon, location.lat)
-    const top3Emergency = emergencyRes.slice(0, 3)
-
-    const routeResArray = []
-
-    for (const [index, feature] of top3Emergency.entries()) {
-      const [endX, endY] = feature.geometry.coordinates
-
-      try {
-        // 6.2 경로 데이터 불러오기
-        const routeData = await getTmapRoute(location.lon, location.lat, endX, endY)
-        routeResArray.push(routeData)
-      } catch (err) {
-        console.error(`${index + 1}번째 경로 요청 오류`)
-        routeResArray.push(null)
-      }
-
-
-      // api 요청 차레로 보내기
-      if (index < top3Emergency.length - 1) {
-        await delay(800)
-      }
-
-    }
-
-    // 6-3. 기존 경로 레이어 삭제
-    await removeRouteLayer(vmap)
-
-    // 6-4. 경로 그리기
-    if (routeResArray.length > 0 && vmap) {
-      console.log(`경로 그리기 함수 실행`)
-
-
-      routeResArray.forEach((routeData, index) => {
-        if (routeData) {
-          console.log('Tmap 응답 데이터 구조 확인:', routeData);
-          drawRoute(vmap, routeData, index + 1)
-
-
-
-        } else {
-          console.log(`${index + 1}번째 병원 경로 데이터가 없어 건너 뜁니다.`)
-        }
-      })
-    }
-
+}
     // marker click 함수
     if (vmap) { setupMarkerClick(onMarkerClick) }
+
+    await delay(400); 
+loadWFSMarkers(); // bbox 감지 시도
 
   } catch (error) {
     console.error('초기화 실패:', error)
