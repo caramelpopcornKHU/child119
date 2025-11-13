@@ -89,6 +89,7 @@ coverage
 /build/
 
 # 안드로이드 빌드 파일 무시
+/android_child
 /android_child/build/
 /android_child/app/build/
 /android_child/app/generated/
