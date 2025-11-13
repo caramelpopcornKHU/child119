@@ -149,7 +149,7 @@ const loading = ref(true)
  * 관리자 페이지로 돌아갑니다
  */
 function goBack() {
-  router.push('/AdminHome')
+  router.push('/AdminFeedback')
 }
 
 /**

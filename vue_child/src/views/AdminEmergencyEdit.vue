@@ -1,5 +1,6 @@
 <template>
-  <main class="bg-body-tertiary min-vh-100">
+  
+  <main class="admin-main ">
     <div class="container-fluid py-4 px-3">
 
       <!-- 상단 헤더 -->
@@ -252,6 +253,7 @@
       </form>
     </div>
   </main>
+  
 </template>
 
 <script setup>
@@ -395,5 +397,15 @@ function removeTag(index) {
 
 .badge.bg-danger-subtle {
   background-color: #fdecea !important;
+}
+/* 사이드바 폭(240px)을 고려한 관리자 메인 레이아웃 */
+.admin-main {
+  margin-left: 120px;      /* 사이드바만큼 오른쪽으로 밀기 */
+  padding-top: 1.5rem;
+  padding-bottom: 2.5rem;
+  padding-left: 0;
+  padding-right: 0;
+  min-height: 100vh;
+  background-color: transparent;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-layout d-flex min-vh-100">
+  <div class="card shadow-sm border-0 rounded-4">
     <!-- 메인 영역 -->
     <main class="admin-main">
       <!-- 상단 타이틀 & 설명 -->
@@ -27,7 +27,7 @@
                 <thead class="table-light">
                   <tr>
                     <th style="width: 4%;">No</th>
-                    <th style="width: 18%;">이메일</th>
+                    
                     <th style="width: 12%;">아이디</th>
                     <th style="width: 12%;">이름</th>
                     <th style="width: 12%;">전화번호</th>
@@ -41,7 +41,6 @@
                 <tbody>
                   <tr v-for="(u, idx) in usersWithKids" :key="u.uid">
                     <td>{{ idx + 1 }}</td>
-                    <td>{{ u.email }}</td>
                     <td>{{ u.username || '-' }}</td>
                     <td>{{ u.name }}</td>
                     <td>{{ u.phone || '-' }}</td>
@@ -246,7 +245,7 @@ const goToUserEdit = (uid) => {
 }
 
 const deleteUser = async (user) => {
-  const ok = confirm(`정말로 ${user.email} 사용자를 삭제하시겠습니까?\n(자녀 정보도 함께 삭제됩니다.)`)
+  const ok = confirm(`정말로 ${user.name} 사용자를 삭제하시겠습니까?\n(자녀 정보도 함께 삭제됩니다.)`)
   if (!ok) return
 
   try {
@@ -294,10 +293,7 @@ onMounted(() => {
   padding-top: 72px;
 }
 
-.admin-main {
-  padding-top: 1.5rem;
-  padding-bottom: 2.5rem;
-}
+
 
 /* 메인 영역: 사이드바 너비만큼 밀기, 좌우 여백 제거 */
 .admin-main {
