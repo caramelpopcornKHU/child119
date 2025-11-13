@@ -5,10 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.webkit.GeolocationPermissions
 import android.webkit.JavascriptInterface
+import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
@@ -17,26 +19,58 @@ import android.webkit.WebViewClient
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.kakaomobility.knsdk.KNLanguageType
+import io.realm.kotlin.BuildConfig
 
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
-    private lateinit var myTextView: TextView // 1. XML의 뷰와 연결할 변수
+
+    // 웹뷰의 권한 요청(마이크 등)을 임시로 저장할 변수
+    private var permissionRequest: PermissionRequest? = null
+
+    // 안드로이드 런타임 권한 요청을 위한 런처
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                // 권한이 승인됨
+                Log.d("WebView", "RECORD_AUDIO 권한 승인됨")
+                // 저장해둔 웹뷰 요청에 대해 '승인'을 알려줌
+                permissionRequest?.grant(permissionRequest?.resources)
+            } else {
+                // 권한이 거부됨
+                Log.d("WebView", "RECORD_AUDIO 권한 거부됨")
+                Toast.makeText(this, "마이크 권한이 거부되었습니다.", Toast.LENGTH_SHORT).show()
+                // 저장해둔 웹뷰 요청에 대해 '거부'를 알려줌
+                permissionRequest?.deny()
+            }
+            // 변수 초기화
+            permissionRequest = null
+        }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
 
 
-        // 1. WebView 초기화
+        // WebView 초기화
         webView = findViewById(R.id.webView)
         setupWebView()
 
-        // 2. www.child119.com 로드
+        // 디버깅 활성화
+        if (BuildConfig.DEBUG) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
+
+        //  www.child119.com 로드
         webView.loadUrl("https://www.child119.com/hospitalInformationApp")
 
         // 3. 앱 시작 시 자동으로 권한 확인 및 인증 시작 (기존 onClick에서 이동)
@@ -95,12 +129,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-
-
-
-
-
-
             // (NEW) 3. WebChromeClient 설정 (위치 정보 권한 요청 처리)
             webChromeClient = object : WebChromeClient() {
                 override fun onGeolocationPermissionsShowPrompt(
@@ -110,6 +138,45 @@ class MainActivity : AppCompatActivity() {
                     // (NEW) 4. 웹페이지의 위치 정보 요청을 즉시 승인
                     callback?.invoke(origin, true, false)
                 }
+
+                // [추가] 마이크, 카메라 등 권한 요청 처리
+                override fun onPermissionRequest(request: PermissionRequest?) {
+                    // API 레벨 21 (Lollipop) 이상에서만 동작
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+                        // 웹페이지가 요청한 권한 목록
+                        val requestedResources = request?.resources ?: emptyArray()
+
+                        // 요청된 권한이 마이크(AUDIO_CAPTURE)인지 확인
+                        if (requestedResources.contains(PermissionRequest.RESOURCE_AUDIO_CAPTURE)) {
+
+                            // 1. 웹뷰의 요청을 변수에 저장
+                            permissionRequest = request
+
+                            // 2. 안드로이드 시스템 권한이 이미 있는지 확인
+                            when {
+                                ContextCompat.checkSelfPermission(
+                                    this@MainActivity,
+                                    Manifest.permission.RECORD_AUDIO
+                                ) == PackageManager.PERMISSION_GRANTED -> {
+                                    // 3-A. 이미 권한이 있다면, 웹뷰에 즉시 승인
+                                    request?.grant(request.resources)
+                                    permissionRequest = null
+                                }
+                                else -> {
+                                    // 3-B. 권한이 없다면, 런처를 실행해 사용자에게 팝업 요청
+                                    requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                }
+                            }
+                        } else {
+                            // 그 외 요청은 거부
+                            request?.deny()
+                        }
+                    } else {
+                        request?.deny()
+                    }
+                }
+
             }
 
             // 2. WebSettings 설정
@@ -118,10 +185,12 @@ class MainActivity : AppCompatActivity() {
                 domStorageEnabled = true   // (권장) 로컬 스토리지 사용
                 useWideViewPort = true     // (권장) Viewport 메타 태그 지원
                 loadWithOverviewMode = true // (권장) 컨텐츠를 WebView 크기에 맞춤
+                setGeolocationEnabled(true) //위치 정보를 사용하려면 필요
+                mediaPlaybackRequiresUserGesture = false // 마이크, 카메라를 스크립트로 제어하려면 필요
             }
 
-            // 3. (중요) JavaScript 브릿지 연결
-            // "AndroidBridge"라는 이름으로 웹페이지의 JavaScript가 호출할 수 있는 인터페이스를 추가합니다.
+            // JavaScript 브릿지 연결
+            // "AndroidBridge"라는 이름으로 웹페이지의 JavaScript가 호출할 수 있는 인터페이스를 추가
             addJavascriptInterface(WebAppInterface(this@MainActivity), "AndroidBridge")
         }
     }
