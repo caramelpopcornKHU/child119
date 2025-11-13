@@ -1,9 +1,11 @@
 <template>
-  <div class="admin-layout d-flex min-vh-100">
+  <div class="card shadow-sm border-0 rounded-4">
     <!-- 메인 영역 -->
     <main class="admin-main">
       <!-- 상단 타이틀 & 설명 -->
-      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3 px-4 pt-3">
+      <div
+        class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3 px-4 pt-3"
+      >
         <div>
           <h3 class="text-bold mb-1">관리자 대시보드</h3>
           <p class="text-medium mb-0 small">
@@ -11,114 +13,171 @@
           </p>
         </div>
       </div>
-        <!-- 크롤링 주기 설정 -->
-        <div class="card shadow-sm border-0 rounded-4">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="fw-semibold mb-0">크롤링 주기 설정</h5>
-            </div>
-            <p class="small text-muted">
+
+      <!-- 🔹 크롤링 주기 설정 카드 -->
+      <div class="card shadow-sm border-0 rounded-4 text-plight mb-3">
+        <div
+          class="card-header bg-white border-0 d-flex justify-content-between align-items-center pb-1"
+        >
+          <div>
+            <h5 class="text-bold mb-1">크롤링 주기 설정</h5>
+            <p class="small text-muted mb-0">
               외부 데이터(예: 응급 관련 뉴스, 콘텐츠)를 가져오는 크롤러의 실행 주기를 설정합니다.
             </p>
+          </div>
+          <div class="text-end">
+            <div class="small text-muted mb-1">현재 주기</div>
+            <span class="badge bg-light text-secondary border small px-3 py-2">
+              {{ crawlingInterval }}분
+            </span>
+          </div>
+        </div>
 
-            <div class="d-flex flex-wrap align-items-center gap-3">
-              <div class="d-flex flex-wrap gap-2">
+        <div class="card-body pt-3 text-plight ">
+          <div class="d-flex flex-wrap align-items-center gap-3">
+            <!-- 프리셋 버튼 그룹 -->
+            <div>
+              <div class="small text-muted mb-1">추천 프리셋</div>
+              <div class="btn-group btn-group-sm flex-wrap" role="group">
                 <button
                   v-for="m in crawlingOptions"
                   :key="m"
                   type="button"
-                  class="btn btn-sm rounded-pill"
-                  :class="crawlingInterval === m ? 'btn-primary' : 'btn-outline-primary'"
+                  class="btn"
+                  :class="crawlingInterval === m ? 'btn-secondary' : 'btn-outline-secondary'"
                   @click="crawlingInterval = m"
                 >
                   {{ m }}분
                 </button>
               </div>
-              <div class="ms-auto">
-                <button
-                  type="button"
-                  class="btn btn-success btn-sm rounded-pill"
-                  @click="saveCrawlingInterval"
-                >
-                  저장
-                </button>
-              </div>
             </div>
 
-            <p class="small text-muted mt-2 mb-0">
-              현재 설정된 주기: <strong>{{ crawlingInterval }}분</strong>
-              <span v-if="lastSavedCrawling" class="text-secondary">
-                (마지막 저장: {{ lastSavedCrawling }})
-              </span>
+
+
+            <!-- 직접 입력 + 저장 -->
+            <div
+              class="flex-grow-1 d-flex flex-wrap align-items-center justify-content-lg-end gap-2 text-plight"
+            >
+              <div class="input-group input-group-sm preset-input w-auto btn-save-offset">
+                <span class="input-group-text bg-body-secondary border-0">
+                  직접 입력
+                </span>
+                <input
+                  type="number"
+                  min="1"
+                  class="form-control"
+                  v-model.number="crawlingInterval"
+                  placeholder="분"
+                />
+                <span class="input-group-text bg-body-secondary border-0">
+                  분
+                </span>
+              </div>
+
+              <button
+  type="button"
+  class="btn btn-primary btn-sm rounded-pill d-inline-flex align-items-center gap-1 btn-save-offset"
+  @click="saveCrawlingInterval"
+>
+  <i class="bi bi-save"></i>
+  <span>저장</span>
+</button>
+
+            </div>
+          </div>
+
+          <p class="small text-muted mt-2 mb-0">
+            <span>현재 설정된 주기: <strong>{{ crawlingInterval }}분</strong></span>
+            <span v-if="lastSavedCrawling" class="text-secondary ms-2">
+              · 마지막 저장: {{ lastSavedCrawling }}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <!-- 🔹 자동화 실행 + 로그 카드 -->
+      <div class="card shadow-sm border-0 rounded-4 text-plight">
+        <div
+          class="card-header bg-white border-0 d-flex justify-content-between align-items-start pb-1"
+        >
+          <div>
+            <h5 class="text-bold mb-1">데이터 크롤링 자동화</h5>
+            <p class="small text-muted mb-0">
+              Python(FastAPI) 자동화 서버에 크롤링 작업을 요청하고, 작업 중 발생하는 로그를 실시간으로
+              확인합니다.
             </p>
+          </div>
+          <div class="text-end">
+            <div class="small text-muted mb-1">상태</div>
+            <span class="badge rounded-pill px-3" :class="automationStatusBadgeClass">
+              {{ automationStatusText }}
+            </span>
+            <div v-if="automationJobId" class="small text-muted mt-1">
+              <i class="bi bi-hash"></i>
+              Job {{ automationJobId }}
+            </div>
           </div>
         </div>
 
-        <!--자동화 실행+로그 카드-->
-        <div class="card shadow-sm border-0 rounded-4">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="fw-semibold mb-0">데이터 크롤링 자동화</h5>
-              <span class="badge rounded-pill px-3"
-                    :class="automationStatusBadgeClass">
-                {{ automationStatusText }}
-              </span>
-            </div>
-            <p class="small text-muted mb-3">
-              아래 버튼을 누르면 Python 자동화 서버에 크롤링 작업을 요청하고,
-              작업 중 발생하는 로그를 실시간으로 표시합니다.
-            </p>
-
-            <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="card-body pt-3">
+          <!-- 상단 버튼 바 -->
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <div class="btn-toolbar gap-2">
               <button
                 type="button"
-                class="btn btn-primary rounded-pill"
+                class="btn btn-primary btn-sm rounded-pill d-inline-flex align-items-center gap-1"
                 @click="startAutomation"
                 :disabled="automationStatus === 'running'"
               >
-                <span v-if="automationStatus !== 'running'">자동화 실행</span>
-                <span v-else>
-                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                  실행 중...
-                </span>
+                <template v-if="automationStatus !== 'running'">
+                  <i class="bi bi-play-fill"></i>
+                  <span>크롤링 즉시 실행</span>
+                </template>
+                <template v-else>
+                  <span
+                    class="spinner-border spinner-border-sm me-1"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                  <span>실행 중...</span>
+                </template>
               </button>
 
               <button
                 type="button"
-                class="btn btn-outline-secondary btn-sm rounded-pill"
+                class="btn btn-outline-secondary btn-sm rounded-pill d-inline-flex align-items-center gap-1"
                 @click="clearAutomationLogs"
               >
-                로그 초기화
+                <i class="bi bi-trash3"></i>
+                <span>로그 초기화</span>
               </button>
-
-              <div class="small text-muted ms-auto" v-if="automationJobId">
-                Job ID: <code>{{ automationJobId }}</code>
-              </div>
             </div>
 
-            <!-- 로그 영역 -->
-            <div class="automation-log-box">
-              <div
-                v-if="automationLogs.length === 0"
-                class="text-muted small h-100 d-flex align-items-center justify-content-center"
-              >
-                아직 실행된 로그가 없습니다. 상단의 "자동화 실행" 버튼을 눌러주세요.
-              </div>
-              <pre v-else class="mb-0">
-<span v-for="(line, idx) in automationLogs" :key="idx">{{ line }}</span>
-              </pre>
-            </div>
-
-            <p class="small text-muted mt-2 mb-0">
-              ※ FastAPI 자동화 서버 엔드포인트:
+            <div class="small text-muted ms-auto">
+              FastAPI 엔드포인트:
               <code>{{ AUTOMATION_BASE_URL }}</code>
-            </p>
+            </div>
+          </div>
+
+          <!-- 로그 영역 -->
+          <div class="automation-log-box">
+            <div
+              v-if="automationLogs.length === 0"
+              class="text-muted small h-100 d-flex align-items-center justify-content-center text-center"
+            >
+              아직 실행된 로그가 없습니다.<br />
+              상단의 <strong>"크롤링 즉시 실행"</strong> 버튼을 눌러 자동화를 시작하세요.
+            </div>
+            <pre v-else class="mb-0">
+<span v-for="(line, idx) in automationLogs" :key="idx">{{ line }}</span>
+            </pre>
           </div>
         </div>
-
+      </div>
     </main>
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue'
@@ -237,24 +296,20 @@ onBeforeUnmount(() => {
   padding-top: 72px;
 }
 
-.admin-main {
-  padding-top: 1.5rem;
-  padding-bottom: 2.5rem;
-}
-
 /* 메인 영역: 사이드바 너비만큼 밀기, 좌우 여백 제거 */
 .admin-main {
   margin-left: 240px; /* 사이드바 width와 일치해야 함 */
   padding-top: 1.5rem;
   padding-bottom: 2.5rem;
-  padding-left: 0;  /* 왼쪽 여백 없는 상태로 시작 */
-  padding-right: 0; /* 오른쪽 여백 없음 (필요하면 수정) */
+  padding-left: 0;
+  padding-right: 0;
   min-height: 100vh;
   background-color: transparent;
 }
 
-.admin-layout {
-  padding-top: 0; /* 필요 시 헤더 높이에 맞춰 조정 */
+/* 크롤링 주기 입력 인풋 살짝 정리 */
+.preset-input {
+  min-width: 190px;
 }
 
 /* 자동화 로그 박스 */
@@ -263,14 +318,13 @@ onBeforeUnmount(() => {
   color: #e9ecef;
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
   font-size: 12px;
   height: 260px;
   overflow-y: auto;
   border: 1px solid #343a40;
 }
-
-/* 사용자 증감 그래프 스타일은 삭제함 (stats 탭 제거) */
 
 /* 배지 subtle 색상 */
 .bg-success-subtle {
@@ -286,21 +340,12 @@ onBeforeUnmount(() => {
   background-color: #f8d7da !important;
 }
 
-/* 자녀 모달 */
-.kid-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0,0,0,0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
+/* 원하는 만큼 조절해서 쓰면 됨 */
+.btn-save-offset {
+  margin-top: 30px;      /* 아래로 2px 내림 */
+  /* or */
+  /* transform: translateY(-2px);  위로 2px 올리기 */
 }
 
-.kid-modal {
-  max-width: 480px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-}
 </style>
+

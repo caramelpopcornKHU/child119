@@ -15,4 +15,90 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <androidx.cardview.widget.CardView
+        android:id="@+id/info_card"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:cardBackgroundColor="#FFFFFF"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/navi_view"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.26">
+
+        <!-- 카드 내부 레이아웃을 ConstraintLayout으로 변경 -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp">
+
+            <!-- 1. 첫 번째 정보 (로고 + 텍스트) -->
+            <ImageView
+                android:id="@+id/card_logo_1"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/bed"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/card_value_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="5/7"
+                android:textColor="@android:color/black"
+                android:textSize="11sp"
+                android:textStyle="bold"
+
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/card_logo_1"
+                app:layout_constraintTop_toTopOf="@id/card_logo_1" />
+
+            <!-- [ ▼▼▼ 추가 ] 첫 번째 줄에서 가장 아래쪽을 감지하는 '벽' -->
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/barrier_row_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="card_logo_1,card_value_1" />
+            <!-- [ ▲▲▲ 추가 ] -->
+
+            <!-- 2. 두 번째 정보 (로고 + 텍스트) -->
+            <ImageView
+                android:id="@+id/card_logo_2"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="8dp"
+                android:src="@drawable/message"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/barrier_row_1" />
+
+            <TextView
+                android:id="@+id/card_value_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="소아진료가능"
+                android:textColor="@android:color/black"
+                android:textSize="11sp"
+                android:textStyle="bold"
+
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/card_logo_2"
+                app:layout_constraintTop_toTopOf="@id/card_logo_2" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.cardview.widget.CardView>
+    <!-- ▲▲▲ [수정된 카드] ▲▲▲ -->
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+

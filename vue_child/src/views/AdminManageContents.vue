@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-layout d-flex min-vh-100">
+  <div class="card shadow-sm border-0 rounded-4">
     <!-- 메인 영역 -->
     <main class="admin-main">
       <!-- 상단 타이틀 & 설명 -->
