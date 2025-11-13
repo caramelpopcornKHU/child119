@@ -2,9 +2,13 @@ package com.lx.child
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.google.gson.Gson
 import com.kakaomobility.knsdk.KNRouteAvoidOption
 import com.kakaomobility.knsdk.KNRoutePriority
 import com.kakaomobility.knsdk.common.objects.KNError
@@ -28,10 +32,49 @@ import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNGuide_Voice
 import com.kakaomobility.knsdk.trip.kntrip.KNTrip
 import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
 import com.kakaomobility.knsdk.ui.view.KNNaviView
+import com.google.gson.annotations.SerializedName
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+// API 응답의 최상위 구조
+data class HospitalResponse(
+    val features: List<HospitalFeature>
+)
+
+// "features" 배열의 각 항목
+data class HospitalFeature(
+    val id: String,
+    val properties: HospitalProperties
+)
+
+// 우리가 필요한 실제 병원 정보
+data class HospitalProperties(
+    val name: String,
+    val message: String?,
+    @SerializedName("bed_avail") // JSON 키와 변수 이름이 다를 경우
+    val bedAvail: String?,
+    @SerializedName("bed_total")
+    val bedTotal: String?
+
+)
 
 class NaviActivity : AppCompatActivity(), KNGuidance_GuideStateDelegate,
     KNGuidance_LocationGuideDelegate, KNGuidance_RouteGuideDelegate, KNGuidance_SafetyGuideDelegate, KNGuidance_VoiceGuideDelegate,
 KNGuidance_CitsGuideDelegate{
+
+
+    // API 서비스 (싱글톤)
+    private val apiService: ApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://api.child119.com/")
+            .addConverterFactory(GsonConverterFactory.create(Gson()))
+            .build()
+            .create(ApiService::class.java)
+    }
+
+    private lateinit var tvBedStatus: TextView      // "5/7"을 표시할 (R.id.card_value_1)
+    private lateinit var tvHospitalMessage: TextView // "소아진료가능"을 표시할 (R.id.card_value_2)
 
     override fun didUpdateCitsGuide(
         aGuidance: KNGuidance,
@@ -147,49 +190,81 @@ KNGuidance_CitsGuideDelegate{
         naviView = findViewById(R.id.navi_view)
 
 
+        // 1. UI 요소 초기화 (새 ID 사용)
+        tvBedStatus = findViewById(R.id.card_value_1)
+        tvHospitalMessage = findViewById(R.id.card_value_2)
+
+        // [추가] 2. Intent에서 featureID 받고 API 호출
+        val featureID = intent.getStringExtra("FEATURE_ID")
+        if (featureID != null) {
+            tvBedStatus.text = "-/-"
+            tvHospitalMessage.text = "로딩 중..."
+            loadHospitalDetails(featureID)
+        } else {
+            Log.e("NaviActivity", "FeatureID가 전달되지 않았습니다.")
+            tvBedStatus.text = "N/A"
+            tvHospitalMessage.text = "정보 없음"
+        }
+
+
         // status bar 영역까지 사용하기 위한 옵션
         window?.apply {
             statusBarColor = Color.TRANSPARENT
             decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         }
 
-        //requestRoute()
+
         startNavigation()
     }
 
-    /**
-     * 주행 경로를 요청합니다.
-     */
-    fun requestRoute() {
-        Thread {
-            // 출발지와 목적지를 설정합니다.
-            val startPoi = KNPOI("현위치", 309840, 552483, "현위치")
-            val goalPoi = KNPOI("목적지",321497,532896,"목적지")
 
-            KNApplication.knsdk.makeTripWithStart(
-                aStart = startPoi,
-                aGoal = goalPoi,
-                aVias = null
-            ) { aError, aTrip ->
 
-                // 경로 요청이 성공하면 aError는 Null이 됩니다.
-                if (aError == null) {
 
+    // API 호출을 위한 함수
+    private fun loadHospitalDetails(featureID: String) {
+        lifecycleScope.launch {
+            try {
+                // API 호출
+                val response = apiService.getHospitalDetails(featureID = featureID)
+
+                if (response.features.isNotEmpty()) {
+                    val properties = response.features[0].properties
+
+                    // API 응답을 TextView에 매핑
+                    val bedAvail = properties.bedAvail ?: "N/A"
+                    val bedTotal = properties.bedTotal ?: "N/A"
+                    tvBedStatus.text = "$bedAvail/$bedTotal" // ID: card_value_1
+
+                    tvHospitalMessage.text = properties.message ?: "정보 없음" // ID: card_value_2
+
+                } else {
+                    tvBedStatus.text = "N/A"
+                    tvHospitalMessage.text = "상세 정보 없음"
                 }
+
+            } catch (e: Exception) {
+                // 네트워크 오류 등 예외 처리
+                Log.e("NaviActivity", "API 호출 실패", e)
+                tvBedStatus.text = "오류"
+                tvHospitalMessage.text = "로드 실패"
             }
-        }.start()
+        }
     }
 
 
     /**
      * 주행 경로를 요청하고 길 안내를 시작합니다.
-     * (기존 requestRoute와 startGuide 함수를 통합했습니다.)
      */
     fun startNavigation() {
         Thread {
             // 출발지와 목적지를 설정합니다.
-            val startPoi = KNPOI("현위치", 309840, 552483, "현위치")
-            //val goalPoi = KNPOI("목적지", 321497, 532896, "목적지")
+
+            val startName = intent.getStringExtra("START_NAME") ?: "현위치"
+            val startX = intent.getIntExtra("START_X", 188836)
+            val startY = intent.getIntExtra("START_Y", 443836)
+
+            val startPoi = KNPOI(startName, startX, startY, "현위치")
+
 
             // (수정됨) 목적지는 MainActivity의 Intent로부터 받아옵니다.
             val goalName = intent.getStringExtra("GOAL_NAME") ?: "목적지" // 기본값
@@ -252,24 +327,7 @@ KNGuidance_CitsGuideDelegate{
         }.start()
     }
 
-    fun startGuide(trip: KNTrip?) {
-        KNApplication.knsdk.sharedGuidance()?.apply {
-            // guidance delegate 등록
-            guideStateDelegate = this@NaviActivity
-            locationGuideDelegate = this@NaviActivity
-            routeGuideDelegate = this@NaviActivity
-            safetyGuideDelegate = this@NaviActivity
-            voiceGuideDelegate = this@NaviActivity
-            citsGuideDelegate = this@NaviActivity
 
-            naviView.initWithGuidance(
-                this,
-                trip,
-                KNRoutePriority.KNRoutePriority_Recommand,
-                0
-            )
-        }
-    }
 
 
 }

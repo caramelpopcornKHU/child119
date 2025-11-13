@@ -11,20 +11,30 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.kakaomobility.knsdk.KNLanguageType
-import com.kakaomobility.knsdk.common.objects.KNPOI
+
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
+    private lateinit var myTextView: TextView // 1. XML의 뷰와 연결할 변수
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
+
+
+
+
+
+
+
+
 
         // 1. WebView 초기화
         webView = findViewById(R.id.webView)
@@ -186,7 +196,9 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun startNavigation(
             startName: String, startX: Int, startY: Int,
-            goalName: String, goalX: Int, goalY: Int, goalAddress: String) {
+            goalName: String, goalX: Int, goalY: Int, goalAddress: String,
+            featureID: String // <-- [추가] 병원 고유 ID (예: "emergency.A1100001")
+             ) {
 
             // (참고) 현위치는 NaviActivity에서 하드코딩된 값을 사용한다고 가정합니다.
             // val startPoi = KNPOI("현위치", 309840, 552483, "현위치")
@@ -206,6 +218,9 @@ class MainActivity : AppCompatActivity() {
                 putExtra("GOAL_X", goalX)
                 putExtra("GOAL_Y", goalY)
                 putExtra("GOAL_ADDRESS", goalAddress)
+
+                // [추가] NaviActivity로 featureID 전달
+                putExtra("FEATURE_ID", featureID)
             }
             context.startActivity(intent)
         }
