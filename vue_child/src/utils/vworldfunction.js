@@ -138,40 +138,46 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
   const name = hospitalName || '';
   const message = emergencyMessage || '';
 
-  const svgWidth = 100;
-  const baseRectWidth = 100;
-  const borderRadius = 10;
-
-  // === 폰트 사이즈 ===
-  const messageFontSize = 12;
-  const nameFontSize = 13;
+  // === 기본 설정 ===
+  const horizontalPadding = 15; // 좌우 여백
+  const svgWidth = 130; // 🔹 전체 SVG 폭 확장
+  const baseRectWidth = svgWidth;
+  const baseContentWidth = svgWidth - horizontalPadding * 2; // 내용 폭 자동계산
+  const borderRadius = 12;
+  const messageFontSize = 11; // 살짝 축소
+  const nameFontSize = 12; // 살짝 축소
   const messageColor = '#333';
+  const nameMaxCharsPerLine = 9;
 
-  // === 병상 정보 색상 로직 ===
+  // === 병상 정보 ===
   let bedText = '';
   let badgeBgColor = '#16a085';
   let badgeTextColor = 'white';
-  let displayFontSize = 18;
+  let displayFontSize = 13; // 🔹 축소
 
   if (!Number.isFinite(bedAvail) || !Number.isFinite(bedTotal) || bedTotal <= 0 || bedAvail <= 0) {
     badgeBgColor = '#95a5a6';
     bedText = '정보없음';
-    displayFontSize = 12;
+    displayFontSize = 11;
   } else {
     const ratio = bedAvail / bedTotal;
     bedText = `${bedAvail}/${bedTotal}`;
     badgeBgColor = ratio <= 0.5 ? '#e74c3c' : '#16a085';
   }
 
-  // === 아이콘 세부 설정 ===
-  const cirRadius = 25;
-  const strokeWidth = isHover ? '4' : '3';
-  const bedIconPath = "M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3";
-  const iconScale = 0.9;
-  const textGap = 4;
+  // === 병원이름 줄바꿈 ===
+  const wrapText = (text, maxCharsPerLine) => {
+    if (!text) return [];
+    const lines = [];
+    for (let i = 0; i < text.length; i += maxCharsPerLine) {
+      lines.push(text.slice(i, i + maxCharsPerLine));
+    }
+    return lines;
+  };
+  const wrappedNameLines = wrapText(name, nameMaxCharsPerLine);
 
   // === 메시지 줄바꿈 ===
-  const wrapText = (text, maxCharsPerLine) => {
+  const wrapMessage = (text, maxCharsPerLine) => {
     if (!text) return [];
     const words = text.split(' ');
     let lines = [];
@@ -187,80 +193,93 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
     if (currentLine.trim()) lines.push(currentLine.trim());
     return lines;
   };
-  const wrappedMessageLines = wrapText(message, 13);
+  const wrappedMessageLines = wrapMessage(message, 15); // 한 줄 최대 문자수 조금 늘림
 
-  // === Y 좌표 계산 ===
-  const nameY = 20;                     // 병원이름
-  const cirCenterY = nameY + 5 + cirRadius; // 병상원 (이름과 간격 30px)
-  const messageStartY = cirCenterY + cirRadius + 18; // 메시지 시작
+  // === 좌표 계산 ===
+  const nameStartY = 18;
+  const lineHeight = nameFontSize + 2;
+  const nameBlockHeight = wrappedNameLines.length * lineHeight;
+  const cirRadius = 27;
+  const cirCenterY = nameStartY + nameBlockHeight + cirRadius;
+  const messageStartY = cirCenterY + cirRadius + 18;
   const totalMessageHeight = wrappedMessageLines.length * (messageFontSize + 3);
-  const rectHeight = messageStartY + totalMessageHeight + 5; // 전체 높이 계산
-  const svgHeight = rectHeight + 20;
+  const rectHeight = messageStartY + totalMessageHeight + 5;
+  const svgHeight = rectHeight + 25;
+  const strokeWidth = isHover ? '3.5' : '2.5';
 
-  const cirCenterX = svgWidth / 2;
+  // === 중앙 정렬 기준점 ===
+  const contentStartX = horizontalPadding;
+  const contentCenterX = contentStartX + baseContentWidth / 2;
 
   // === 핀 ===
   const pinSvgPath = "M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7";
   const pinColor = "#000000";
-  const pinScaleFactor = 1.3;
-  const pinY = rectHeight - 5;
+  const pinScaleFactor = 1.2;
+  const pinY = rectHeight - 3;
+
+  // === 병상 아이콘 ===
+  const bedIconPath = "M19 7h-8v7H3V5H1v15h2v-3h18v3h2v-9a4 4 0 0 0-4-4M7 13a3 3 0 0 0 3-3a3 3 0 0 0-3-3a3 3 0 0 0-3 3a3 3 0 0 0 3 3";
+  const iconScale = 0.7; // 🔹 축소
 
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
-            <!-- 흰 배경 -->
-            <rect 
-                x="0" y="0" 
-                width="${baseRectWidth}" height="${rectHeight}" 
-                rx="${borderRadius}" ry="${borderRadius}" 
-                fill="white" stroke="#ddd" stroke-width="1.5"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+        <!-- 배경 -->
+        <rect 
+            x="0" y="0" 
+            width="${baseRectWidth}" height="${rectHeight}" 
+            rx="${borderRadius}" ry="${borderRadius}" 
+            fill="white" stroke="#ddd" stroke-width="1.5"/>
 
-            <!-- 병원이름 -->
-            <text x="${svgWidth / 2}" y="${nameY}" text-anchor="middle" dominant-baseline="middle"
-                fill="#333" font-size="${nameFontSize}" font-weight="600" font-family="pretendard">
-                ${name}
-            </text>
+        <!-- 내부 그룹 -->
+        <g transform="translate(${horizontalPadding}, 0)">
+          <!-- 병원이름 -->
+          ${wrappedNameLines.map(
+            (line, i) => `
+              <text x="${baseContentWidth / 2}" y="${nameStartY + i * lineHeight}" text-anchor="middle"
+                    fill="#333" font-size="${nameFontSize}" font-weight="600" font-family="pretendard">
+                    ${line}
+              </text>`
+          ).join('')}
 
-            <!-- 동그라미 (병상정보) -->
-            <circle 
-                cx="${cirCenterX}" cy="${cirCenterY}" 
-                r="${cirRadius - (strokeWidth / 2)}" 
-                fill="${badgeBgColor}" 
-                stroke="white" 
-                stroke-width="${strokeWidth}"/>
+          <!-- 병상 원 -->
+          <circle 
+              cx="${baseContentWidth / 2}" cy="${cirCenterY}" 
+              r="${cirRadius - (strokeWidth / 2)}" 
+              fill="${badgeBgColor}" 
+              stroke="white" 
+              stroke-width="${strokeWidth}"/>
 
-            <!-- 병상 아이콘 + 텍스트 -->
-            <g transform="translate(${cirCenterX}, ${cirCenterY})">
-                <path 
-                    transform="translate(-10, -10) scale(${iconScale})"
-                    fill="white"
-                    d="${bedIconPath}"
-                />
-                <text x="0" y="${cirRadius / 2}" text-anchor="middle" dominant-baseline="middle"
-                    fill="${badgeTextColor}" font-size="${displayFontSize}" font-weight="500" font-family="pretendard">
-                    ${bedText}
-                </text>
-            </g>
+          <!-- 병상 아이콘 + 텍스트 -->
+          <g transform="translate(${baseContentWidth / 2}, ${cirCenterY})">
+              <path 
+                  transform="translate(-9, -12) scale(${iconScale})"
+                  fill="white"
+                  d="${bedIconPath}"
+              />
+              <text x="0" y="${cirRadius / 2 + 5}" text-anchor="middle" dominant-baseline="middle"
+                  fill="${badgeTextColor}" font-size="${displayFontSize}" font-weight="500" font-family="pretendard">
+                  ${bedText}
+              </text>
+          </g>
 
-            <!-- 메시지 (줄바꿈 지원) -->
-            ${wrappedMessageLines.length > 0
-      ? wrappedMessageLines
-        .map((line, i) => `
-                        <text x="${svgWidth / 2}" y="${messageStartY + i * (messageFontSize + 3)}"
-                            text-anchor="middle" fill="${messageColor}"
-                            font-size="${messageFontSize}" font-family="pretendard">
-                            ${line}
-                        </text>`)
-        .join('')
-      : ''}
+          <!-- 메시지 -->
+          ${wrappedMessageLines.map(
+            (line, i) => `
+              <text x="${baseContentWidth / 2}" y="${messageStartY + i * (messageFontSize + 3)}"
+                  text-anchor="middle" fill="${messageColor}"
+                  font-size="${messageFontSize}" font-family="pretendard">
+                  ${line}
+              </text>`
+          ).join('')}
+        </g>
 
-            <!-- 핀 -->
-            <g transform="translate(${svgWidth / 2 - 12 * pinScaleFactor}, ${pinY}) scale(${pinScaleFactor})">
-                <path fill="${pinColor}" d="${pinSvgPath}"/>
-            </g>
-        </svg>
-    `);
+        <!-- 핀 -->
+        <g transform="translate(${contentCenterX - 12 * pinScaleFactor}, ${pinY}) scale(${pinScaleFactor})">
+            <path fill="${pinColor}" d="${pinSvgPath}"/>
+        </g>
+    </svg>
+  `);
 };
-
 
 
 // HospitalInformation marker 생성 

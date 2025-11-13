@@ -20,7 +20,7 @@
     </div>
     <!-- 내 위치 새로고침 버튼 -->
     <div class="position-fixed end-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
-      <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="getCurrentPositionApp()"
+      <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="refreshLocation()"
         style="width: 48px; height: 48px; padding: 0;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
           <path fill="currentColor"
@@ -233,6 +233,7 @@ import {
   drawRoute,
   setupMarkerClick,
   removeRouteLayer,
+  addMarkerHospital
 } from '@/utils/vworldfunction';
 import { calculateDistance, getEmergencyFromWFSByBBox, getTmapRoute, getEmergencyFromWFSSortByDistance, getEmergencyHospitalByHPID } from '@/utils/api';
 
@@ -250,6 +251,7 @@ const KATEC = 'KATEC';
 
 // 현재 위치
 const cur = ref({ lat: null, lon: null })
+const userLocation = ref(null)
 
 
 // vmap 변수
@@ -483,8 +485,9 @@ const initMapAndCoords = async () => {
     try {
       const userLocation = await getCurrentLocation()
       location = userLocation; // 위치 획득 성공 시 값 업데이트
-      location.lon = 127.727366
-      location.lat = 37.891997
+      // location.lon = 127.727366
+      // location.lat = 37.891997
+      console.log(`현재 위치 -> ${location.lon}, ${location.lat}`)
       centerCoords = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
     } catch {
       console.log(`위치 가져오기 실패, 기본 위치 사용`)
@@ -679,9 +682,42 @@ function getCurrentLocation() {
   })
 }
 
+async function refreshLocation() {
+  try {
+    const position = await getCurrentLocation()
+    const { lat, lon } = position
+    userLocation.value = { lat, lon }
 
+    const center = window.ol.proj.fromLonLat([lon, lat])
+    const view = vmap.getView()
 
+    // 부드럽게 중앙으로 이동
+    if (!view.animate) {
+      const start = view.getCenter()
+      const steps = 20
+      let i = 0
+      const timer = setInterval(() => {
+        const t = ++i / steps
+        const lon = start[0] + (center[0] - start[0]) * t
+        const lat = start[1] + (center[1] - start[1]) * t
+        view.setCenter([lon, lat])
+        if (i >= steps) clearInterval(timer)
+      }, 10)
+    }
 
+    // 현재 위치 마커 갱신
+    addMarkerHospital(lon, lat, {
+      name: '현재 위치',
+      iconUrl: 'icons/currentLocation.svg',
+      anchor: [0.5, 0.5]
+    })
+
+    console.log(`화면 중심만 내 위치로 이동: ${lat}, ${lon}`)
+  } catch (err) {
+    console.error('moveToUserLocation 실패:', err)
+    alert('현재 위치를 가져올 수 없습니다.')
+  }
+}
 
 onMounted(async () => {
   await initMapAndCoords()
