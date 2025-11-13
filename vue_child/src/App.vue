@@ -56,12 +56,13 @@
     <aside v-if="isAdminRoute" class="admin-aside bg-white border-end shadow-sm p-3">
       <h5 class="fw-bold mb-4 text-center">관리자 메뉴</h5>
 
-      <ul class="nav flex-column">
+      <ul class="nav flex-column text-bold">
         <li class="nav-item mb-2">
           <button
               class="nav-link btn-aside text-start w-100"
               :class="{ 'text-bold text-primary': isActive('/AdminHome') }"
               @click="goTo('/AdminHome')"
+              style="color: black;"
             >
             👥 사용자 정보
           </button>
@@ -72,6 +73,7 @@
               class="nav-link btn-aside text-start w-100"
               :class="{ 'text-bold text-primary': isActive('/AdminManageContents') }"
               @click="goTo('/AdminManageContents')"
+              style="color: black;"
             >
             👥 응급 콘텐츠 관리
           </button>
@@ -79,9 +81,10 @@
 
         <li class="nav-item mb-2">
           <button
-              class="nav-link btn-aside text-start w-100"
+              class="nav-link btn-aside text-start w-100 text-bold"
               :class="{ 'text-bold text-primary': isActive('/AdminAutomation') }"
               @click="goTo('/AdminAutomation')"
+              style="color: black;"
             >
             ⚙️ 자동화 로그
           </button>
@@ -91,7 +94,8 @@
           <button
               class="nav-link btn-aside text-start w-100"
               :class="{ 'text-bold text-primary': isActive('/AdminFeedback') }"
-              @click="goTo('/AdminFeedback')"
+              @click="goTo('/AdminFedback')"
+              style="color: black;"
             >
             💬 건의사항
           </button>
