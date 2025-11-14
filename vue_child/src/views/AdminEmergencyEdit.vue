@@ -1,272 +1,272 @@
 <template>
-  
-  <main class="admin-main ">
-    <div class="container-fluid py-4 px-3">
+  <!-- ✅ 다른 관리자 화면과 폭/레이아웃 통일 -->
+  <div class="card shadow-sm border-0 rounded-4">
+    <main class="admin-main">
+      <div class="container-fluid py-4 px-3">
 
-      <!-- 상단 헤더 -->
-      <div class="d-flex align-items-center mb-3 gap-2">
-        <button class="btn btn-link p-0 text-dark" @click="goBack">
-          <i class="bi bi-arrow-left fs-5"></i>
-        </button>
-        <h5 class="mb-0 text-bold">
-          응급 교육 콘텐츠 수정
-        </h5>
+        <!-- 상단 헤더 -->
+        <div class="d-flex align-items-center mb-3 gap-2">
+          <button class="btn btn-link p-0 text-dark" @click="goBack">
+            <i class="bi bi-arrow-left fs-5"></i>
+          </button>
+          <h5 class="mb-0 text-bold">
+            응급 교육 콘텐츠 수정
+          </h5>
+        </div>
+
+        <!-- 폼 시작 -->
+        <form @submit.prevent="handleSubmit">
+          <!-- 기본 정보 카드 -->
+          <div class="card border-0 shadow-sm rounded-4 mb-3">
+            <div class="card-body p-3 p-md-4">
+              <!-- 제목 -->
+              <div class="mb-3">
+                <label class="form-label fw-semibold">제목</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="form.title"
+                  placeholder="예) 고열, 화상 시 응급처치"
+                  required
+                />
+              </div>
+
+              <!-- 해시태그 -->
+              <div class="mb-3">
+                <label class="form-label fw-semibold">해시태그</label>
+
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                  <span
+                    v-for="(tag, idx) in form.hashtags"
+                    :key="idx"
+                    class="badge bg-danger-subtle text-danger fw-semibold px-3 py-2 rounded-pill d-flex align-items-center gap-1"
+                  >
+                    #{{ tag }}
+                    <i
+                      class="bi bi-x-lg small"
+                      style="cursor:pointer;"
+                      @click="removeTag(idx)"
+                    ></i>
+                  </span>
+                </div>
+
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-body-secondary border-0">#</span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    v-model="newTag"
+                    placeholder="태그를 입력 후 + 버튼 클릭"
+                    @keyup.enter="addTag"
+                  />
+                  <button type="button" class="btn btn-outline-danger" @click="addTag">
+                    +
+                  </button>
+                </div>
+                <div class="form-text">예: #열 #감기 #소아응급 등</div>
+              </div>
+
+              <!-- 유튜브 URL -->
+              <div class="mb-3">
+                <label class="form-label fw-semibold">유튜브 URL</label>
+                <input
+                  type="url"
+                  class="form-control"
+                  v-model="form.url"
+                  placeholder="https://youtu.be/..."
+                  required
+                />
+                <div class="form-text">
+                  유튜브 링크를 입력하면 자동으로 썸네일을 가져옵니다.
+                </div>
+              </div>
+
+              <!-- 썸네일 미리보기 -->
+              <div v-if="thumbnail" class="mt-3">
+                <label class="form-label fw-semibold d-block">썸네일 미리보기</label>
+                <div class="rounded-4 overflow-hidden" style="max-height: 220px;">
+                  <img :src="thumbnail" alt="thumbnail preview" class="w-100 object-fit-cover" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 증상 -->
+          <div class="card border-0 shadow-sm rounded-4 mb-3">
+            <div class="card-body p-3 p-md-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="text-danger text-bold mb-0">증상</h6>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger rounded-pill"
+                  @click="addItem('symptomList')"
+                >
+                  + 항목 추가
+                </button>
+              </div>
+
+              <div class="d-flex flex-column gap-2">
+                <div
+                  v-for="(s, idx) in form.symptomList"
+                  :key="`symptom-${idx}`"
+                  class="input-group input-group-sm"
+                >
+                  <span class="input-group-text bg-body-secondary border-0">
+                    {{ idx + 1 }}
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    v-model="form.symptomList[idx]"
+                    placeholder="증상 내용을 입력하세요"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    @click="removeItem('symptomList', idx)"
+                    v-if="form.symptomList.length > 1"
+                  >
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 응급처치 -->
+          <div class="card border-0 shadow-sm rounded-4 mb-3">
+            <div class="card-body p-3 p-md-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="text-danger text-bold mb-0">응급처치</h6>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger rounded-pill"
+                  @click="addItem('methodList')"
+                >
+                  + 항목 추가
+                </button>
+              </div>
+
+              <div class="d-flex flex-column gap-2">
+                <div
+                  v-for="(m, idx) in form.methodList"
+                  :key="`method-${idx}`"
+                  class="input-group input-group-sm"
+                >
+                  <span class="input-group-text bg-body-secondary border-0">
+                    {{ idx + 1 }}
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    v-model="form.methodList[idx]"
+                    placeholder="응급처치 내용을 입력하세요"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    @click="removeItem('methodList', idx)"
+                    v-if="form.methodList.length > 1"
+                  >
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 원인 -->
+          <div class="card border-0 shadow-sm rounded-4 mb-3">
+            <div class="card-body p-3 p-md-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="text-danger text-bold mb-0">원인</h6>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger rounded-pill"
+                  @click="addItem('reasonList')"
+                >
+                  + 항목 추가
+                </button>
+              </div>
+
+              <div class="d-flex flex-column gap-2">
+                <div
+                  v-for="(r, idx) in form.reasonList"
+                  :key="`reason-${idx}`"
+                  class="input-group input-group-sm"
+                >
+                  <span class="input-group-text bg-body-secondary border-0">
+                    {{ idx + 1 }}
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    v-model="form.reasonList[idx]"
+                    placeholder="원인을 입력하세요"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    @click="removeItem('reasonList', idx)"
+                    v-if="form.reasonList.length > 1"
+                  >
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 주의 문구 -->
+          <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-3 p-md-4">
+              <h6 class="text-danger text-bold mb-2">주의 문구</h6>
+              <textarea
+                class="form-control"
+                rows="3"
+                v-model="form.warning"
+                placeholder="예) 이 내용은 안내용입니다. 증상이 심하거나 아이의 경우 반드시 의료진의 진료를 받으세요."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- 하단 버튼 -->
+          <div
+            class="position-sticky bottom-0 bg-body-tertiary pt-2 pb-3"
+            style="z-index: 1; margin-bottom: var(--footer-h, 70px);"
+          >
+            <div class="d-flex gap-2">
+              <button
+                type="button"
+                class="btn btn-outline-secondary flex-fill rounded-pill"
+                @click="goBack"
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                class="btn btn-danger flex-fill rounded-pill"
+              >
+                수정하기
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
-
-      <!-- 폼 시작 -->
-      <form @submit.prevent="handleSubmit">
-        <!-- 기본 정보 카드 -->
-        <div class="card border-0 shadow-sm rounded-4 mb-3">
-          <div class="card-body p-3 p-md-4">
-            <!-- 제목 -->
-            <div class="mb-3">
-              <label class="form-label fw-semibold">제목</label>
-              <input
-                type="text"
-                class="form-control"
-                v-model="form.title"
-                placeholder="예) 고열, 화상 시 응급처치"
-                required
-              />
-            </div>
-
-            <!-- 해시태그 -->
-            <div class="mb-3">
-              <label class="form-label fw-semibold">해시태그</label>
-
-              <div class="d-flex flex-wrap gap-2 mb-2">
-                <span
-                  v-for="(tag, idx) in form.hashtags"
-                  :key="idx"
-                  class="badge bg-danger-subtle text-danger fw-semibold px-3 py-2 rounded-pill d-flex align-items-center gap-1"
-                >
-                  #{{ tag }}
-                  <i
-                    class="bi bi-x-lg small"
-                    style="cursor:pointer;"
-                    @click="removeTag(idx)"
-                  ></i>
-                </span>
-              </div>
-
-              <div class="input-group input-group-sm">
-                <span class="input-group-text bg-body-secondary border-0">#</span>
-                <input
-                  type="text"
-                  class="form-control"
-                  v-model="newTag"
-                  placeholder="태그를 입력 후 + 버튼 클릭"
-                  @keyup.enter="addTag"
-                />
-                <button type="button" class="btn btn-outline-danger" @click="addTag">
-                  +
-                </button>
-              </div>
-              <div class="form-text">예: #열 #감기 #소아응급 등</div>
-            </div>
-
-            <!-- 유튜브 URL -->
-            <div class="mb-3">
-              <label class="form-label fw-semibold">유튜브 URL</label>
-              <input
-                type="url"
-                class="form-control"
-                v-model="form.url"
-                placeholder="https://youtu.be/..."
-                required
-              />
-              <div class="form-text">
-                유튜브 링크를 입력하면 자동으로 썸네일을 가져옵니다.
-              </div>
-            </div>
-
-            <!-- 썸네일 미리보기 -->
-            <div v-if="thumbnail" class="mt-3">
-              <label class="form-label fw-semibold d-block">썸네일 미리보기</label>
-              <div class="rounded-4 overflow-hidden" style="max-height: 220px;">
-                <img :src="thumbnail" alt="thumbnail preview" class="w-100 object-fit-cover" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 증상 -->
-        <div class="card border-0 shadow-sm rounded-4 mb-3">
-          <div class="card-body p-3 p-md-4">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="text-danger text-bold mb-0">증상</h6>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-danger rounded-pill"
-                @click="addItem('symptomList')"
-              >
-                + 항목 추가
-              </button>
-            </div>
-
-            <div class="d-flex flex-column gap-2">
-              <div
-                v-for="(s, idx) in form.symptomList"
-                :key="`symptom-${idx}`"
-                class="input-group input-group-sm"
-              >
-                <span class="input-group-text bg-body-secondary border-0">
-                  {{ idx + 1 }}
-                </span>
-                <input
-                  type="text"
-                  class="form-control"
-                  v-model="form.symptomList[idx]"
-                  placeholder="증상 내용을 입력하세요"
-                />
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary"
-                  @click="removeItem('symptomList', idx)"
-                  v-if="form.symptomList.length > 1"
-                >
-                  <i class="bi bi-x"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 응급처치 -->
-        <div class="card border-0 shadow-sm rounded-4 mb-3">
-          <div class="card-body p-3 p-md-4">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="text-danger text-bold mb-0">응급처치</h6>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-danger rounded-pill"
-                @click="addItem('methodList')"
-              >
-                + 항목 추가
-              </button>
-            </div>
-
-            <div class="d-flex flex-column gap-2">
-              <div
-                v-for="(m, idx) in form.methodList"
-                :key="`method-${idx}`"
-                class="input-group input-group-sm"
-              >
-                <span class="input-group-text bg-body-secondary border-0">
-                  {{ idx + 1 }}
-                </span>
-                <input
-                  type="text"
-                  class="form-control"
-                  v-model="form.methodList[idx]"
-                  placeholder="응급처치 내용을 입력하세요"
-                />
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary"
-                  @click="removeItem('methodList', idx)"
-                  v-if="form.methodList.length > 1"
-                >
-                  <i class="bi bi-x"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 원인 -->
-        <div class="card border-0 shadow-sm rounded-4 mb-3">
-          <div class="card-body p-3 p-md-4">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="text-danger text-bold mb-0">원인</h6>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-danger rounded-pill"
-                @click="addItem('reasonList')"
-              >
-                + 항목 추가
-              </button>
-            </div>
-
-            <div class="d-flex flex-column gap-2">
-              <div
-                v-for="(r, idx) in form.reasonList"
-                :key="`reason-${idx}`"
-                class="input-group input-group-sm"
-              >
-                <span class="input-group-text bg-body-secondary border-0">
-                  {{ idx + 1 }}
-                </span>
-                <input
-                  type="text"
-                  class="form-control"
-                  v-model="form.reasonList[idx]"
-                  placeholder="원인을 입력하세요"
-                />
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary"
-                  @click="removeItem('reasonList', idx)"
-                  v-if="form.reasonList.length > 1"
-                >
-                  <i class="bi bi-x"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 주의 문구 -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-          <div class="card-body p-3 p-md-4">
-            <h6 class="text-danger text-bold mb-2">주의 문구</h6>
-            <textarea
-              class="form-control"
-              rows="3"
-              v-model="form.warning"
-              placeholder="예) 이 내용은 안내용입니다. 증상이 심하거나 아이의 경우 반드시 의료진의 진료를 받으세요."
-            ></textarea>
-          </div>
-        </div>
-
-        <!-- 하단 버튼 -->
-        <div
-          class="position-sticky bottom-0 bg-body-tertiary pt-2 pb-3"
-          style="z-index: 1; margin-bottom: var(--footer-h, 70px);"
-        >
-          <div class="d-flex gap-2">
-            <button
-              type="button"
-              class="btn btn-outline-secondary flex-fill rounded-pill"
-              @click="goBack"
-            >
-              취소
-            </button>
-            <button
-              type="submit"
-              class="btn btn-danger flex-fill rounded-pill"
-            >
-              수정하기
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </main>
-  
+    </main>
+  </div>
 </template>
 
 <script setup>
+// 그대로 사용 (변경 없음)
 import { reactive, computed, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-
-// Firestore import
 import { db } from '@/firebase'
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 
 const router = useRouter()
 const route = useRoute()
-const docId = route.params.id // /emergencyEdit/:id 이런 라우트 기준
+const docId = route.params.id
 
 const form = reactive({
   title: '',
@@ -281,7 +281,6 @@ const form = reactive({
 const newTag = ref('')
 const isSubmitting = ref(false)
 
-// 기존 데이터 불러오기
 onMounted(async () => {
   try {
     const refDoc = doc(db, 'emergencyData', docId)
@@ -298,9 +297,12 @@ onMounted(async () => {
     form.title = data.title || ''
     form.url = data.youtubeUrl || data.url || ''
     form.hashtags = Array.isArray(data.hashtags) ? data.hashtags : []
-    form.symptomList = Array.isArray(data.symptomList) && data.symptomList.length ? data.symptomList : ['']
-    form.methodList = Array.isArray(data.methodList) && data.methodList.length ? data.methodList : ['']
-    form.reasonList = Array.isArray(data.reasonList) && data.reasonList.length ? data.reasonList : ['']
+    form.symptomList =
+      Array.isArray(data.symptomList) && data.symptomList.length ? data.symptomList : ['']
+    form.methodList =
+      Array.isArray(data.methodList) && data.methodList.length ? data.methodList : ['']
+    form.reasonList =
+      Array.isArray(data.reasonList) && data.reasonList.length ? data.reasonList : ['']
     form.warning = data.warning || ''
   } catch (e) {
     console.error('문서 불러오기 실패:', e)
@@ -309,14 +311,12 @@ onMounted(async () => {
   }
 })
 
-// 유튜브 ID 추출 함수
 function extractYoutubeId(url) {
   const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/
   const match = url.match(regex)
   return match ? match[1] : ''
 }
 
-// 유튜브 썸네일
 const thumbnail = computed(() => getYoutubeThumbnail(form.url))
 
 function getYoutubeThumbnail(url) {
@@ -336,7 +336,6 @@ function goBack() {
   router.back()
 }
 
-// Firestore에 수정 내용 저장
 async function handleSubmit() {
   if (isSubmitting.value) return
   isSubmitting.value = true
@@ -364,7 +363,6 @@ async function handleSubmit() {
       reasonList: form.reasonList,
       warning: form.warning,
       updatedAt: serverTimestamp()
-      // viewCount, createdAt 등은 건드리지 않음
     })
 
     alert('응급 교육 콘텐츠가 수정되었습니다.')
@@ -398,9 +396,10 @@ function removeTag(index) {
 .badge.bg-danger-subtle {
   background-color: #fdecea !important;
 }
-/* 사이드바 폭(240px)을 고려한 관리자 메인 레이아웃 */
+
+/* ✅ 관리자 메인 레이아웃: 다른 관리자 화면과 동일하게 폭/위치 통일 */
 .admin-main {
-  margin-left: 120px;      /* 사이드바만큼 오른쪽으로 밀기 */
+  margin-left: 240px;      /* 사이드바 너비와 동일 */
   padding-top: 1.5rem;
   padding-bottom: 2.5rem;
   padding-left: 0;

@@ -214,6 +214,12 @@ async function loadUsersWithKids() {
         name: data.kid || '(이름 없음)',
         age: calcAge(data.birthYear),
         gender: data.gender || '-',
+        heightCm:data.heightCm,
+        weightKg:data.weightKg,
+        bloodType:data.bloodType,
+        allergy:data.allergy,
+        medicalHistory:data.medicalHistory,
+        medication:data.medication
       })
     })
 

@@ -160,18 +160,23 @@
           </div>
 
           <!-- 로그 영역 -->
-          <div class="automation-log-box">
-            <div
-              v-if="automationLogs.length === 0"
-              class="text-muted small h-100 d-flex align-items-center justify-content-center text-center"
-            >
-              아직 실행된 로그가 없습니다.<br />
-              상단의 <strong>"크롤링 즉시 실행"</strong> 버튼을 눌러 자동화를 시작하세요.
-            </div>
-            <pre v-else class="mb-0">
+<!-- 로그 영역 -->
+<div class="automation-log-box">
+  <!-- ✅ 로그가 없을 때 안내 문구 -->
+  <div
+    v-if="automationLogs.length === 0"
+    class="log-empty-state"
+  >
+    아직 실행된 로그가 없습니다.<br />
+    상단의 <strong>“크롤링 즉시 실행”</strong> 버튼을 눌러 자동화를 시작하세요.
+  </div>
+
+  <!-- ✅ 로그가 있을 때 -->
+  <pre v-else class="mb-0">
 <span v-for="(line, idx) in automationLogs" :key="idx">{{ line }}</span>
-            </pre>
-          </div>
+  </pre>
+</div>
+
         </div>
       </div>
     </main>
@@ -292,6 +297,18 @@ onBeforeUnmount(() => {
 
 
 <style scoped>
+/* 로그가 없을 때 안내 문구 스타일 */
+.log-empty-state {
+  color: #e9ecef;             /* 밝은 글자색 – 배경(#111)에서 확실히 보이게 */
+  font-size: 0.85rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;        /* 줄바꿈 자연스럽게 */
+}
+
 .admin-layout {
   padding-top: 72px;
 }
