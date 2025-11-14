@@ -70,23 +70,72 @@
         </div>
 
         <!-- 오른쪽: 버튼 그룹 -->
-        <div class="d-flex gap-2">
-          <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByDistance">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
-              <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
-                d="m24 42l-9-13h18zm0-36l-9 13h18z" />
-            </svg>
-            <span class="fw-bold">거리순</span>
+        <div class="dropdown">
+          <button
+              class="btn dropdown-toggle w-100 d-flex align-items-center justify-content-between 
+                    bg-white border rounded-pill px-4 fw-bold"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+              style="height: 42px; font-size: 15px; padding-right: 18px !important;"
+            >
+
+            <div class="d-flex align-items-center gap-2">
+              <!-- 현재 선택된 항목 표시 -->
+              <template v-if="currentSort === 'time'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24">
+                  <path fill="#525252"
+                    d="M12 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8a8 8 0 0 0-8 8a8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10a10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7z"/>
+                </svg>
+                시간순
+              </template>
+
+              <template v-else>
+                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 48 48">
+                  <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
+                    d="m24 42l-9-13h18zm0-36l-9 13h18z"/>
+                </svg>
+                거리순
+              </template>
+            </div>
           </button>
 
-          <button type="button" class="btn btn-light border rounded-pill px-3 text-bold" @click="sortByTime">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path fill="currentColor"
-                d="M12 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8a8 8 0 0 0-8 8a8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10a10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7z" />
-            </svg>
-            시간순
-          </button>
+          <!-- dropdown menu -->
+          <ul class="dropdown-menu w-100 rounded-4 shadow-sm p-0 overflow-hidden" style="min-width: auto;">
+            
+            <!-- 거리순이 아닐 때만 거리순 표시 -->
+            <li v-if="currentSort !== 'distance'">
+              <button 
+                class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold"
+                style="font-size: 15px;"
+                @click="changeSort('distance')"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 48 48">
+                  <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
+                    d="m24 42l-9-13h18zm0-36l-9 13h18z"/>
+                </svg>
+                거리순
+              </button>
+            </li>
+
+            <!-- 시간순이 아닐 때만 시간순 표시 -->
+            <li v-if="currentSort !== 'time'">
+              <button 
+                class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold"
+                style="font-size: 15px;"
+                @click="changeSort('time')"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24">
+                  <path fill="#525252"
+                    d="M12 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8a8 8 0 0 0-8 8a8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10a10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7z"/>
+                </svg>
+                시간순
+              </button>
+            </li>
+          </ul>
         </div>
+
+
       </div>
 
       <!-- 리스트 스크롤 영역 -->
@@ -280,6 +329,7 @@ const onMarkerClick = (id) => {
   scrollCard(id)
 }
 
+
 // 스크롤 함수
 const scrollCard = (id) => {
   nextTick(() => {
@@ -345,6 +395,14 @@ const onTouchEnd = () => {
   sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 1 : 0
 }
 const toggleSheet = () => { sheetHeightRatio.value = sheetHeightRatio.value > 0.5 ? 0 : 1 }
+
+const currentSort = ref("time");
+
+function changeSort(type) {
+  currentSort.value = type;
+  type === "distance" ? sortByDistance() : sortByTime();
+}
+
 /* 바텀시트 제스처 end */
 
 
@@ -871,5 +929,9 @@ function bedBadgeClass(h) {
   box-shadow: 0 4px 12px rgba(13, 110, 253, .3);
   /* 선택되었을 때 기본 카드와 구별되도록 약간의 스케일업 */
   transform: scale(1.01);
+}
+
+.dropdown-toggle::after {
+  margin-left: 8px !important;
 }
 </style>
