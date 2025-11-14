@@ -2,8 +2,8 @@
 <section name="Workbench">
 	<section name="MavenProjectImportWizardPage">
 		<list key="rootDirectory">
-			<item value="C:\lx_final_project\springboot_child"/>
 			<item value="C:\lx_final_project"/>
+			<item value="C:\lx_final_project\springboot_child"/>
 		</list>
 		<list key="projectNameTemplate">
 			<item value="[artifactId]"/>

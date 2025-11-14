@@ -95,3 +95,6 @@ coverage
 /android_child/app/generated/
 /android_child/app/intermediates/
 *.apk
+
+
+aws_postgresql.txt
