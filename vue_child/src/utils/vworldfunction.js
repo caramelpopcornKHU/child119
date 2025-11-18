@@ -37,6 +37,10 @@ export function initVworldMap({
     vectorSource = new ol.source.Vector({});
     vectorLayer = new ol.layer.Vector({ source: vectorSource });
 
+    // 🔹 마커 레이어를 경로보다 위에 오도록 zIndex 설정
+    vectorLayer.setZIndex(20);
+
+
     const internalMap = vmap.getMap
       ? vmap.getMap()
       : vmap.map

@@ -132,14 +132,19 @@
               </span>
             </div>
 
-            <!-- ✅ 병원 데이터의 message 필드를 이용해 소아가능 / 불가능 자동 표시 -->
-            <div class="mb-2" v-if="h.message">
-              <span class="badge me-1" :class="h.message.includes('가능')
-                ? 'bg-success-subtle text-success-emphasis'
-                : 'bg-secondary-subtle text-secondary-emphasis'">
-                {{ h.message }}
-              </span>
-            </div>
+          <!-- 소아 가능/불가능 메시지 표시 (콤마 기준으로 여러 개 뱃지) -->
+<div class="mb-2" v-if="h.messageLines?.length">
+  <span
+    v-for="(msg, idx) in h.messageLines"
+    :key="idx"
+    class="badge me-1 hospital-message-chip"
+    :class="msg.includes('가능')
+      ? 'bg-success-subtle text-success-emphasis'
+      : 'bg-secondary-subtle text-secondary-emphasis'"
+  >
+    {{ msg }}
+  </span>
+</div>
 
 
             <!-- ✅ state 상태 표시 -->
@@ -388,6 +393,7 @@ const listHospitals = computed(() => {
     hpid: h.hpid,               // ← 추가
     name: h.name,
     message: h.message,
+     messageLines: h.messageLines || [],
     state: h.state,
     bedAvail: h.bedAvail,   // ✅ 추가
     bedTotal: h.bedTotal,
@@ -440,7 +446,16 @@ const loadWFSMarkers = async () => {
         return Number.isFinite(n) ? n : null;
       }
 
-      const message = p.message
+      const rawMessage = p.message || '';
+
+    const messageLines = rawMessage
+    .split(',')                 // 콤마 기준으로 자르기
+    .map(s => s.trim())         // 양옆 공백 제거
+    .filter(Boolean);           // 빈 문자열 제거
+
+
+
+      
       const state = p.state
       const name = p.nickname
       const bedAvail = toInt(p.bed_avail)
@@ -460,7 +475,8 @@ const loadWFSMarkers = async () => {
         lon,
         distance,
         name,
-        message,
+        message:rawMessage,
+        messageLines,
         state,
         bedAvail,
         bedTotal,
