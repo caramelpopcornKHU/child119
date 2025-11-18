@@ -299,7 +299,7 @@ export function addMarkerHospital(lon, lat, props = {}) {
     const style = new ol.style.Style({
       image: new ol.style.Icon({
         src: props.iconUrl || "https://cdn-icons-png.flaticon.com/512/854/854878.png",
-        scale: props.scale || 0.5,
+        scale: props.scale || 0.8,
         anchor: props.anchor || [0.5, 1]
       }),
     });

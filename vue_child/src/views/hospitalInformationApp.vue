@@ -75,62 +75,6 @@
           </h6>
           <button type="button" class="btn-close btn-close-white" @click="exitRouteMode" aria-label="닫기"></button>
         </div>
-
-        <!-- 경로 상세 정보 -->
-        <div class="bg-white text-dark rounded p-3">
-          <div class="row g-2 small">
-            <div class="col-6">
-              <div class="text-muted mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                  style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor"
-                    d="M10 18v-2h4v2zm-3 4v-2h10v2zm9-15.65L12.35 3H18m1 0h-7l-2 2H6l2 2L4 16v2h16v-2l-4-9z" />
-                </svg>총 거리
-              </div>
-              <div class="fw-bold fs-6">{{ routeDetails.distance }}</div>
-            </div>
-            <div class="col-6">
-              <div class="text-muted mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                  style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor"
-                    d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m4.2 14.2L11 13V7h1.5v5.2l4.5 2.7z" />
-                </svg>소요 시간
-              </div>
-              <div class="fw-bold fs-6">{{ routeDetails.time }}</div>
-            </div>
-            <div class="col-6" v-if="transportType === 'car' && routeDetails.fare">
-              <div class="text-muted mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                  style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor"
-                    d="M20 8h-3V6c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v10h2v2h2v-2h12v2h2v-2h2V10c0-1.1-.9-2-2-2M9 6h6v2H9zm11 12H4v-6h16z" />
-                </svg>통행 요금
-              </div>
-              <div class="fw-bold fs-6">{{ routeDetails.fare }}</div>
-            </div>
-            <div class="col-6" v-if="transportType === 'car' && routeDetails.taxiFare">
-              <div class="text-muted mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                  style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor"
-                    d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8zM6.85 6h10.29l1.08 3.11H5.77zM19 16H5v-4.66l.12-.34h13.77l.11.34z" />
-                </svg>예상 택시 요금
-              </div>
-              <div class="fw-bold fs-6">{{ routeDetails.taxiFare }}</div>
-            </div>
-            <div class="col-6" v-if="transportType === 'walk' && routeDetails.walkTime">
-              <div class="text-muted mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                  style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                  <path fill="currentColor"
-                    d="M14.12 10H19V8.2h-3.62l-2.94-3.12C12.08 4.71 11.63 4.5 11.15 4.5c-.22 0-.42.03-.62.09l-3.94 1.88c-.46.22-.79.66-.79 1.17v4.18c0 .53.71 1.04 1.27 1.04c.55 0 1-.45 1-1V8.91l1.83-.88l-1.62 7.88l-2.98-.83c-.41-.11-.82-.07-1.18.11L2 16.25c-.48.23-.78.72-.78 1.25c0 .75.61 1.36 1.36 1.36c.21 0 .41-.05.59-.13L5.1 17.5l3.08.86c.5.14 1 .04 1.42-.25l2.12-1.51l.69 3.4c.1.5.55.86 1.05.86c.07 0 .13-.01.19-.02c.57-.12.94-.67.82-1.24l-.89-4.38zM13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2s-2 .9-2 2s.9 2 2 2" />
-                </svg>도보 시간
-              </div>
-              <div class="fw-bold fs-6">{{ routeDetails.walkTime }}</div>
-            </div>
-          </div>
-        </div>
       </div>
       <!-- 상단 라인 -->
       <div class="d-flex align-items-center justify-content-between gap-2 mb-3 ms-2 me-2 flex-shrink-0">
@@ -310,8 +254,6 @@
       </div>
     </div>
   </div>
-
-  <!-- 경로 안내 옵션 모달 -->
   <div class="modal fade" id="routeModal" tabindex="-1" aria-labelledby="routeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow">
@@ -620,6 +562,8 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
   }
 
   try {
+    currentListType.value = listType
+
     clearMarkers()
     clearLabels()
     refreshUserMarker()
@@ -1059,12 +1003,13 @@ onMounted(async () => {
     clearMarkers()
     if (!vmap) throw new Error('vmap 초기화 실패')
 
+    showMoonlight()
+
     // 2️⃣ 현재 위치 표시
     await updateUserLocation(16)
   } catch (err) {
     console.error('초기화 실패:', err)
   }
-
   
 })
 

@@ -81,6 +81,7 @@
               {{ msg.text }}
             </span>
 
+            
             <!-- ✅ 아이 선택 버튼 표시 -->
             <div v-if="msg.showKidButtons" class="mt-2">
               <button
@@ -190,19 +191,6 @@ const initWebSocket = () => {
       messages.value.push({ text: data.aiText, type: "ai" });
       speakText(data.aiText);
     }
-
-    // 선택한 아이 기준 필터 메시지
-    if (data.filteredMessages && data.filteredMessages.length > 0) {
-      data.filteredMessages.forEach(msg => {
-        messages.value.push({ text: msg.message, type: "ai" });
-      });
-    } else if (selectedKid.value) {
-      messages.value.push({
-        text: `✅ 현재 선택한 아이 기준으로 주변 응급실 연령 제한 메시지는 없지만, 확인 전화를 해보시는 게 안전합니다.`,
-        type: "ai",
-      });
-    }
-
     await nextTick();
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
   };
