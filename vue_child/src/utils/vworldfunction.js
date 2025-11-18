@@ -72,7 +72,16 @@ export function initVworldMap({
 
 // 기존 marker 삭제
 export function clearMarkers() {
-  if (vectorSource) vectorSource.clear();
+ if (!vectorSource) return;
+
+  const all = vectorSource.getFeatures();
+
+  const toRemove = all.filter(f => {
+    // isUserLocation 이 true인 건 남겨두기
+    return !f.get('isUserLocation');
+  });
+
+  toRemove.forEach(f => vectorSource.removeFeature(f));
 }
 
 // Homeview marker 생성
@@ -299,6 +308,8 @@ export function addMarkerHospital(lon, lat, props = {}) {
     const feature = new ol.Feature({
       geometry: new ol.geom.Point(p3857),
       ...props,
+       // 🔹 현재 위치 구분 플래그 (기본값 false)
+      isUserLocation: props.isUserLocation === true,
     });
     const style = new ol.style.Style({
       image: new ol.style.Icon({

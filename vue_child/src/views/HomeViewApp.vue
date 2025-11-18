@@ -133,18 +133,18 @@
             </div>
 
           <!-- 소아 가능/불가능 메시지 표시 (콤마 기준으로 여러 개 뱃지) -->
-<div class="mb-2" v-if="h.messageLines?.length">
-  <span
-    v-for="(msg, idx) in h.messageLines"
-    :key="idx"
-    class="badge me-1 hospital-message-chip"
-    :class="msg.includes('가능')
-      ? 'bg-success-subtle text-success-emphasis'
-      : 'bg-secondary-subtle text-secondary-emphasis'"
-  >
-    {{ msg }}
-  </span>
-</div>
+            <div class="mb-2" v-if="h.messageLines?.length">
+              <span
+                v-for="(msg, idx) in h.messageLines"
+                :key="idx"
+                class="badge me-1 hospital-message-chip"
+                :class="msg.includes('가능')
+                  ? 'bg-success-subtle text-success-emphasis'
+                  : 'bg-secondary-subtle text-secondary-emphasis'"
+              >
+                {{ msg }}
+              </span>
+            </div>
 
 
             <!-- ✅ state 상태 표시 -->
@@ -251,6 +251,7 @@
 // import
 import { ref, computed, onMounted, onBeforeUnmount, onActivated, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
+import kidLogo from '@/assets/kid_logo.png'
 
 
 import {
@@ -739,26 +740,31 @@ async function refreshLocation() {
     const center = window.ol.proj.fromLonLat([lon, lat])
     const view = vmap.getView()
 
-    // 부드럽게 중앙으로 이동
+    // 부드럽게 중앙 이동
     if (!view.animate) {
       const start = view.getCenter()
       const steps = 20
       let i = 0
       const timer = setInterval(() => {
         const t = ++i / steps
-        const lon = start[0] + (center[0] - start[0]) * t
-        const lat = start[1] + (center[1] - start[1]) * t
-        view.setCenter([lon, lat])
+        const x = start[0] + (center[0] - start[0]) * t
+        const y = start[1] + (center[1] - start[1]) * t
+        view.setCenter([x, y])
         if (i >= steps) clearInterval(timer)
       }, 10)
     }
 
-    // 현재 위치 마커 갱신
-    addMarkerHospital(lon, lat, {
-      name: '현재 위치',
-      iconUrl: 'icons/currentLocation.svg',
-      anchor: [0.5, 0.5]
-    })
+    // 🔹 여기서 kidLogo를 이용해서 SVG 아이콘 생성
+    const logoDataUrl = await toDataUrl(kidLogo)
+const iconUrl = createUserPinIcon(logoDataUrl)
+
+addMarkerHospital(lon, lat, {
+  name: '현재 위치',
+  iconUrl,
+  anchor: [0.5, 1],
+  isUserLocation: true,
+})
+
 
     console.log(`화면 중심만 내 위치로 이동: ${lat}, ${lon}`)
   } catch (err) {
@@ -767,8 +773,12 @@ async function refreshLocation() {
   }
 }
 
+
+console.log('kidLogo url =>', kidLogo)
+
 onMounted(async () => {
   await initMapAndCoords()
+  await refreshLocation()
 })
 
 // zoom / moveend 됐을 때
@@ -857,6 +867,57 @@ function bedBadgeClass(h) {
   if (ratio > 0) return 'bg-warning-subtle text-warning-emphasis'    // 부족
   return 'bg-danger-subtle text-danger-emphasis'                        // 없음
 }
+
+
+function createUserPinIcon(logoDataUrl, size = 70) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         width="${size}" height="${size}" viewBox="0 0 80 80">
+
+      <!-- 바깥 핀 -->
+      <path 
+        d="M40 0C23 0 10 13 10 30c0 18 20 40 30 50c10-10 30-32 30-50C70 13 57 0 40 0z"
+        fill="#464654"
+      />
+
+      <!-- 안쪽 흰 원 -->
+      <circle cx="40" cy="30" r="22" fill="#ffffff" />
+
+      <!-- 내부 로고 이미지 -->
+      <clipPath id="clipLogo">
+        <circle cx="40" cy="30" r="18" />
+      </clipPath>
+
+      <image 
+        href="${logoDataUrl}"
+        xlink:href="${logoDataUrl}"
+        x="22"
+        y="12"
+        width="36"
+        height="36"
+        clip-path="url(#clipLogo)"
+        preserveAspectRatio="xMidYMid slice"
+      />
+    </svg>
+  `
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+}
+
+
+
+async function toDataUrl(url) {
+  const res = await fetch(url)
+  const blob = await res.blob()
+
+  return await new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result) // result: data:image/png;base64,....
+    reader.readAsDataURL(blob)
+  })
+}
+
 
 
 
