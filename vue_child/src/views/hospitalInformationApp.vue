@@ -620,6 +620,8 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
   }
 
   try {
+    currentListType.value = listType
+
     clearMarkers()
     clearLabels()
     refreshUserMarker()
@@ -678,12 +680,51 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
     })
 
     addToHospitalList(filtered, listType)
+    //moveToNearestOpenHospital(filtered);
     console.log(`✅ ${listType} ${filtered.length}개 표시 완료`)
   } catch (err) {
     console.error(`${listType} 조회 실패:`, err)
     alert(`${listType} 데이터를 불러오는 중 오류가 발생했습니다.`)
   }
 }
+
+// function moveToNearestOpenHospital(features) {
+//   if (!userLocation.value) return
+//   if (!features.length) return
+
+//   const { lat: uLat, lon: uLon } = userLocation.value
+
+//   // 1) OPEN 병원만 필터링
+//   const openOnly = features.filter(f => isHospitalOpen(f.properties))
+
+//   if (!openOnly.length) {
+//     console.log("🔕 현재 열린 병원이 없음 → 이동 안 함")
+//     return
+//   }
+
+//   // 2) 거리 계산해서 가장 가까운 병원 찾기
+//   let nearest = null
+//   let minDistance = Infinity
+
+//   openOnly.forEach(f => {
+//     const [lon, lat] = f.geometry.coordinates
+//     const dist = calculateDistance(uLat, uLon, lat, lon)
+//     if (dist < minDistance) {
+//       minDistance = dist
+//       nearest = { lat, lon }
+//     }
+//   })
+
+//   if (!nearest) return
+
+//   // 3) 지도 중심 이동
+//   const center = window.ol.proj.fromLonLat([nearest.lon, nearest.lat])
+//   const view = vmap.getView();
+//     view.setCenter(center);
+//     view.setZoom(16)
+
+//   console.log(`📍 가장 가까운 OPEN 병원으로 이동: ${minDistance}m`)
+// }
 
 // 달빛어린이병원 조회 (GeoServer)
 function showMoonlight() {
@@ -1059,12 +1100,13 @@ onMounted(async () => {
     clearMarkers()
     if (!vmap) throw new Error('vmap 초기화 실패')
 
+    showMoonlight()
+
     // 2️⃣ 현재 위치 표시
     await updateUserLocation(16)
   } catch (err) {
     console.error('초기화 실패:', err)
   }
-
   
 })
 
