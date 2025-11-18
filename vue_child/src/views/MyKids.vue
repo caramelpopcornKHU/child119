@@ -19,7 +19,7 @@
         <div v-else-if="kids.length === 0" class="text-center py-5">
           <i class="bi bi-people fs-1 text-muted d-block mb-3"></i>
           <p class="text-medium">등록된 아이가 없습니다.</p>
-          <p class="text-dark text-light">아래 버튼을 눌러 아이 정보를 추가해주세요.</p>
+          <p class="text-dark text-plight">아래 버튼을 눌러 아이 정보를 추가해주세요.</p>
         </div>
 
         <!-- 아이 카드(아코디언 형태) -->
@@ -33,13 +33,13 @@
                 class="rounded-circle me-2"
                 style="width:36px;height:36px;object-fit:cover;"
               />
-              <div class="flex-grow-1 fw-semibold">{{ kid.label }}</div>
+              <div class="flex-grow-1 text-medium">{{ kid.label }}</div>
             
 
-              <button class="btn btn-link px-2 text-primary" @click="editKid(i)" aria-label="수정">
+              <button class="btn btn-link px-2" @click="editKid(i)" aria-label="수정">
                 <i class="bi bi-pencil-square"></i>
               </button>
-              <button class="btn btn-link px-2 text-body" @click="toggle(i)" :aria-expanded="kid.open" :aria-controls="'kid'+i">
+              <button class="btn btn-link px-2" @click="toggle(i)" :aria-expanded="kid.open" :aria-controls="'kid'+i">
                 <i class="bi" :class="kid.open ? 'bi-caret-up-fill' : 'bi-caret-down-fill'"></i>
               </button>
             </div>
@@ -48,33 +48,33 @@
             <div :id="'kid'+i" v-show="kid.open" class="mt-3">
               <dl class="row mb-0">
                 <dt class="col-4 text-medium">이름</dt>
-                <dd class="col-8 text-black text-light mb-2">{{ kid.name }}</dd>
+                <dd class="col-8 text-black text-plight mb-2">{{ kid.name }}</dd>
 
                 <dt class="col-4 text-medium">출생년도</dt>
-                <dd class="col-8 text-black text-light mb-2">{{ kid.birthYear }}</dd>
+                <dd class="col-8 text-black text-plight mb-2">{{ kid.birthYear }}</dd>
 
                 <dt class="col-4 text-medium">혈액형</dt>
-                <dd class="col-8 text-black text-light mb-2">{{ kid.blood }}</dd>
+                <dd class="col-8 text-black text-plight mb-2">{{ kid.blood }}</dd>
 
                 <dt class="col-4 text-medium">특이 체질</dt>
-                <dd class="col-8 text-black text-light mb-2">{{ kid.trait || '-' }}</dd>
+                <dd class="col-8 text-black text-plight mb-2">{{ kid.trait || '-' }}</dd>
 
                 <dt class="col-4 text-medium">복용 중인 약</dt>
-                <dd class="col-8 text-black text-light mb-2">{{ kid.meds || '-' }}</dd>
+                <dd class="col-8 text-black text-plight mb-2">{{ kid.meds || '-' }}</dd>
 
                 <dt class="col-4 text-medium">키(cm)</dt>
-                <dd class="col-8 text-black text-light mb-2">{{ kid.height }}</dd>
+                <dd class="col-8 text-black text-plight mb-2">{{ kid.height }}</dd>
 
                 <dt class="col-4 text-medium">몸무게(kg)</dt>
-                <dd class="col-8 text-black text-light mb-2">{{ kid.weight }}</dd>
+                <dd class="col-8 text-black text-plight mb-2">{{ kid.weight }}</dd>
 
                 <dt class="col-4 text-medium">알레르기</dt>
-                <dd class="col-8 text-black text-light mb-2">{{ kid.allergy || '-' }}</dd>
+                <dd class="col-8 text-black text-plight mb-2">{{ kid.allergy || '-' }}</dd>
 
                 <dt class="col-4 text-medium">성별</dt>
                 <dd class="col-8">
-                  <span v-if="kid.gender==='F'" class="text-black text-light"><i class="bi bi-gender-female text-danger me-1"></i>여</span>
-                  <span v-else-if="kid.gender==='M'" class="text-black text-light"><i class="bi bi-gender-male text-primary me-1"></i>남</span>
+                  <span v-if="kid.gender==='F'" class="text-black text-plight"><i class="bi bi-gender-female text-danger me-1"></i>여</span>
+                  <span v-else-if="kid.gender==='M'" class="text-black text-plight"><i class="bi bi-gender-male text-primary me-1"></i>남</span>
                   <span v-else>-</span>
                 </dd>
               </dl>
