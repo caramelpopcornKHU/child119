@@ -155,22 +155,57 @@
         </div>
 
         <!-- 오른쪽: 버튼 그룹 -->
-        <div class="d-flex gap-2">
-          <button type="button" class="btn btn-light border rounded-pill px-2 text-bold" @click="sortByDistance">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
-              <path fill="#525252" stroke="#525252" stroke-linejoin="round" stroke-width="4"
-                d="m24 42l-9-13h18zm0-36l-9 13h18z" />
-            </svg>
-            <span class="fw-bold"> 거리순</span>
+        <div class="dropdown">
+          <button
+              class="btn dropdown-toggle w-100 d-flex align-items-center justify-content-between 
+                    bg-white border rounded-pill px-4 fw-bold"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+              style="height: 42px; font-size: 15px; padding-right: 18px !important;"
+            >
+
+            <div class="d-flex align-items-center gap-2">
+              <!-- 현재 선택된 항목 표시 -->
+              <template v-if="currentSort === 'time'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z"/></svg>
+                시간순
+              </template>
+
+              <template v-else>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 8.11c-.89 0-1.61-.72-1.61-1.61A1.61 1.61 0 0 1 6.5 4.89c.89 0 1.61.72 1.61 1.61A1.61 1.61 0 0 1 6.5 8.11M6.5 2C4 2 2 4 2 6.5c0 3.37 4.5 8.36 4.5 8.36S11 9.87 11 6.5C11 4 9 2 6.5 2m11 6.11a1.61 1.61 0 0 1-1.61-1.61a1.609 1.609 0 1 1 3.22 0a1.61 1.61 0 0 1-1.61 1.61m0-6.11C15 2 13 4 13 6.5c0 3.37 4.5 8.36 4.5 8.36S22 9.87 22 6.5C22 4 20 2 17.5 2m0 14c-1.27 0-2.4.8-2.82 2H9.32a3 3 0 0 0-3.82-1.83A3.003 3.003 0 0 0 3.66 20a3.017 3.017 0 0 0 3.84 1.83c.85-.3 1.5-.98 1.82-1.83h5.37c.55 1.56 2.27 2.38 3.81 1.83A3 3 0 0 0 20.35 18c-.43-1.2-1.57-2-2.85-2m0 4.5A1.5 1.5 0 0 1 16 19a1.5 1.5 0 0 1 1.5-1.5A1.5 1.5 0 0 1 19 19a1.5 1.5 0 0 1-1.5 1.5"/></svg>
+                거리순
+              </template>
+            </div>
           </button>
 
-          <button type="button" class="btn btn-light border rounded-pill px-2 text-bold" @click="sortByTime">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-              <path fill="currentColor"
-                d="M12 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8a8 8 0 0 0-8 8a8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10a10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7z" />
-            </svg>
-            시간순
-          </button>
+          <!-- dropdown menu -->
+          <ul class="dropdown-menu w-100 rounded-4 shadow-sm p-0 overflow-hidden" style="min-width: auto;">
+            
+            <!-- 거리순이 아닐 때만 거리순 표시 -->
+            <li v-if="currentSort !== 'distance'">
+              <button 
+                class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold"
+                style="font-size: 15px;"
+                @click="changeSort('distance')"
+              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 8.11c-.89 0-1.61-.72-1.61-1.61A1.61 1.61 0 0 1 6.5 4.89c.89 0 1.61.72 1.61 1.61A1.61 1.61 0 0 1 6.5 8.11M6.5 2C4 2 2 4 2 6.5c0 3.37 4.5 8.36 4.5 8.36S11 9.87 11 6.5C11 4 9 2 6.5 2m11 6.11a1.61 1.61 0 0 1-1.61-1.61a1.609 1.609 0 1 1 3.22 0a1.61 1.61 0 0 1-1.61 1.61m0-6.11C15 2 13 4 13 6.5c0 3.37 4.5 8.36 4.5 8.36S22 9.87 22 6.5C22 4 20 2 17.5 2m0 14c-1.27 0-2.4.8-2.82 2H9.32a3 3 0 0 0-3.82-1.83A3.003 3.003 0 0 0 3.66 20a3.017 3.017 0 0 0 3.84 1.83c.85-.3 1.5-.98 1.82-1.83h5.37c.55 1.56 2.27 2.38 3.81 1.83A3 3 0 0 0 20.35 18c-.43-1.2-1.57-2-2.85-2m0 4.5A1.5 1.5 0 0 1 16 19a1.5 1.5 0 0 1 1.5-1.5A1.5 1.5 0 0 1 19 19a1.5 1.5 0 0 1-1.5 1.5"/></svg>
+                거리순
+              </button>
+            </li>
+
+            <!-- 시간순이 아닐 때만 시간순 표시 -->
+            <li v-if="currentSort !== 'time'">
+              <button 
+                class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold"
+                style="font-size: 15px;"
+                @click="changeSort('time')"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z"/></svg>
+                시간순
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -468,6 +503,13 @@ const sheetStyle = computed(() => ({
   bottom: `0px`,
   top: 'auto'
 }))
+
+const currentSort = ref("time");
+
+function changeSort(type) {
+  currentSort.value = type;
+  type === "distance" ? sortByDistance() : sortByTime();
+}
 
 // 🔹 병원 상세 페이지로 이동
 const router = useRouter();
