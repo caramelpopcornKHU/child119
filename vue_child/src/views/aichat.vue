@@ -81,6 +81,7 @@
               {{ msg.text }}
             </span>
 
+            
             <!-- ✅ 아이 선택 버튼 표시 -->
             <div v-if="msg.showKidButtons" class="mt-2">
               <button

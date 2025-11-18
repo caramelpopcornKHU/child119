@@ -18,7 +18,7 @@
             <!-- 이름 -->
             <div class="mb-3">
               <label class="form-label text-medium">이름</label>
-              <input v-model.trim="form.name" type="text" class="form-control" placeholder="아이 이름을 입력해주세요"
+              <input v-model.trim="form.name" type="text" class="form-control text-plight" placeholder="아이 이름을 입력해주세요" style="background-color: rgb(197, 197, 197)"
                 required />
               <div class="invalid-feedback text-medium">이름을 입력해주세요.</div>
             </div>
@@ -26,7 +26,7 @@
             <!-- 출생년도 -->
             <div class="mb-3">
               <label class="form-label text-medium">출생년도</label>
-              <input v-model.number="form.birthYear" type="number" class="form-control" placeholder="아이의 출생년도를 입력해주세요"
+              <input v-model.number="form.birthYear" type="number" class="form-control text-plight" placeholder="아이의 출생년도를 입력해주세요"
                 min="2000" max="2099" required />
               <div class="invalid-feedback text-medium">출생년도를 올바르게 입력해주세요.</div>
             </div>
@@ -34,7 +34,7 @@
             <!-- 혈액형 -->
             <div class="mb-3">
               <label class="form-label text-medium">혈액형</label>
-              <input v-model.trim="form.blood" type="text" class="form-control" placeholder="아이의 혈액형을 입력해주세요"
+              <input v-model.trim="form.blood" type="text" class="form-control text-plight" placeholder="아이의 혈액형을 입력해주세요"
                 required />
               <div class="invalid-feedback text-medium">혈액형을 입력해주세요.</div>
             </div>
@@ -42,33 +42,33 @@
             <!-- 복용 중인 약 -->
             <div class="mb-3">
               <label class="form-label text-medium">복용 중인 약</label>
-              <textarea v-model.trim="form.meds" class="form-control" rows="3"
+              <textarea v-model.trim="form.meds" class="form-control text-plight" rows="3"
                 placeholder="아이가 주기적으로 복용하는 약을 입력해주세요"></textarea>
             </div>
 
             <!-- 키/몸무게 -->
             <div class="mb-3">
               <label class="form-label text-medium">키(cm)</label>
-              <input v-model.number="form.height" type="number" class="form-control" placeholder="아이의 키를 입력해주세요"
+              <input v-model.number="form.height" type="number" class="form-control text-plight" placeholder="아이의 키를 입력해주세요"
                 min="0" />
             </div>
             <div class="mb-3">
               <label class="form-label text-medium">몸무게(kg)</label>
-              <input v-model.number="form.weight" type="number" class="form-control" placeholder="아이의 몸무게를 입력해주세요"
+              <input v-model.number="form.weight" type="number" class="form-control text-plight" placeholder="아이의 몸무게를 입력해주세요"
                 min="0" />
             </div>
 
             <!-- 기저질환 및 병력 -->
             <div class="mb-3">
               <label class="form-label text-medium">기저질환 및 병력</label>
-              <textarea v-model.trim="form.history" class="form-control" rows="3"
+              <textarea v-model.trim="form.history" class="form-control text-plight" rows="3"
                 placeholder="아이가 가지고 있는 기저질환 및 병력을 입력해주세요"></textarea>
             </div>
 
             <!-- 알레르기 -->
             <div class="mb-3">
               <label class="form-label text-medium">알레르기</label>
-              <textarea v-model.trim="form.allergy" class="form-control" rows="3"
+              <textarea v-model.trim="form.allergy" class="form-control text-plight" rows="3"
                 placeholder="아이가 가지고 있는 알레르기 질환명을 입력해주세요"></textarea>
             </div>
 
