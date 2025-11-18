@@ -126,25 +126,44 @@ export function addMarkerEmergency(lon, lat, props = {}) {
 }
 
 // Homeview marker click 함수
+// Homeview marker click 함수
+// Homeview marker click 함수
 export function setupMarkerClick(onMarkerClickCallback) {
-  if (!vmap) {
-    console.warn("VMap이 초기화 되지 않아 클릭 리스너 설정 불가")
+  if (!vmap || !vectorLayer) {
+    console.warn("VMap 또는 vectorLayer가 없어 클릭 리스너 설정 불가");
     return;
   }
 
+  // 🔹 VWorld의 vmap 자체에 클릭 이벤트 등록
   vmap.on('click', function (evt) {
-    const feature = vmap.forEachFeatureAtPixel(evt.pixel, function (feature) {
-      return feature;
-    })
+    let clickedFeature = null;
 
-    if (feature) {
-      const featureId = feature.get('id')
-      if (featureId && onMarkerClickCallback) {
-        onMarkerClickCallback(featureId)
+    // 이 픽셀에서 어떤 feature가 있는지 검사
+    vmap.forEachFeatureAtPixel(
+      evt.pixel,
+      function (feature, layer) {
+        // 🔹 우리 응급실 마커 레이어만 타겟팅
+        if (layer === vectorLayer) {
+          clickedFeature = feature;
+          return true; // 더 이상 탐색 안 함
+        }
+        return false;
+      },
+      {
+        hitTolerance: 5, // 손가락 살짝 빗맞아도 클릭되게 여유
       }
+    );
+
+    if (!clickedFeature) return;
+
+    const featureId = clickedFeature.get('id');
+    if (featureId && typeof onMarkerClickCallback === 'function') {
+      onMarkerClickCallback(featureId);
     }
-  })
+  });
 }
+
+
 
 // svg url 만들기
 const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, isHover = false) => {

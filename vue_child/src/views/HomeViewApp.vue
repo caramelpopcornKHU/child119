@@ -203,48 +203,7 @@
   </div>
 
   <!-- 증상 선택 모달 -->
-  <div class="modal fade" id="symptomModal" tabindex="-1" aria-labelledby="symptomModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header">
-          <h5 class="modal-title" id="symptomModalLabel">
-            <i class="bi bi-clipboard2-pulse me-1"></i> 증상 확인
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
-        </div>
 
-        <div class="modal-body">
-          <div class="alert alert-light border py-2 px-3 mb-3">
-            <div class="small text-muted mb-1">
-              기본 키워드 <strong>"소아응급실"</strong>에 선택한 증상이 붙어 검색됩니다.
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-search"></i>
-
-            </div>
-          </div>
-
-          <div class="d-flex flex-wrap gap-2">
-            <template v-for="opt in symptomOptions" :key="opt">
-              <input class="btn-check" type="checkbox" :id="`sym-${opt}`" :value="opt" v-model="selectedSymptoms" />
-              <label class="btn btn-outline-secondary rounded-pill py-1 px-3" :for="`sym-${opt}`">{{ opt }}</label>
-            </template>
-          </div>
-
-          <div v-if="selectedSymptoms.length" class="mt-3 text-muted small">
-            <i class="bi bi-check2-circle"></i> {{ selectedSymptoms.length }}개 증상 선택됨
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onConfirmSymptoms">
-            <i class="bi bi-search"></i> 3km 재검색
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script setup>
