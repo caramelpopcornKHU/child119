@@ -22,13 +22,11 @@
     style="z-index: 2; padding-bottom: 150px;">
 
     <!-- 그립 -->
-    <div class="py-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
+    <div class="pt-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
       <div class="bg-secondary-subtle rounded-pill w-25" style="height:5px;"></div>
     </div>
     <!-- 핸들 -->
-    <div class="py-3 d-flex justify-content-center" @click="toggleSheet"></div>
-
-
+    <div class="d-flex justify-content-center" @click="toggleSheet"></div>
 
 
     <!-- 내용 -->
@@ -52,7 +50,6 @@
         <!-- 왼쪽 -->
         <div class="d-flex align-items-center gap-2">
           <h5 class="fw-bold mb-0">응급실 리스트</h5>
-
           <span v-if="hospitals.length > 0" class="badge bg-white text-black">{{ hospitals.length }}개</span>
         </div>
 

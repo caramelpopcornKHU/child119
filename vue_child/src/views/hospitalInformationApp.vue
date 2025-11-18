@@ -147,7 +147,7 @@
       </div>
 
       <!-- 타이틀 -->
-      <div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2 flex-shrink-0">
+      <div class="d-flex justify-content-between align-items-center mb-3 ms-2 me-2">
         <!-- 왼쪽 -->
         <div class="d-flex align-items-center gap-2">
           <h5 class="fw-bold mb-0">{{ currentListType }} 리스트</h5>
@@ -489,8 +489,8 @@ const isDragging = ref(false)
 const sheetHeightRatio = ref(0)
 const dragStart = ref({ y: 0, ratio: 0 })
 
-const MAX_SHEET_HEIGHT = window.innerHeight * 0.7
-const MIN_SHEET_HEIGHT = 180
+const MAX_SHEET_HEIGHT = window.innerHeight * 0.8
+const MIN_SHEET_HEIGHT = 220
 
 const sheetY = computed(() =>
   (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT) * (1 - sheetHeightRatio.value)
@@ -1148,6 +1148,10 @@ onBeforeUnmount(() => {
 :deep(.marker-label:hover) {
   background: #0d6efd;
   color: #fff;
+}
+
+.dropdown-toggle::after {
+  margin-left: 8px !important;
 }
 
 </style>
