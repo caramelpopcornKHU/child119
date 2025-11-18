@@ -11,15 +11,17 @@
       <!-- 데이터 표시 -->
       <div v-else-if="item" class="container px-3">
         <!-- 제목 -->
-        <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="d-flex align-items-center mb-3 text-bold gap-3">
           <button class="btn btn-link p-0 text-dark" @click="goBack">
-            <i class="bi bi-arrow-left fs-5"></i>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#000" d="M20 11v2H8l5.5 5.5l-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5L8 11z"/>
+            </svg>
           </button>
-          <h1 class="fs-4 fw-bold mb-0">{{ item.title }}</h1>
+          <h1 class="fs-4 text-bold mb-0">{{ item.title }}</h1>
         </div>
 
         <!-- 메타 정보 -->
-        <div class="d-flex align-items-center text-muted small mb-4">
+        <div class="d-flex align-items-center text-muted small mb-4 text-plight">
           <span>{{ formatDate(item.createdAt) }}</span>
           <span class="mx-2">|</span>
           <span>조회수 {{ item.viewCount || 0 }}</span><!--수-->
@@ -46,7 +48,7 @@
           </a>
         </div>
         <!-- 본문 카드 -->
-        <div class="card border-0 shadow-sm rounded-4">
+        <div class="card border-0 shadow-sm rounded-4 text-plight mb-3">
           <div class="card-body p-3 p-md-4">
 
             <!-- 해시태그 -->
@@ -58,7 +60,7 @@
 
             <!-- 증상 교체-->
             <div v-if="item.symptomList && item.symptomList.length > 0" class="mb-4">
-              <h6 class="text-danger fw-bold mb-2">증상</h6>
+              <h6 class="text-bold mb-2">증상</h6>
               <ul class="text-black ps-3">
                 <li v-for="(symptom, idx) in item.symptomList" :key="idx" class="mb-1">
                   {{ symptom }}
@@ -68,7 +70,7 @@
 
             <!-- 응급처치 -->
             <div v-if="item.methodList && item.methodList.length > 0" class="mb-4">
-              <h6 class="text-danger fw-bold mb-2">응급처치</h6>
+              <h6 class="text-bold mb-2">응급처치</h6>
               <ol class="mb-0 ps-3 text-black d-flex flex-column gap-2">
                 <li v-for="(method, idx) in item.methodList" :key="idx">
                   {{ method }}
@@ -77,7 +79,7 @@
             </div>
             <!-- 원인 -->
             <div v-if="item.reasonList && item.reasonList.length > 0" class="mb-4">
-              <h6 class="text-danger fw-bold mb-2">원인</h6>
+              <h6 class="text-bold mb-2">원인</h6>
               <ul class="text-black ps-3">
                 <li v-for="(reason, idx) in item.reasonList" :key="idx" class="mb-1">
                   {{ reason }}
@@ -102,7 +104,7 @@
       </div>
 
       <!-- 데이터 없음 -->
-      <div v-else class="text-center py-5">
+      <div v-else class="text-center text-bold py-5">
         <p class="text-muted">데이터를 찾을 수 없습니다.</p>
       </div>
     </div><!--닫는태-->

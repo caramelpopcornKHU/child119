@@ -4,7 +4,9 @@
       <!-- 상단 헤더 -->
        <div class="d-flex align-items-center mb-3">
         <button class="btn btn-link p-0 me-2 text-dark" @click="goBack">
-          <i class="bi bi-arrow-left fs-5"></i>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#000" d="M20 11v2H8l5.5 5.5l-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5L8 11z"/>
+          </svg>
         </button>
         <img
           :src="getKidImage(form.gender)"
@@ -22,49 +24,49 @@
             <!-- 이름 -->
             <div class="mb-3">
               <label class="form-label text-medium">이름</label>
-              <input v-model.trim="form.name" type="text" class="form-control text-black text-light" placeholder="김서아" />
+              <input v-model.trim="form.name" type="text" class="form-control text-plight" placeholder="김서아" />
             </div>
 
             <!-- 출생년도 -->
             <div class="mb-3">
               <label class="form-label text-medium">출생년도</label>
-              <input v-model.number="form.birthYear" type="number" class="form-control text-black text-light" placeholder="2022" />
+              <input v-model.number="form.birthYear" type="number" class="form-control  text-plight" placeholder="2022" />
             </div>
 
             <!-- 혈액형 -->
             <div class="mb-3">
               <label class="form-label text-medium">혈액형</label>
-              <input v-model.trim="form.blood" type="text" class="form-control text-black text-light" placeholder="O형" />
+              <input v-model.trim="form.blood" type="text" class="form-control  text-plight" placeholder="O형" />
             </div>
 
             <!-- 복용 중인 약 (멀티라인) -->
             <div class="mb-3">
               <label class="form-label text-medium">복용 중인 약</label>
-              <textarea v-model.trim="form.meds" class="form-control text-black text-light" rows="2" placeholder="OOO 알러지약 아침마다 복용"></textarea>
+              <textarea v-model.trim="form.meds" class="form-control  text-plight" rows="2" placeholder="OOO 알러지약 아침마다 복용"></textarea>
             </div>
 
             <!-- 키(cm) -->
             <div class="mb-3">
               <label class="form-label text-medium">키(cm)</label>
-              <input v-model.number="form.height" type="number" class="form-control text-black text-light" placeholder="95" />
+              <input v-model.number="form.height" type="number" class="form-control text-plight" placeholder="95" />
             </div>
 
             <!-- 몸무게(kg) -->
             <div class="mb-3">
               <label class="form-label text-medium">몸무게(kg)</label>
-              <input v-model.number="form.weight" type="number" class="form-control text-black text-light" placeholder="14" />
+              <input v-model.number="form.weight" type="number" class="form-control text-plight" placeholder="14" />
             </div>
 
             <!-- 기저질환 및 병력 -->
             <div class="mb-3">
               <label class="form-label text-medium">기저질환 및 병력</label>
-              <textarea v-model.trim="form.history" class="form-control text-black text-light" rows="2" placeholder="12개월 때 열성 경련 경험 있음"></textarea>
+              <textarea v-model.trim="form.history" class="form-control  text-plight" rows="2" placeholder="12개월 때 열성 경련 경험 있음"></textarea>
             </div>
 
             <!-- 알레르기 -->
             <div class="mb-3">
               <label class="form-label text-medium">알레르기</label>
-              <input v-model.trim="form.allergy" type="text" class="form-control text-black text-light" placeholder="땅콩, 감귤류 알레르기" />
+              <input v-model.trim="form.allergy" type="text" class="form-control  text-plight" placeholder="땅콩, 감귤류 알레르기" />
             </div>
 
             <!-- 성별 -->
@@ -72,11 +74,11 @@
               <label class="form-label d-block text-medium">성별</label>
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" id="genderM" value="M" v-model="form.gender" />
-                <label class="form-check-label text-black text-light" for="genderM">남</label>
+                <label class="form-check-label text-plight" for="genderM">남</label>
               </div>
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" id="genderF" value="F" v-model="form.gender" />
-                <label class="form-check-label text-black text-light" for="genderF">여</label>
+                <label class="form-check-label text-plight" for="genderF">여</label>
               </div>
             </div>
 

@@ -13,12 +13,12 @@
           @click="goBack"
         >
           <!-- 왼쪽 화살표 아이콘 -->
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#000" d="M20 11v2H8l5.5 5.5l-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5L8 11z"/>
           </svg>
         </button>
         <!-- 페이지 제목 -->
-        <h5 class="mb-0" style="font-family: 'Pretendard', sans-serif; font-weight: 600; color: #212529;">
+        <h5 class="mb-0 text-bold" >
           건의사항 작성
         </h5>
       </div>
@@ -30,17 +30,13 @@
         <div class="card border-0 shadow-sm rounded-4 mb-3">
           <div class="card-body p-4">
             <!-- 라벨 -->
-            <label 
-              class="form-label fw-semibold mb-3" 
-              style="font-family: 'Pretendard', sans-serif; color: #0D6EFD;"
-            >
+            <label class="form-label text-medium mb-3" >
               제목
             </label>
             <!-- 입력 필드 -->
             <input
               type="text"
-              class="form-control border-2"
-              style="border-color: #0D6EFD; font-family: 'Pretendard', sans-serif;"
+              class="form-control border-2 text-plight "
               v-model="form.title"
               placeholder="건의사항 제목을 입력하세요"
               required
@@ -52,16 +48,12 @@
         <div class="card border-0 shadow-sm rounded-4 mb-4">
           <div class="card-body p-4">
             <!-- 라벨 -->
-            <label 
-              class="form-label fw-semibold mb-3" 
-              style="font-family: 'Pretendard', sans-serif; color: #0D6EFD;"
-            >
+            <label class="form-label text-medium mb-3" >
               내용
             </label>
             <!-- 텍스트 영역 -->
             <textarea
-              class="form-control border-2"
-              style="border-color: #0D6EFD; font-family: 'Pretendard', sans-serif;"
+              class="form-control border-2 text-plight"
               rows="8"
               v-model="form.content"
               placeholder="건의사항 내용을 자세히 작성해주세요"

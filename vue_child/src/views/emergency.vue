@@ -9,22 +9,20 @@
     </div>
 
     <!-- 검색 영역 -->
-    <div class="mb-3">
-      <div class="input-group edu-search rounded-3 px-2">
-        <input type="text" class="form-control border-0 shadow-none p-2" placeholder="검색어를 입력하세요." v-model="keyword" />
+    <div class="mb-3"
+          style="background-color: whitesmoke; border-radius: 10px;">
+      <div class="input-group rounded-3 px-2">
+        <input type="text" class="form-control border-0 p-2 text-plight " style="background-color: whitesmoke;"  v-model="keyword" />
         <span class="input-group-text bg-transparent border-0 p-0">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
-            <path fill="#00b894" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5
-                 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L19 20.49
-                 20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5
-                 11.99 14 9.5 14" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <path fill="#000" d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5l-1.5 1.5l-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16A6.5 6.5 0 0 1 3 9.5A6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14S14 12 14 9.5S12 5 9.5 5"/>
           </svg>
         </span>
       </div>
     </div>
 
     <!-- 전체 개수 -->
-    <p class="text-muted small mb-3">
+    <p class="text-muted small mb-3 text-plight">
       전체 {{ filteredItems.length }}건이 등록되어 있습니다.
     </p>
 
@@ -32,10 +30,10 @@
     <div v-for="item in filteredItems" :key="item.id"
       class="edu-item border-top d-flex justify-content-between align-items-center">
       <div class="py-3 flex-grow-1" @click="goToDetail(item.id)" style="cursor: pointer;">
-        <div class="fw-semibold edu-title text-primary">
+        <div class="text-bold edu-title">
           {{ item.title }}
         </div>
-        <div class="text-muted small mt-2">
+        <div class="text-muted small mt-2 text-plight">
           {{ formatDate(item.createdAt) }}
           <span class="mx-2">|</span>
           조회수 {{ item.viewCount || 0 }}
@@ -53,11 +51,10 @@
       </div>
     </div>
     <!-- 건의사항 버튼 (오른쪽 아래 고정) 바텀이랑 조정 width 조정했습니다 -->
-    <button class="btn btn-primary rounded position-fixed shadow"
-      style="bottom: 100px; right: 20px; width: 170px; height: 56px; z-index: 100;" @click="goToSuggestions">
+    <button class="btn btn-primary rounded position-fixed "
+      style="bottom: 100px; right: 20px; width: 150px; height: 56px; z-index: 100;" @click="goToSuggestions">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <path fill="white"
-          d="M17 14h2v3h3v2h-3v3h-2v-3h-3v-2h3zM5 3h14c1.11 0 2 .89 2 2v7.8c-.61-.35-1.28-.6-2-.72V5H5v14h7.08c.12.72.37 1.39.72 2H5c-1.11 0-2-.89-2-2V5c0-1.11.89-2 2-2m2 4h10v2H7zm0 4h10v1.08c-.85.14-1.63.46-2.32.92H7zm0 4h5v2H7z" />
+        <path fill="#fff" d="M21 12.13c-.15.01-.29.06-.39.17l-1 1l2.05 2l1-1c.22-.21.22-.56 0-.77l-1.24-1.23a.56.56 0 0 0-.38-.17m-2 1.75L13 19.94V22h2.06l6.06-6.07M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7v-.89l8.24-8.22c.47-.49 1.12-.76 1.8-.76c.34 0 .68.06 1 .19V6c0-1.12-.92-2-2.04-2m0 4l-8 5l-8-5V6l8 5l8-5"/>
       </svg> 건의사항 추가
     </button>
   </div>
@@ -215,9 +212,6 @@ function formatDate(date) {
   background-color: #ffffff;
 }
 
-.edu-search {
-  background-color: #f5f5f5;
-}
 
 .edu-item:last-child {
   border-bottom: 1px solid #e9ecef;
