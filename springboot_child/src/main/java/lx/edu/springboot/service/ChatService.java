@@ -1,7 +1,10 @@
 package lx.edu.springboot.service;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,12 +47,11 @@ public class ChatService {
     }
 
     public String getAiResponse(String sessionId, String userMessage, Double lat, Double lon, Map<String, Object> kidInfo) {
+
         List<String> history = sessionHistories.computeIfAbsent(sessionId, k -> new ArrayList<>());
 
         double baseLat = (lat != null) ? lat : 37.4955;
         double baseLon = (lon != null) ? lon : 126.8873;
-
-        String emergencyInfo = getNearbyEmergencyInfo(userMessage, baseLat, baseLon);
 
         StringBuilder prompt = new StringBuilder();
         prompt.append(SYSTEM_PROMPT).append("\n\n");
@@ -59,11 +61,13 @@ public class ChatService {
             prompt.append(history.get(i)).append("\n");
         }
 
-        if (emergencyInfo != null && !emergencyInfo.isEmpty()) {
-            prompt.append("현재 위치 기준 응급실 정보:\n").append(emergencyInfo).append("\n\n");
+        if (isEmergencyRoomQuery(userMessage) && kidInfo != null) {
+            String ageNotice = generateAgeNotice(kidInfo, baseLat, baseLon);
+            if (ageNotice != null) {
+                prompt.append("\n\n연령 제한 분석: ").append(ageNotice).append("\n");
+            }
         }
 
-        // ✅ kidInfo가 null이 아닐 때만 추가
         if (kidInfo != null) {
             prompt.append("아이 정보: ").append(kidInfo).append("\n");
         }
@@ -78,6 +82,7 @@ public class ChatService {
 
         return aiResponse;
     }
+
 
 
 
@@ -175,5 +180,65 @@ public class ChatService {
         String prompt = SYSTEM_PROMPT + "\n\n사용자: " + userMessage;
         return callGeminiApi(prompt);
     }
+    
+    private boolean isEmergencyRoomQuery(String userMessage) {
+        if (userMessage == null) return false;
+
+        userMessage = userMessage.replace(" ", "").toLowerCase();
+
+        String[] keywords = {
+                "응급실", "병원", "응급", "어디", "어딜",
+                "가까운", "빨리가", "병상", "진료가능", "이송",
+                "소요시간", "네비", "길찾기"
+        };
+
+        for (String key : keywords) {
+            if (userMessage.contains(key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String generateAgeNotice(Map<String, Object> kidInfo, double lat, double lon) {
+
+        int birthYear = (int) kidInfo.get("birthYear");
+        int ageYears = LocalDate.now().getYear() - birthYear;
+
+        List<Emergency> nearby = emergencyRepository.findNearbyAvailableHospitals(lat, lon, 5.0);
+
+        int allowed = 0;
+        int denied = 0;
+
+        for (Emergency e : nearby) {
+            if (isAllowedAge(e.getMessage(), ageYears)) allowed++;
+            else denied++;
+        }
+
+        if (denied == 0) {
+            return "현재 선택한 아이 기준으로 주변 응급실 연령 제한 메시지는 없지만, 방문 전 전화 확인을 추천드립니다.";
+        } else if (allowed > 0 && denied > 0) {
+            return "일부 응급실에서 연령 제한이 있어 선택 시 주의가 필요합니다. 방문 전 전화 확인을 권장합니다.";
+        } else {
+            return "현재 선택한 아이 기준으로 소아 진료가 제한된 응급실이 많습니다. 방문 가능 여부를 반드시 전화로 확인하세요.";
+        }
+    }
+
+    private boolean isAllowedAge(String msg, int ageYears) {
+        if (msg == null || msg.isEmpty()) return true;
+
+        Pattern p = Pattern.compile("(\\d+)\\s*(세|살)");
+        Matcher m = p.matcher(msg);
+
+        if (m.find()) {
+            int value = Integer.parseInt(m.group(1));
+            if (msg.contains("미만")) return ageYears < value;
+            if (msg.contains("초과")) return ageYears > value;
+            if (msg.contains("이하")) return ageYears <= value;
+            if (msg.contains("이상")) return ageYears >= value;
+        }
+        return true;
+    }
+
 
 }
