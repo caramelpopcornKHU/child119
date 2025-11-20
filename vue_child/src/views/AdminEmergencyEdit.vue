@@ -20,11 +20,11 @@
           <div class="card border-0 shadow-sm rounded-4 mb-3">
             <div class="card-body p-3 p-md-4">
               <!-- 제목 -->
-              <div class="mb-3">
-                <label class="form-label fw-semibold">제목</label>
+              <div class="mb-3 text-medium">
+                <label class="form-label text-bold">제목</label>
                 <input
                   type="text"
-                  class="form-control"
+                  class="form-control text-muted"
                   v-model="form.title"
                   placeholder="예) 고열, 화상 시 응급처치"
                   required
@@ -32,14 +32,14 @@
               </div>
 
               <!-- 해시태그 -->
-              <div class="mb-3">
-                <label class="form-label fw-semibold">해시태그</label>
+              <div class="mb-3 text-medium">
+                <label class="form-label text-bold">해시태그</label>
 
                 <div class="d-flex flex-wrap gap-2 mb-2">
                   <span
                     v-for="(tag, idx) in form.hashtags"
                     :key="idx"
-                    class="badge bg-danger-subtle text-danger fw-semibold px-3 py-2 rounded-pill d-flex align-items-center gap-1"
+                    class="badge bg-danger-subtle text-danger text-bold px-3 py-2 rounded-pill d-flex align-items-center gap-1"
                   >
                     #{{ tag }}
                     <i
@@ -50,7 +50,7 @@
                   </span>
                 </div>
 
-                <div class="input-group input-group-sm">
+                <div class="input-group input-group-sm text-medium">
                   <span class="input-group-text bg-body-secondary border-0">#</span>
                   <input
                     type="text"
@@ -63,12 +63,12 @@
                     +
                   </button>
                 </div>
-                <div class="form-text">예: #열 #감기 #소아응급 등</div>
+                <div class="form-text text-plight">예: #열 #감기 #소아응급 등</div>
               </div>
 
               <!-- 유튜브 URL -->
-              <div class="mb-3">
-                <label class="form-label fw-semibold">유튜브 URL</label>
+              <div class="mb-3 text-medium">
+                <label class="form-label text-bold">유튜브 URL</label>
                 <input
                   type="url"
                   class="form-control"
@@ -76,14 +76,14 @@
                   placeholder="https://youtu.be/..."
                   required
                 />
-                <div class="form-text">
+                <div class="form-text text-plight">
                   유튜브 링크를 입력하면 자동으로 썸네일을 가져옵니다.
                 </div>
               </div>
 
               <!-- 썸네일 미리보기 -->
               <div v-if="thumbnail" class="mt-3">
-                <label class="form-label fw-semibold d-block">썸네일 미리보기</label>
+                <label class="form-label text-bold d-block">썸네일 미리보기</label>
                 <div class="rounded-4 overflow-hidden" style="max-height: 220px;">
                   <img :src="thumbnail" alt="thumbnail preview" class="w-100 object-fit-cover" />
                 </div>
@@ -93,7 +93,7 @@
 
           <!-- 증상 -->
           <div class="card border-0 shadow-sm rounded-4 mb-3">
-            <div class="card-body p-3 p-md-4">
+            <div class="card-body p-3 p-md-4 text-plight">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="text-danger text-bold mb-0">증상</h6>
                 <button
@@ -135,7 +135,7 @@
 
           <!-- 응급처치 -->
           <div class="card border-0 shadow-sm rounded-4 mb-3">
-            <div class="card-body p-3 p-md-4">
+            <div class="card-body p-3 p-md-4 text-plight">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="text-danger text-bold mb-0">응급처치</h6>
                 <button
@@ -177,7 +177,7 @@
 
           <!-- 원인 -->
           <div class="card border-0 shadow-sm rounded-4 mb-3">
-            <div class="card-body p-3 p-md-4">
+            <div class="card-body p-3 p-md-4 text-plight">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="text-danger text-bold mb-0">원인</h6>
                 <button
@@ -219,7 +219,7 @@
 
           <!-- 주의 문구 -->
           <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-3 p-md-4">
+            <div class="card-body p-3 p-md-4 text-plight">
               <h6 class="text-danger text-bold mb-2">주의 문구</h6>
               <textarea
                 class="form-control"
@@ -232,7 +232,7 @@
 
           <!-- 하단 버튼 -->
           <div
-            class="position-sticky bottom-0 bg-body-tertiary pt-2 pb-3"
+            class="position-sticky bottom-0 pt-2 pb-3 text-medium"
             style="z-index: 1; margin-bottom: var(--footer-h, 70px);"
           >
             <div class="d-flex gap-2">

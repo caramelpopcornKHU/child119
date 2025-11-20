@@ -20,8 +20,8 @@
           <div class="card border-0 shadow-sm rounded-4 mb-3">
             <div class="card-body p-3 p-md-4">
               <!-- 제목 -->
-              <div class="mb-3">
-                <label class="form-label fw-semibold">제목</label>
+              <div class="mb-3 text-medium">
+                <label class="form-label text-bold">제목</label>
                 <input
                   type="text"
                   class="form-control"
@@ -32,8 +32,8 @@
               </div>
 
               <!-- 해시태그 -->
-              <div class="mb-3">
-                <label class="form-label fw-semibold">해시태그</label>
+              <div class="mb-3 text-medium">
+                <label class="form-label text-bold">해시태그</label>
 
                 <div class="d-flex flex-wrap gap-2 mb-2">
                   <span
@@ -63,12 +63,12 @@
                     +
                   </button>
                 </div>
-                <div class="form-text">예: #열 #감기 #소아응급 등</div>
+                <div class="form-text text-plight">예: #열 #감기 #소아응급 등</div>
               </div>
 
               <!-- 유튜브 URL -->
-              <div class="mb-3">
-                <label class="form-label fw-semibold">유튜브 URL</label>
+              <div class="mb-3 text-medium">
+                <label class="form-label text-bold">유튜브 URL</label>
                 <input
                   type="url"
                   class="form-control"
@@ -76,7 +76,7 @@
                   placeholder="https://youtu.be/..."
                   required
                 />
-                <div class="form-text">
+                <div class="form-text text-plight">
                   유튜브 링크를 입력하면 자동으로 썸네일을 가져옵니다.
                 </div>
               </div>
@@ -93,7 +93,7 @@
 
           <!-- 증상 -->
           <div class="card border-0 shadow-sm rounded-4 mb-3">
-            <div class="card-body p-3 p-md-4">
+            <div class="card-body p-3 p-md-4 text-plight">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="text-danger text-bold mb-0">증상</h6>
                 <button
@@ -135,7 +135,7 @@
 
           <!-- 응급처치 -->
           <div class="card border-0 shadow-sm rounded-4 mb-3">
-            <div class="card-body p-3 p-md-4">
+            <div class="card-body p-3 p-md-4 text-plight">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="text-danger text-bold mb-0">응급처치</h6>
                 <button
@@ -177,7 +177,7 @@
 
           <!-- 원인 -->
           <div class="card border-0 shadow-sm rounded-4 mb-3">
-            <div class="card-body p-3 p-md-4">
+            <div class="card-body p-3 p-md-4 text-plight">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="text-danger text-bold mb-0">원인</h6>
                 <button
@@ -219,7 +219,7 @@
 
           <!-- 주의 문구 -->
           <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-3 p-md-4">
+            <div class="card-body p-3 p-md-4 text-plight">
               <h6 class="text-danger text-bold mb-2">주의 문구</h6>
               <textarea
                 class="form-control"
@@ -232,10 +232,10 @@
 
           <!-- 하단 버튼 -->
           <div
-            class="position-sticky bottom-0 bg-body-tertiary pt-2 pb-3"
+            class="position-sticky bottom-0 pt-2 pb-3"
             style="z-index: 1; margin-bottom: var(--footer-h, 70px);"
           >
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 text-bold">
               <button
                 type="button"
                 class="btn btn-outline-secondary flex-fill rounded-pill"

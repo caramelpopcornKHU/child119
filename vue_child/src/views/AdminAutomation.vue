@@ -21,19 +21,19 @@
         >
           <div>
             <h5 class="text-bold mb-1">크롤링 주기 설정</h5>
-            <p class="small text-muted mb-0">
-              외부 데이터(예: 응급 관련 뉴스, 콘텐츠)를 가져오는 크롤러의 실행 주기를 설정합니다.
+            <p class="small text-plight mb-0">
+              응급실 정보를 가져오는 크롤러의 실행 주기를 설정합니다.
             </p>
           </div>
-          <div class="text-end">
-            <div class="small text-muted mb-1">현재 주기</div>
+          <div class="text-end text-plight">
+            <div class="small text-plight mb-1">현재 주기</div>
             <span class="badge bg-light text-secondary border small px-3 py-2">
               {{ crawlingInterval }}분
             </span>
           </div>
         </div>
 
-        <div class="card-body pt-3 text-plight ">
+        <div class="card-body pt-3 text-medium">
           <div class="d-flex flex-wrap align-items-center gap-3">
             <!-- 프리셋 버튼 그룹 -->
             <div>
@@ -75,18 +75,18 @@
               </div>
 
               <button
-  type="button"
-  class="btn btn-primary btn-sm rounded-pill d-inline-flex align-items-center gap-1 btn-save-offset"
-  @click="saveCrawlingInterval"
->
-  <i class="bi bi-save"></i>
-  <span>저장</span>
-</button>
+                type="button"
+                class="btn btn-primary btn-sm rounded-pill d-flex align-items-center justify-content-center gap-1 btn-save-offset"
+                @click="saveCrawlingInterval"
+              >
+                <i class="bi bi-folder-symlink"></i>
+                <span>저장</span>
+              </button>
 
             </div>
           </div>
 
-          <p class="small text-muted mt-2 mb-0">
+          <p class="small text-medium text-muted mt-2 mb-0">
             <span>현재 설정된 주기: <strong>{{ crawlingInterval }}분</strong></span>
             <span v-if="lastSavedCrawling" class="text-secondary ms-2">
               · 마지막 저장: {{ lastSavedCrawling }}
@@ -102,13 +102,13 @@
         >
           <div>
             <h5 class="text-bold mb-1">데이터 크롤링 자동화</h5>
-            <p class="small text-muted mb-0">
+            <p class="small text-plight mb-0">
               Python(FastAPI) 자동화 서버에 크롤링 작업을 요청하고, 작업 중 발생하는 로그를 실시간으로
               확인합니다.
             </p>
           </div>
-          <div class="text-end">
-            <div class="small text-muted mb-1">상태</div>
+          <div class="text-end text-plight">
+            <div class="small text-plight mb-1">상태</div>
             <span class="badge rounded-pill px-3" :class="automationStatusBadgeClass">
               {{ automationStatusText }}
             </span>
@@ -122,7 +122,7 @@
         <div class="card-body pt-3">
           <!-- 상단 버튼 바 -->
           <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-            <div class="btn-toolbar gap-2">
+            <div class="btn-toolbar gap-2 texxt-medium">
               <button
                 type="button"
                 class="btn btn-primary btn-sm rounded-pill d-inline-flex align-items-center gap-1"
@@ -153,29 +153,28 @@
               </button>
             </div>
 
-            <div class="small text-muted ms-auto">
+            <div class="small text-medium text-muted ms-auto">
               FastAPI 엔드포인트:
               <code>{{ AUTOMATION_BASE_URL }}</code>
             </div>
           </div>
 
           <!-- 로그 영역 -->
-<!-- 로그 영역 -->
-<div class="automation-log-box">
-  <!-- ✅ 로그가 없을 때 안내 문구 -->
-  <div
-    v-if="automationLogs.length === 0"
-    class="log-empty-state"
-  >
-    아직 실행된 로그가 없습니다.<br />
-    상단의 <strong>“크롤링 즉시 실행”</strong> 버튼을 눌러 자동화를 시작하세요.
-  </div>
+          <div class="automation-log-box">
+            <!-- ✅ 로그가 없을 때 안내 문구 -->
+            <div
+              v-if="automationLogs.length === 0"
+              class="log-empty-state fs-5 text-medium"
+            >
+              아직 실행된 로그가 없습니다.<br />
+              상단의 <strong>“크롤링 즉시 실행”</strong> 버튼을 눌러 자동화를 시작하세요.
+            </div>
 
-  <!-- ✅ 로그가 있을 때 -->
-  <pre v-else class="mb-0">
-<span v-for="(line, idx) in automationLogs" :key="idx">{{ line }}</span>
-  </pre>
-</div>
+            <!-- ✅ 로그가 있을 때 -->
+            <pre v-else class="mb-0">
+          <span v-for="(line, idx) in automationLogs" :key="idx">{{ line }}</span>
+            </pre>
+          </div>
 
         </div>
       </div>

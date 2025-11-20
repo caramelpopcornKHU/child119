@@ -16,25 +16,25 @@
       <div class="card shadow-sm border-0 rounded-4">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-semibold mb-0">응급처치 화면 건의사항</h5>
+            <h5 class="text-bold mb-0">응급처치 화면 건의사항</h5>
           </div>
 
           <!-- 건의사항 총 수 -->
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="badge bg-secondary-subtle text-dark small">
+            <span class="badge bg-secondary-subtle text-medium text-dark small">
               총 {{ emergencyFeedbacks.length }}건
             </span>
           </div>
 
           <!-- 로딩 중 -->
-          <div v-if="loading" class="text-center py-4 small text-muted">
+          <div v-if="loading" class="text-center py-4 small text-medium text-muted">
             건의사항을 불러오는 중입니다...
           </div>
 
           <!-- 건의사항 없음 -->
           <div
             v-else-if="!loading && emergencyFeedbacks.length === 0"
-            class="text-muted small py-3 text-center"
+            class="text-medium text-muted small py-3 text-center"
           >
             아직 응급처치 화면 건의사항이 없습니다.
           </div>
@@ -42,7 +42,7 @@
           <!-- 건의사항 목록 -->
           <div v-else class="table-responsive">
             <table class="table table-sm align-middle mb-0">
-              <thead class="table-light">
+              <thead class="table-light text-bold">
                 <tr>
                   <th style="width: 8%;">No</th>
                   <th>관련 콘텐츠</th>
@@ -58,15 +58,15 @@
                   @click="goToSuggestionDetail(f.id)"
                   style="cursor: pointer;"
                 >
-                  <td>{{ idx + 1 }}</td>
-                  <td class="text-truncate" style="max-width: 240px;">
+                  <td class="text-plight">{{ idx + 1 }}</td>
+                  <td class="text-truncate text-plight" style="max-width: 240px;">
                     {{ f.emergencyTitle }}
                   </td>
-                  <td class="text-truncate" style="max-width: 280px;">
+                  <td class="text-truncate text-plight" style="max-width: 280px;">
                     {{ f.content }}
                   </td>
-                  <td>{{ f.writer }}</td>
-                  <td>{{ formatDate(f.createdAt) }}</td>
+                  <td class="text-plight">{{ f.writer }}</td>
+                  <td class="text-plight">{{ formatDate(f.createdAt) }}</td>
                 </tr>
               </tbody>
             </table>

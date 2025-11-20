@@ -9,22 +9,22 @@
           <button class="btn btn-link p-0 text-dark" @click="goBack">
             <i class="bi bi-arrow-left fs-5"></i>
           </button>
-          <h4 class="fw-bold mb-0">사용자 정보 수정</h4>
+          <h4 class="text-bold mb-0">사용자 정보 수정</h4>
         </div>
 
         <!-- 사용자 기본 정보 -->
         <div class="card border-0 shadow-sm rounded-4 mb-3" v-if="user">
           <div class="card-body">
-            <h5 class="fw-semibold mb-3">기본 정보</h5>
+            <h5 class="text-medium mb-3">기본 정보</h5>
 
             <div class="mb-3">
-              <label class="form-label">이메일 (읽기 전용)</label>
-              <input type="email" class="form-control" v-model="user.email" disabled />
+              <label class="form-label text-medium text-muted">이메일 (읽기 전용)</label>
+              <input type="email" class="form-control text-plight text-muted " v-model="user.email" disabled />
             </div>
 
             <div class="mb-3">
-              <label class="form-label">이름</label>
-              <input type="text" class="form-control" v-model="user.username" placeholder="사용자 이름" />
+              <label class="form-label text-medium text-muted">이름</label>
+              <input type="text" class="form-control text-plight text-muted" v-model="user.username" placeholder="사용자 이름" />
             </div>
           </div>
         </div>
@@ -33,55 +33,51 @@
         <div class="card border-0 shadow-sm rounded-4 mb-3">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="fw-semibold mb-0">자녀 정보</h5>
-              <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" @click="addKid">
+              <h5 class="text-medium mb-0">자녀 정보</h5>
+              <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill text-plight" @click="addKid">
                 + 자녀 추가
               </button>
             </div>
 
-            <div v-if="kids.length === 0" class="text-muted small">
+            <div v-if="kids.length === 0" class="text-muted text-medium small">
               등록된 자녀 정보가 없습니다.
             </div>
 
             <div v-for="(k, idx) in kids" :key="k.id || idx" class="border rounded-3 p-2 mb-2">
               <div class="mb-2">
-                <label class="form-label small mb-1">이름</label>
-                <input type="text" class="form-control form-control-sm" v-model="k.name" placeholder="자녀 이름" />
+                <label class="form-label text-medium text-muted">이름</label>
+                <input type="text" class="form-control text-plight text-muted" v-model="k.name" placeholder="자녀 이름" />
               </div>
 
               <div class="row g-2">
                 <div class="col-12">
-                  <label class="form-label small mb-1">생년월일</label>
-                  <div class="row g-2">
+                  <label class="form-label text-medium text-muted">생년월일</label>
+                  <div class="row g-2 text-plight text-muted">
                     <div class="col-4">
                       <select class="form-select form-select-sm" v-model.number="k.birthYear" required>
-                        <option value="">년도</option>
                         <option v-for="year in years" :key="year" :value="year">{{ year }}년</option>
                       </select>
                     </div>
                     <div class="col-4">
                       <select class="form-select form-select-sm" v-model.number="k.birthMonth" required>
-                        <option value="">월</option>
                         <option v-for="month in 12" :key="month" :value="month">{{ month }}월</option>
                       </select>
                     </div>
                     <div class="col-4">
                       <select class="form-select form-select-sm" v-model.number="k.birthDay" required>
-                        <option value="">일</option>
                         <option v-for="day in 31" :key="day" :value="day">{{ day }}일</option>
                       </select>
                     </div>
                   </div>
                 </div>
                 <div class="col-12 mt-2">
-                  <label class="form-label small mb-1">나이 (자동)</label>
-                  <input type="text" class="form-control form-control-sm"
+                  <label class="form-label text-medium text-muted">나이 (자동)</label>
+                  <input type="text" class="form-control text-plight text-muted"
                     :value="formatAge(k.birthYear, k.birthMonth, k.birthDay)" disabled />
                 </div>
                 <div class="col-6">
-                  <label class="form-label small mb-1">성별</label>
-                  <select class="form-select form-select-sm" v-model="k.gender">
-                    <option value="">선택</option>
+                  <label class="form-label text-medium text-muted">성별</label>
+                  <select class="form-select form-select-sm text-plight text-muted" v-model="k.gender">
                     <option value="남">남</option>
                     <option value="여">여</option>
                   </select>
@@ -89,7 +85,7 @@
               </div>
 
               <div class="mt-2 text-end">
-                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" @click="removeKid(idx, k)">
+                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill text-plight" @click="removeKid(idx, k)">
                   삭제
                 </button>
               </div>
@@ -99,10 +95,10 @@
 
         <!-- 하단 버튼 -->
         <div class="d-flex gap-2 mt-3">
-          <button type="button" class="btn btn-outline-secondary flex-fill rounded-pill" @click="goBack">
+          <button type="button" class="btn btn-outline-secondary flex-fill rounded-pill text-medium" @click="goBack">
             취소
           </button>
-          <button type="button" class="btn btn-primary flex-fill rounded-pill" :disabled="saving" @click="saveAll">
+          <button type="button" class="btn btn-primary flex-fill rounded-pill text-medium" :disabled="saving" @click="saveAll">
             {{ saving ? '저장 중...' : '저장하기' }}
           </button>
         </div>

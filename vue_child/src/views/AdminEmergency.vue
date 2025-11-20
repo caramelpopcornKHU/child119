@@ -9,8 +9,8 @@
                 <i class="bi bi-arrow-left fs-5"></i>
               </button>
           <div>
-            <h4 class="fw-bold mb-1">응급 교육 콘텐츠</h4>
-            <div class="text-muted small">총 {{ filteredItems.length }}건</div>
+            <h4 class="text-bold mb-1">응급 교육 콘텐츠</h4>
+            <div class="text-medium text-muted small">총 {{ filteredItems.length }}건</div>
           </div>
 
           <!-- 우측 퀵 액션 -->
@@ -18,7 +18,7 @@
             <button
               v-if="isAdmin"
               type="button"
-              class="btn btn-success rounded-pill fw-semibold"
+              class="btn btn-success rounded-pill text-bold"
               @click="goToWrite"
             >
               + 새 게시물
@@ -51,7 +51,7 @@
             <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
 
               <!-- 정렬 기준 -->
-              <select v-model="sortKey" class="form-select form-select-sm w-auto">
+              <select v-model="sortKey" class="form-select form-select-sm w-auto text-plight">
                 <option value="createdAt">작성일</option>
                 <option value="title">제목</option>
                 <option value="viewCount">조회수</option>
@@ -68,7 +68,7 @@
               </button>
 
               <!-- 페이지 크기 -->
-              <select v-model.number="pageSize" class="form-select form-select-sm w-auto">
+              <select v-model.number="pageSize" class="form-select form-select-sm w-auto text-plight">
                 <option :value="10">10개</option>
                 <option :value="20">20개</option>
                 <option :value="50">50개</option>
@@ -77,7 +77,7 @@
               <!-- 일괄 삭제 -->
               <button
                 v-if="isAdmin"
-                class="btn btn-outline-danger btn-sm"
+                class="btn btn-outline-danger btn-sm text-plight"
                 :disabled="selectedIds.size===0"
                 @click="bulkDelete"
               >
@@ -107,7 +107,7 @@
 
         <!-- 빈 상태 -->
         <div v-else-if="pagedItems.length === 0" class="card shadow-sm border-0 rounded-4">
-          <div class="card-body py-5 text-center text-muted">
+          <div class="card-body py-5 text-center text-medium text-muted">
             <i class="bi bi-journal-text fs-1 d-block mb-2"></i>
             검색 결과가 없습니다.
           </div>
@@ -117,7 +117,7 @@
         <div v-else class="card shadow-sm border-0 rounded-4">
           <div class="table-responsive">
             <table class="table align-middle mb-0 admin-table">
-              <thead class="table-light">
+              <thead class="table-light text-bold">
                 <tr>
                   <th style="width:40px;">
                     <input
@@ -133,7 +133,7 @@
                   <th class="text-end" style="width:160px;">관리</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody class="text-plight">
                 <tr v-for="item in pagedItems" :key="item.id">
                   <td>
                     <input
@@ -169,13 +169,13 @@
                   <td class="text-end">
                     <div class="d-inline-flex gap-2">
                       <button
-                        class="btn btn-sm btn-outline-primary rounded-pill"
+                        class="btn btn-outline-primary btn-sm rounded-1 w-100 text-center"
                         @click="goToEdit(item.id)"
                       >
                         수정
                       </button>
                       <button
-                        class="btn btn-sm btn-outline-danger rounded-pill"
+                        class="btn btn-outline-dark btn-sm rounded-1 w-100 text-center"
                         @click="handleDelete(item.id)"
                       >
                         삭제
@@ -189,14 +189,14 @@
 
           <!-- 페이지네이션 -->
           <div class="card-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div class="text-muted small">
+            <div class="text-bold text-muted small">
               표시: {{ startIdx + 1 }}–{{ endIdx }} / 총 {{ filteredItems.length }}
             </div>
             <div class="d-flex align-items-center gap-1">
               <button class="btn btn-light btn-sm" :disabled="page===1" @click="page--">
                 <i class="bi bi-chevron-left"></i>
               </button>
-              <span class="px-2 fw-semibold">{{ page }} / {{ totalPages }}</span>
+              <span class="px-2 text-bold">{{ page }} / {{ totalPages }}</span>
               <button class="btn btn-light btn-sm" :disabled="page===totalPages" @click="page++">
                 <i class="bi bi-chevron-right"></i>
               </button>
