@@ -16,10 +16,10 @@
         <div class="card shadow-sm border-0 rounded-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="fw-semibold mb-0">응급 교육 콘텐츠 (emergencyData)</h5>
+              <h5 class="text-bold mb-0">응급 교육 콘텐츠 (emergencyData)</h5>
               <button
                 type="button"
-                class="btn btn-outline-primary btn-sm rounded-pill"
+                class="btn btn-outline-primary btn-sm rounded-pill text-plight"
                 @click="goToAdminEmergency"
               >
                 콘텐츠 관리 화면으로 이동
@@ -28,7 +28,7 @@
 
             <div class="table-responsive">
               <table class="table table-sm align-middle mb-0">
-                <thead class="table-light">
+                <thead class="table-light text-bold">
                   <tr>
                     <th style="width: 6%;">No</th>
                     <th style="width: 12%;">썸네일</th>
@@ -41,9 +41,9 @@
                 </thead>
                 <tbody>
                   <tr v-for="(c, idx) in emergencyList" :key="c.id">
-                    <td>{{ idx + 1 }}</td>
+                    <td class="text-plight">{{ idx + 1 }}</td>
 
-                    <td>
+                    <td class="text-plight">
                       <div v-if="c.thumbnailUrl" class="ratio ratio-16x9" style="max-width: 120px;">
                         <img
                           :src="c.thumbnailUrl"
@@ -55,7 +55,7 @@
                       <span v-else class="text-muted small">없음</span>
                     </td>
 
-                    <td class="text-truncate" style="max-width: 260px;">
+                    <td class="text-truncate text-plight" style="max-width: 260px;">
                       <button
                         type="button"
                         class="btn btn-link p-0 text-start text-truncate"
@@ -66,11 +66,11 @@
                       </button>
                     </td>
 
-                    <td>{{ formatDate(c.createdAt) }}</td>
-                    <td>{{ c.viewCount.toLocaleString() }}</td>
+                    <td class="text-plight">{{ formatDate(c.createdAt) }}</td>
+                    <td class="text-plight">{{ c.viewCount.toLocaleString() }}</td>
 
                     <td>
-                      <div class="small text-muted">
+                      <div class="small text-muted text-plight">
                         <span
                           v-for="(tag, tIdx) in c.hashtags"
                           :key="tIdx"
@@ -84,18 +84,18 @@
                       </div>
                     </td>
 
-                    <td>
+                    <td class="text-plight">
                       <div class="d-flex flex-column gap-1">
                         <button
                           type="button"
-                          class="btn btn-outline-primary btn-sm rounded-pill"
+                          class="btn btn-outline-primary btn-sm rounded-1 w-100 text-center"
                           @click="goToAdminEmergencyEdit(c.id)"
                         >
                           수정
                         </button>
                         <button
                           type="button"
-                          class="btn btn-outline-danger btn-sm rounded-pill"
+                          class="btn btn-outline-dark btn-sm rounded-1 w-100 text-center"
                           @click="deleteEmergency(c)"
                         >
                           삭제
@@ -107,7 +107,7 @@
               </table>
             </div>
 
-            <p class="small text-muted mt-2 mb-0">
+            <p class="small text-muted text-plight mt-2 mb-0">
               ※ 이 목록은 관리자용 요약입니다. 상세 편집은 별도의 응급 콘텐츠 관리 화면에서 진행하세요.
             </p>
           </div>

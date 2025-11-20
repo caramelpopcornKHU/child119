@@ -1,9 +1,6 @@
 <template>
-  <!-- 전체 페이지 배경 -->
-  <main class="bg-body-tertiary min-vh-100">
-    <!-- 컨테이너: 좌우 여백과 상하 여백 적용 -->
-    <div class="container-fluid py-4 px-3">
-
+  <main class="min-vh-100">
+    <div class="container-fluid px-0">
       <!-- 상단 헤더: 뒤로가기 버튼과 제목 -->
       <div class="d-flex align-items-center mb-4 gap-2">
         <!-- 뒤로가기 버튼 -->
@@ -71,7 +68,7 @@
 
         <!-- 하단 버튼 영역: 화면 하단에 고정 -->
         <div
-          class="position-sticky bottom-0 bg-body-tertiary pt-2 pb-3"
+          class="position-sticky bottom-0 pt-2 pb-3"
           style="z-index: 1; margin-bottom: var(--footer-h, 70px);"
         >
           <!-- 버튼 그룹: 취소와 저장 버튼 -->

@@ -1,6 +1,6 @@
 <template>
-  <main class="bg-body-tertiary min-vh-100">
-    <div class="container-fluid py-4 px-3">
+  <main class="min-vh-100">
+    <div class="container-fluid px-0">
       <div v-if="loading" class="text-center py-5">
         <div class="spinner-border text-danger" role="status">
           <span class="visually-hidden">로딩 중...</span>
@@ -9,7 +9,7 @@
 
 
       <!-- 데이터 표시 -->
-      <div v-else-if="item" class="container px-3">
+      <div v-else-if="item" class="container-fluid px-0">
         <!-- 제목 -->
         <div class="d-flex align-items-center mb-3 text-bold gap-3">
           <button class="btn btn-link p-0 text-dark" @click="goBack">

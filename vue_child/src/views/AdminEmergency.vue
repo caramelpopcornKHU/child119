@@ -9,8 +9,8 @@
                 <i class="bi bi-arrow-left fs-5"></i>
               </button>
           <div>
-            <h4 class="fw-bold mb-1">응급 교육 콘텐츠</h4>
-            <div class="text-muted small">총 {{ filteredItems.length }}건</div>
+            <h4 class="text-bold mb-1">응급 교육 콘텐츠</h4>
+            <div class="text-medium text-muted small">총 {{ filteredItems.length }}건</div>
           </div>
 
           <!-- 우측 퀵 액션 -->
@@ -18,7 +18,7 @@
             <button
               v-if="isAdmin"
               type="button"
-              class="btn btn-success rounded-pill fw-semibold"
+              class="btn btn-success rounded-pill text-bold"
               @click="goToWrite"
             >
               + 새 게시물
@@ -28,28 +28,36 @@
 
         <!-- 컨트롤바 -->
         <div class="card shadow-sm border-0 rounded-4 mb-3">
-          <div class="card-body d-flex flex-wrap align-items-center gap-2">
+          <div class="card-body d-flex flex-wrap align-items-center gap-3">
+
             <!-- 검색 -->
-            <div class="input-group admin-search">
-              <span class="input-group-text bg-transparent border-0 pe-0">
-                <i class="bi bi-search text-primary"></i>
-              </span>
-              <input
-                v-model="keyword"
-                type="text"
-                class="form-control border-0 shadow-none"
-                placeholder="제목으로 검색"
-                @keyup.enter="gotoFirstPage"
-              />
+            <div class="flex-grow-1" style="min-width: 200px;">
+              <div class="input-group rounded-3 bg-light px-2">
+                <input 
+                  type="text" 
+                  class="form-control border-0 bg-light p-2 text-plight" 
+                  placeholder="검색어를 입력하세요"
+                  v-model="keyword"
+                />
+                <span class="input-group-text bg-light border-0">
+                  <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="#666" d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5l-1.5 1.5l-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16A6.5 6.5 0 0 1 3 9.5A6.5 6.5 0 0 1 9.5 3"/>
+                  </svg>
+                </span>
+              </div>
             </div>
 
-            <!-- 정렬 / 페이지 / 내보내기 / 일괄 삭제 -->
-            <div class="ms-auto d-flex align-items-center gap-2">
-              <select v-model="sortKey" class="form-select form-select-sm w-auto">
+            <!-- 옵션들 -->
+            <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+
+              <!-- 정렬 기준 -->
+              <select v-model="sortKey" class="form-select form-select-sm w-auto text-plight">
                 <option value="createdAt">작성일</option>
                 <option value="title">제목</option>
                 <option value="viewCount">조회수</option>
               </select>
+
+              <!-- 정렬 방향 -->
               <button
                 class="btn btn-light btn-sm"
                 @click="toggleSortDir"
@@ -59,27 +67,27 @@
                 <i v-else class="bi bi-sort-up"></i>
               </button>
 
-              <select v-model.number="pageSize" class="form-select form-select-sm w-auto">
+              <!-- 페이지 크기 -->
+              <select v-model.number="pageSize" class="form-select form-select-sm w-auto text-plight">
                 <option :value="10">10개</option>
                 <option :value="20">20개</option>
                 <option :value="50">50개</option>
               </select>
 
-              <button class="btn btn-outline-secondary btn-sm" @click="exportCsv">
-                <i class="bi bi-download me-1"></i>CSV
-              </button>
-
+              <!-- 일괄 삭제 -->
               <button
                 v-if="isAdmin"
-                class="btn btn-outline-danger btn-sm"
+                class="btn btn-outline-danger btn-sm text-plight"
                 :disabled="selectedIds.size===0"
                 @click="bulkDelete"
               >
-                <i class="bi bi-trash me-1"></i>일괄 삭제 ({{ selectedIds.size }})
+                <i class="bi bi-trash me-1"></i>삭제 ({{ selectedIds.size }})
               </button>
             </div>
+
           </div>
         </div>
+
 
         <!-- 로딩 스켈레톤 -->
         <div v-if="loading" class="card shadow-sm border-0 rounded-4">
@@ -99,7 +107,7 @@
 
         <!-- 빈 상태 -->
         <div v-else-if="pagedItems.length === 0" class="card shadow-sm border-0 rounded-4">
-          <div class="card-body py-5 text-center text-muted">
+          <div class="card-body py-5 text-center text-medium text-muted">
             <i class="bi bi-journal-text fs-1 d-block mb-2"></i>
             검색 결과가 없습니다.
           </div>
@@ -109,7 +117,7 @@
         <div v-else class="card shadow-sm border-0 rounded-4">
           <div class="table-responsive">
             <table class="table align-middle mb-0 admin-table">
-              <thead class="table-light">
+              <thead class="table-light text-bold">
                 <tr>
                   <th style="width:40px;">
                     <input
@@ -125,7 +133,7 @@
                   <th class="text-end" style="width:160px;">관리</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody class="text-plight">
                 <tr v-for="item in pagedItems" :key="item.id">
                   <td>
                     <input
@@ -161,13 +169,13 @@
                   <td class="text-end">
                     <div class="d-inline-flex gap-2">
                       <button
-                        class="btn btn-sm btn-outline-primary rounded-pill"
+                        class="btn btn-outline-primary btn-sm rounded-1 w-100 text-center"
                         @click="goToEdit(item.id)"
                       >
                         수정
                       </button>
                       <button
-                        class="btn btn-sm btn-outline-danger rounded-pill"
+                        class="btn btn-outline-dark btn-sm rounded-1 w-100 text-center"
                         @click="handleDelete(item.id)"
                       >
                         삭제
@@ -181,14 +189,14 @@
 
           <!-- 페이지네이션 -->
           <div class="card-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div class="text-muted small">
+            <div class="text-bold text-muted small">
               표시: {{ startIdx + 1 }}–{{ endIdx }} / 총 {{ filteredItems.length }}
             </div>
             <div class="d-flex align-items-center gap-1">
               <button class="btn btn-light btn-sm" :disabled="page===1" @click="page--">
                 <i class="bi bi-chevron-left"></i>
               </button>
-              <span class="px-2 fw-semibold">{{ page }} / {{ totalPages }}</span>
+              <span class="px-2 text-bold">{{ page }} / {{ totalPages }}</span>
               <button class="btn btn-light btn-sm" :disabled="page===totalPages" @click="page++">
                 <i class="bi bi-chevron-right"></i>
               </button>

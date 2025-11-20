@@ -24,7 +24,7 @@
 
             <div class="table-responsive">
               <table class="table table-sm align-middle mb-0">
-                <thead class="table-light">
+                <thead class="table-light text-bold">
                   <tr>
                     <th style="width: 4%;">No</th>
                     
@@ -40,13 +40,13 @@
 
                 <tbody>
                   <tr v-for="(u, idx) in usersWithKids" :key="u.uid">
-                    <td>{{ idx + 1 }}</td>
-                    <td>{{ u.username || '-' }}</td>
-                    <td>{{ u.name }}</td>
-                    <td>{{ u.phone || '-' }}</td>
+                    <td class="text-plight">{{ idx + 1 }}</td>
+                    <td class="text-plight">{{ u.username || '-' }}</td>
+                    <td class="text-plight">{{ u.name }}</td>
+                    <td class="text-plight">{{ u.phone || '-' }}</td>
 
                     <td>
-                      <div class="small">
+                      <div class="small text-plight">
                         <div v-if="u.kids.length">
                           <strong>{{ u.kids.length }}명</strong>
                           <button
@@ -57,16 +57,16 @@
                             상세보기
                           </button>
                         </div>
-                        <div v-else class="text-muted">
-                          등록된 자녀 정보 없음
+                        <div v-else class="text-plight">
+                          등록된 정보 없음
                         </div>
                       </div>
                     </td>
 
-                    <td>{{ formatDate(u.createdAt) }}</td>
+                    <td class="text-plight">{{ formatDate(u.createdAt) }}</td>
 
                     <td>
-                      <div class="d-flex flex-column gap-1 small">
+                      <div class="d-flex flex-column gap-1 small text-plight">
                         <span
                           class="badge rounded-pill px-2"
                           :class="u.agreeTerms ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-muted'"
@@ -82,18 +82,18 @@
                       </div>
                     </td>
 
-                    <td>
+                    <td class="text-plight">
                       <div class="d-flex flex-column gap-1">
                         <button
                           type="button"
-                          class="btn btn-outline-primary btn-sm rounded-pill"
+                          class="btn btn-outline-primary btn-sm rounded-1 w-100 text-center"
                           @click="goToUserEdit(u.uid)"
                         >
                           수정
                         </button>
                         <button
                           type="button"
-                          class="btn btn-outline-danger btn-sm rounded-pill"
+                          class="btn btn-outline-dark btn-sm rounded-1 w-100 text-center"
                           @click="deleteUser(u)"
                         >
                           삭제
@@ -104,30 +104,25 @@
                 </tbody>
               </table>
             </div>
-
-            <p class="small text-muted mt-2 mb-0">
-              ※ 실제 구현 시, Firestore의 <code>users</code> 컬렉션과
-              <code>kidinformation</code> 컬렉션을 join해서 가져오면 됩니다.
-            </p>
           </div>
         </div>
         <div v-if="kidModalUser" class="kid-modal-backdrop" @click.self="closeKidModal">
         <div class="kid-modal card shadow-sm">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="fw-semibold mb-0">
+              <h5 class="fs-4 text-bold mb-0">
                 {{ kidModalUser.name }} 님의 자녀 정보
               </h5>
               <button
                 type="button"
-                class="btn btn-sm btn-outline-secondary rounded-pill"
+                class="btn btn-sm btn-outline-secondary rounded-pill text-plight"
                 @click="closeKidModal"
               >
                 닫기
               </button>
             </div>
 
-            <div v-if="kidModalUser.kids.length === 0" class="text-muted small">
+            <div v-if="kidModalUser.kids.length === 0" class="text-muted small text-plight">
               등록된 자녀 정보가 없습니다.
             </div>
 
@@ -137,18 +132,18 @@
                 :key="k.id || idx"
                 class="border rounded-3 p-2"
               >
-                <div class="fw-semibold mb-1">
+                <div class="text-bold mb-1">
                   {{ idx + 1 }}. {{ k.name || '(이름 없음)' }}
                 </div>
-                <div class="small text-muted">
+                <div class="small text-plight">
                   나이: {{ k.age }}세 / 성별: {{ k.gender || '-' }}
                 </div>
-                <div class="small text-muted mt-1">
+                <div class="small text-plight mt-1">
                   키: {{ k.heightCm ?? '-' }}cm /
                   몸무게: {{ k.weightKg ?? '-' }}kg /
                   혈액형: {{ k.bloodType || '-' }}
                 </div>
-                <div class="small text-muted mt-1">
+                <div class="small text-plight mt-1">
                   알레르기: {{ k.allergy || '-' }}<br />
                   기저질환: {{ k.medicalHistory || '-' }}<br />
                   복용약: {{ k.medication || '-' }}

@@ -54,6 +54,8 @@ export async function addKid(payload) {
   const data = {
     kid: payload.name,  // name → kid
     birthYear: Number(payload.birthYear || 0),
+    birthMonth: Number(payload.birthMonth || 0),  // 추가 필요!
+    birthDay: Number(payload.birthDay || 0),      // 추가 필요!
     bloodType: payload.blood || "",  // blood → bloodType
     medication: payload.meds || "",  // meds → medication
     heightCm: Number(payload.height || 0),  // height → heightCm
@@ -76,6 +78,8 @@ export async function updateKid(id, payload) {
     kid: payload.name,  // name → kid
     birthYear: Number(payload.birthYear || 0),
     bloodType: payload.blood || "",  // blood → bloodType
+    birthMonth: Number(payload.birthMonth || 0),  // 추가
+    birthDay: Number(payload.birthDay || 0),      // 추가
     medication: payload.meds || "",  // meds → medication
     heightCm: Number(payload.height || 0),  // height → heightCm
     weightKg: Number(payload.weight || 0),  // weight → weightKg

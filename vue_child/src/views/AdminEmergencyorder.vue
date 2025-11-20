@@ -28,11 +28,11 @@
               <button class="btn btn-link p-0 text-dark" @click="goBack">
                 <i class="bi bi-arrow-left fs-5"></i>
               </button>
-              <h1 class="fs-4 fw-bold mb-0">{{ item.title }}</h1>
+              <h1 class="fs-4 text-bold mb-0">{{ item.title }}</h1>
             </div>
 
             <!-- 메타 정보 -->
-            <div class="d-flex align-items-center text-muted small mb-4">
+            <div class="d-flex align-items-center text-bold text-muted small mb-4">
               <span>{{ formatDate(item.createdAt) }}</span>
               <span class="mx-2">|</span>
               <span>조회수 {{ item.viewCount || 0 }}</span>
@@ -60,7 +60,7 @@
             </div>
 
             <!-- 일반 동영상 URL (유튜브가 아닌 경우) -->
-            <div v-if="item.youtubeUrl && !item.youtubeId && !item.thumbnailUrl" class="mb-3">
+            <div v-if="item.youtubeUrl && !item.youtubeId && !item.thumbnailUrl" class="mb-3 text-medium">
               <a :href="item.youtubeUrl" target="_blank" class="btn btn-danger w-100">
                 <i class="bi bi-play-circle me-2"></i>동영상 보러 가기
               </a>
@@ -74,7 +74,7 @@
                   <span
                     v-for="(tag, idx) in item.hashtags"
                     :key="idx"
-                    class="badge bg-danger-subtle text-danger me-2"
+                    class="badge bg-danger-subtle text-bold text-danger me-2"
                   >
                     #{{ tag }}
                   </span>
@@ -82,12 +82,12 @@
 
                 <!-- 증상 -->
                 <div v-if="item.symptomList && item.symptomList.length > 0" class="mb-4">
-                  <h6 class="text-danger fw-bold mb-2">증상</h6>
+                  <h6 class="text-danger text-bold mb-2">증상</h6>
                   <ul class="text-black ps-3">
                     <li
                       v-for="(symptom, idx) in item.symptomList"
                       :key="idx"
-                      class="mb-1"
+                      class="mb-1 text-medium text-dark"
                     >
                       {{ symptom }}
                     </li>
@@ -96,8 +96,8 @@
 
                 <!-- 응급처치 -->
                 <div v-if="item.methodList && item.methodList.length > 0" class="mb-4">
-                  <h6 class="text-danger fw-bold mb-2">응급처치</h6>
-                  <ol class="mb-0 ps-3 text-black d-flex flex-column gap-2">
+                  <h6 class="text-danger text-bold mb-2">응급처치</h6>
+                  <ol class="mb-0 ps-3 text-medium text-dark d-flex flex-column gap-2">
                     <li v-for="(method, idx) in item.methodList" :key="idx">
                       {{ method }}
                     </li>
@@ -106,8 +106,8 @@
 
                 <!-- 원인 -->
                 <div v-if="item.reasonList && item.reasonList.length > 0" class="mb-4">
-                  <h6 class="text-danger fw-bold mb-2">원인</h6>
-                  <ul class="text-black ps-3">
+                  <h6 class="text-danger text-bold mb-2">원인</h6>
+                  <ul class="text-medium text-dark ps-3">
                     <li
                       v-for="(reason, idx) in item.reasonList"
                       :key="idx"
@@ -119,8 +119,8 @@
                 </div>
 
                 <!-- 주의사항 -->
-                <div v-if="item.warning" class="alert alert-warning text-black small mb-0">
-                  <strong class="text-danger fw-bold">주의:</strong> {{ item.warning }}
+                <div v-if="item.warning" class="alert alert-warning text-black text-medium small mb-0">
+                  <strong class="text-danger text-bold">주의:</strong> {{ item.warning }}
                 </div>
               </div>
             </div>
