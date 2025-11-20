@@ -1,6 +1,7 @@
 <template>
-  <div class="bg-gray min-vh-100 d-flex justify-content-center align-items-start py-4">
-    <div v-if="hospitalData" class="card shadow-sm border-0 rounded-4 p-4 bg-white" style="width: 420px;">
+  <main class="min-vh-100">
+    <div class="container-fluid px-0">
+    <div v-if="hospitalData" class="card border-0 rounded-4 p-0 bg-white">
       <!-- 상단 헤더 -->
       <div class="d-flex align-items-center mb-3 gap-2">
         <button class="btn btn-link p-0 me-2 text-dark d-flex" @click="goBack">
@@ -50,7 +51,7 @@
 
         <div class="d-flex flex-column justify-content-start">
           <div class="d-felx text-bold fs-7 mb-2">진료 시간</div>
-          <table class="table table-striped table-bordered text-plight ms-2">
+          <table class="table table-striped table-bordered text-plight mb-0">
             <tbody>
               <tr>
                 <th>월</th>
@@ -85,7 +86,7 @@
         </div>
 
 
-        <div class="info-block">
+        <div class="info-block mt-3">
           <div class="mb-2 text-bold">진료과목</div>
 
           <div class="departments d-flex flex-wrap gap-2 mb-4">
@@ -108,6 +109,7 @@
       </div>
     </div>
   </div>
+  </main>
 </template>
 
 <script setup>

@@ -28,28 +28,36 @@
 
         <!-- 컨트롤바 -->
         <div class="card shadow-sm border-0 rounded-4 mb-3">
-          <div class="card-body d-flex flex-wrap align-items-center gap-2">
+          <div class="card-body d-flex flex-wrap align-items-center gap-3">
+
             <!-- 검색 -->
-            <div class="input-group admin-search">
-              <span class="input-group-text bg-transparent border-0 pe-0">
-                <i class="bi bi-search text-primary"></i>
-              </span>
-              <input
-                v-model="keyword"
-                type="text"
-                class="form-control border-0 shadow-none"
-                placeholder="제목으로 검색"
-                @keyup.enter="gotoFirstPage"
-              />
+            <div class="flex-grow-1" style="min-width: 200px;">
+              <div class="input-group rounded-3 bg-light px-2">
+                <input 
+                  type="text" 
+                  class="form-control border-0 bg-light p-2 text-plight" 
+                  placeholder="검색어를 입력하세요"
+                  v-model="keyword"
+                />
+                <span class="input-group-text bg-light border-0">
+                  <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="#666" d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5l-1.5 1.5l-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16A6.5 6.5 0 0 1 3 9.5A6.5 6.5 0 0 1 9.5 3"/>
+                  </svg>
+                </span>
+              </div>
             </div>
 
-            <!-- 정렬 / 페이지 / 내보내기 / 일괄 삭제 -->
-            <div class="ms-auto d-flex align-items-center gap-2">
+            <!-- 옵션들 -->
+            <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+
+              <!-- 정렬 기준 -->
               <select v-model="sortKey" class="form-select form-select-sm w-auto">
                 <option value="createdAt">작성일</option>
                 <option value="title">제목</option>
                 <option value="viewCount">조회수</option>
               </select>
+
+              <!-- 정렬 방향 -->
               <button
                 class="btn btn-light btn-sm"
                 @click="toggleSortDir"
@@ -59,27 +67,27 @@
                 <i v-else class="bi bi-sort-up"></i>
               </button>
 
+              <!-- 페이지 크기 -->
               <select v-model.number="pageSize" class="form-select form-select-sm w-auto">
                 <option :value="10">10개</option>
                 <option :value="20">20개</option>
                 <option :value="50">50개</option>
               </select>
 
-              <button class="btn btn-outline-secondary btn-sm" @click="exportCsv">
-                <i class="bi bi-download me-1"></i>CSV
-              </button>
-
+              <!-- 일괄 삭제 -->
               <button
                 v-if="isAdmin"
                 class="btn btn-outline-danger btn-sm"
                 :disabled="selectedIds.size===0"
                 @click="bulkDelete"
               >
-                <i class="bi bi-trash me-1"></i>일괄 삭제 ({{ selectedIds.size }})
+                <i class="bi bi-trash me-1"></i>삭제 ({{ selectedIds.size }})
               </button>
             </div>
+
           </div>
         </div>
+
 
         <!-- 로딩 스켈레톤 -->
         <div v-if="loading" class="card shadow-sm border-0 rounded-4">

@@ -3,7 +3,7 @@
     <!-- 상단 탭 -->
     <div class="d-flex justify-content-center mb-3" v-if="isAdmin">
       <div></div>
-      <button type="button" class="btn btn-success rounded-pill px-3 fw-semibold" @click="goToWrite">
+      <button type="button" class="btn btn-success rounded-pill px-3 text-bold" @click="goToWrite">
         + 게시물 추가
       </button>
     </div>
