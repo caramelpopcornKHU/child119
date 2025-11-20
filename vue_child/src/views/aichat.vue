@@ -42,7 +42,7 @@
       </div>
 
       <!-- ✅ 아이 정보 -->
-      <div v-if="isLoggedIn && selectedKid" class="p-3 bg-light">
+      <div v-if="isLoggedIn && selectedKid" class="p-3 bg-light text-medium">
         <p class="mb-2">🧒 선택된 아이: <b>{{ selectedKid.kid }}</b></p>
         <p class="mb-1">혈액형: {{ selectedKid.bloodType }}</p>
         <p class="mb-1">알레르기: {{ selectedKid.allergy || '없음' }}</p>
@@ -50,11 +50,11 @@
         <p class="mb-0">병력: {{ selectedKid.medicalHistory || '없음' }}</p>
       </div>
 
-      <div v-else-if="isLoggedIn && !selectedKid" class="p-3 bg-light">
+      <div v-else-if="isLoggedIn && !selectedKid" class="p-3 bg-light text-medium">
         <p class="mb-0">내 아이 정보를 불러오는 중...</p>
       </div>
 
-      <div v-else class="p-3 bg-light">
+      <div v-else class="p-3 bg-light text-medium">
         <p class="mb-0">로그인되어 있지 않습니다. 기본 AI 대화로 진행합니다.</p>
       </div>
 
@@ -67,7 +67,7 @@
         <div v-for="(msg, i) in messages" :key="i" class="mb-3">
           <!-- 사용자 메시지 -->
           <div v-if="msg.type === 'user'" class="text-end">
-            <span class="d-inline-block bg-primary text-white px-3 py-2 rounded-4">
+            <span class="d-inline-block bg-primary text-white text-plight px-3 py-2 rounded-4">
               {{ msg.text }}
             </span>
           </div>
@@ -75,7 +75,7 @@
           <!-- AI 메시지 -->
           <div v-else class="text-start">
             <span
-              class="d-inline-block bg-light text-dark px-3 py-2 rounded-4"
+              class="d-inline-block bg-light text-dark text-plight px-3 py-2 rounded-4"
               style="white-space: pre-line; word-break: keep-all;"
             >
               {{ msg.text }}
@@ -87,7 +87,7 @@
               <button
                 v-for="kid in kidList"
                 :key="kid.kid"
-                class="btn btn-outline-primary rounded-pill me-2 mb-2"
+                class="btn btn-outline-primary rounded-pill me-2 mb-2 text-medium"
                 @click="selectKid(kid)"
               >
                 🧒 {{ kid.kid }}

@@ -18,7 +18,7 @@
             <!-- 이름 -->
             <div class="mb-3">
               <label class="form-label text-medium">이름</label>
-              <input v-model.trim="form.name" type="text" class="form-control text-plight" placeholder="아이 이름을 입력해주세요" style="background-color: rgb(197, 197, 197)"
+              <input v-model.trim="form.name" type="text" class="form-control text-plight" placeholder="아이 이름을 입력해주세요"
                 required />
               <div class="invalid-feedback text-medium">이름을 입력해주세요.</div>
             </div>
