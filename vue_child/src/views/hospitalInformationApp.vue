@@ -10,26 +10,25 @@
     <!-- 상단 조회 버튼 :: start -->
     <div class="position-fixed start-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
       <div class="pe-auto">
-        <button type="button" class="btn btn-light border rounded-pill px-3 shadow-sm text-bold" data-bs-toggle="modal"
-          data-bs-target="#departmentModal">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path fill="currentColor"
-              d="M18 14h2v-3h3V9h-3V6h-2v3h-3v2h3zM10 4c0-.6.4-1 1-1h1V1h-1c-1.7 0-3 1.3-3 3v1H4v2h11V5h-5zm-1 8H7c0-1.1.9-2 2-2zm3.5 7c.83 0 1.5-.67 1.5-1.5S13.33 16 12.5 16s-1.5.67-1.5 1.5s.67 1.5 1.5 1.5M5 22h14c1.1 0 2-.9 2-2v-9H3v9c0 1.1.9 2 2 2" />
+        <button type="button" class="btn-light border rounded-pill px-2 ms-1 shadow-sm text-bold top-button"
+          data-bs-toggle="modal" data-bs-target="#departmentModal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+            <path fill="currentColor" d="m17 21l1.8 1.77c.5.5 1.2.1 1.2-.49V18l2.8-3.4A1 1 0 0 0 22 13h-7c-.8 0-1.3 1-.8 1.6L17 18zm-5-10h8V3a2 2 0 0 0-2-2H4c-1.1 0-2 .9-2 2v12a2 2 0 0 0 2 2h9.42L12 15zm0-6h6v4h-6zm-2 10H4v-4h6zm0-6H4V5h6z"/>
           </svg> 진료과
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="달빛어린이병원"
+        <button class="btn-light border rounded-pill px-2 ms-1 shadow-sm text-bold top-button" title="달빛어린이병원"
           @click="showMoonlight()">
           🌙 달빛어린이병원
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="소아과"
+        <button class="btn-light border rounded-pill px-2 ms-1 shadow-sm text-bold top-button" title="소아과"
           @click="showPediatric()">
           🧒 소아청소년과
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="약국"
+        <button class="btn-light border rounded-pill px-2 ms-1 shadow-sm text-bold top-button" title="약국"
           @click="showPharmacy()">
           <i class="bi bi-capsule"></i> 약국
         </button>
-        <button class="btn-light border rounded-pill px-3 shadow-sm text-bold top-button" title="AED"
+        <button class="btn-light border rounded-pill px-2 ms-1 shadow-sm text-bold top-button" title="AED"
           @click="showAED()">
           ⚡ AED
         </button>
@@ -62,20 +61,6 @@
 
     <!-- 내용 -->
     <div class="d-flex flex-column" style="height: 100%;">
-
-      <!-- 경로 결과 정보 (경로 탐색 후 표시) -->
-      <div v-if="isRouteMode" class="p-3 border-bottom bg-primary bg-gradient text-white flex-shrink-0">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h6 class="fw-bold mb-0 text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-              style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-              <path fill="currentColor"
-                d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
-            </svg>{{ selectedHospital?.properties?.hospital_name || '경로 안내' }}
-          </h6>
-          <button type="button" class="btn-close btn-close-white" @click="exitRouteMode" aria-label="닫기"></button>
-        </div>
-      </div>
       <!-- 상단 라인 -->
       <div class="d-flex align-items-center justify-content-between gap-2 mb-3 ms-2 me-2 flex-shrink-0">
         <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -100,24 +85,25 @@
 
         <!-- 오른쪽: 버튼 그룹 -->
         <div class="dropdown">
-          <button
-              class="btn dropdown-toggle w-100 d-flex align-items-center justify-content-between 
-                    bg-white border rounded-pill px-4 fw-bold"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-              style="height: 42px; font-size: 15px; padding-right: 18px !important;"
-            >
+          <button class="btn dropdown-toggle w-100 d-flex align-items-center justify-content-between 
+                    bg-white border rounded-pill px-4 fw-bold" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false" style="height: 42px; font-size: 15px; padding-right: 18px !important;">
 
             <div class="d-flex align-items-center gap-2">
               <!-- 현재 선택된 항목 표시 -->
               <template v-if="currentSort === 'time'">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                  <path fill="currentColor"
+                    d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z" />
+                </svg>
                 시간순
               </template>
 
               <template v-else>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 8.11c-.89 0-1.61-.72-1.61-1.61A1.61 1.61 0 0 1 6.5 4.89c.89 0 1.61.72 1.61 1.61A1.61 1.61 0 0 1 6.5 8.11M6.5 2C4 2 2 4 2 6.5c0 3.37 4.5 8.36 4.5 8.36S11 9.87 11 6.5C11 4 9 2 6.5 2m11 6.11a1.61 1.61 0 0 1-1.61-1.61a1.609 1.609 0 1 1 3.22 0a1.61 1.61 0 0 1-1.61 1.61m0-6.11C15 2 13 4 13 6.5c0 3.37 4.5 8.36 4.5 8.36S22 9.87 22 6.5C22 4 20 2 17.5 2m0 14c-1.27 0-2.4.8-2.82 2H9.32a3 3 0 0 0-3.82-1.83A3.003 3.003 0 0 0 3.66 20a3.017 3.017 0 0 0 3.84 1.83c.85-.3 1.5-.98 1.82-1.83h5.37c.55 1.56 2.27 2.38 3.81 1.83A3 3 0 0 0 20.35 18c-.43-1.2-1.57-2-2.85-2m0 4.5A1.5 1.5 0 0 1 16 19a1.5 1.5 0 0 1 1.5-1.5A1.5 1.5 0 0 1 19 19a1.5 1.5 0 0 1-1.5 1.5"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                  <path fill="currentColor"
+                    d="M6.5 8.11c-.89 0-1.61-.72-1.61-1.61A1.61 1.61 0 0 1 6.5 4.89c.89 0 1.61.72 1.61 1.61A1.61 1.61 0 0 1 6.5 8.11M6.5 2C4 2 2 4 2 6.5c0 3.37 4.5 8.36 4.5 8.36S11 9.87 11 6.5C11 4 9 2 6.5 2m11 6.11a1.61 1.61 0 0 1-1.61-1.61a1.609 1.609 0 1 1 3.22 0a1.61 1.61 0 0 1-1.61 1.61m0-6.11C15 2 13 4 13 6.5c0 3.37 4.5 8.36 4.5 8.36S22 9.87 22 6.5C22 4 20 2 17.5 2m0 14c-1.27 0-2.4.8-2.82 2H9.32a3 3 0 0 0-3.82-1.83A3.003 3.003 0 0 0 3.66 20a3.017 3.017 0 0 0 3.84 1.83c.85-.3 1.5-.98 1.82-1.83h5.37c.55 1.56 2.27 2.38 3.81 1.83A3 3 0 0 0 20.35 18c-.43-1.2-1.57-2-2.85-2m0 4.5A1.5 1.5 0 0 1 16 19a1.5 1.5 0 0 1 1.5-1.5A1.5 1.5 0 0 1 19 19a1.5 1.5 0 0 1-1.5 1.5" />
+                </svg>
                 거리순
               </template>
             </div>
@@ -125,27 +111,27 @@
 
           <!-- dropdown menu -->
           <ul class="dropdown-menu w-100 rounded-4 shadow-sm p-0 overflow-hidden" style="min-width: auto;">
-            
+
             <!-- 거리순이 아닐 때만 거리순 표시 -->
             <li v-if="currentSort !== 'distance'">
-              <button 
-                class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold"
-                style="font-size: 15px;"
-                @click="changeSort('distance')"
-              >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 8.11c-.89 0-1.61-.72-1.61-1.61A1.61 1.61 0 0 1 6.5 4.89c.89 0 1.61.72 1.61 1.61A1.61 1.61 0 0 1 6.5 8.11M6.5 2C4 2 2 4 2 6.5c0 3.37 4.5 8.36 4.5 8.36S11 9.87 11 6.5C11 4 9 2 6.5 2m11 6.11a1.61 1.61 0 0 1-1.61-1.61a1.609 1.609 0 1 1 3.22 0a1.61 1.61 0 0 1-1.61 1.61m0-6.11C15 2 13 4 13 6.5c0 3.37 4.5 8.36 4.5 8.36S22 9.87 22 6.5C22 4 20 2 17.5 2m0 14c-1.27 0-2.4.8-2.82 2H9.32a3 3 0 0 0-3.82-1.83A3.003 3.003 0 0 0 3.66 20a3.017 3.017 0 0 0 3.84 1.83c.85-.3 1.5-.98 1.82-1.83h5.37c.55 1.56 2.27 2.38 3.81 1.83A3 3 0 0 0 20.35 18c-.43-1.2-1.57-2-2.85-2m0 4.5A1.5 1.5 0 0 1 16 19a1.5 1.5 0 0 1 1.5-1.5A1.5 1.5 0 0 1 19 19a1.5 1.5 0 0 1-1.5 1.5"/></svg>
+              <button class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold" style="font-size: 15px;"
+                @click="changeSort('distance')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                  <path fill="currentColor"
+                    d="M6.5 8.11c-.89 0-1.61-.72-1.61-1.61A1.61 1.61 0 0 1 6.5 4.89c.89 0 1.61.72 1.61 1.61A1.61 1.61 0 0 1 6.5 8.11M6.5 2C4 2 2 4 2 6.5c0 3.37 4.5 8.36 4.5 8.36S11 9.87 11 6.5C11 4 9 2 6.5 2m11 6.11a1.61 1.61 0 0 1-1.61-1.61a1.609 1.609 0 1 1 3.22 0a1.61 1.61 0 0 1-1.61 1.61m0-6.11C15 2 13 4 13 6.5c0 3.37 4.5 8.36 4.5 8.36S22 9.87 22 6.5C22 4 20 2 17.5 2m0 14c-1.27 0-2.4.8-2.82 2H9.32a3 3 0 0 0-3.82-1.83A3.003 3.003 0 0 0 3.66 20a3.017 3.017 0 0 0 3.84 1.83c.85-.3 1.5-.98 1.82-1.83h5.37c.55 1.56 2.27 2.38 3.81 1.83A3 3 0 0 0 20.35 18c-.43-1.2-1.57-2-2.85-2m0 4.5A1.5 1.5 0 0 1 16 19a1.5 1.5 0 0 1 1.5-1.5A1.5 1.5 0 0 1 19 19a1.5 1.5 0 0 1-1.5 1.5" />
+                </svg>
                 거리순
               </button>
             </li>
 
             <!-- 시간순이 아닐 때만 시간순 표시 -->
             <li v-if="currentSort !== 'time'">
-              <button 
-                class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold"
-                style="font-size: 15px;"
-                @click="changeSort('time')"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z"/></svg>
+              <button class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold" style="font-size: 15px;"
+                @click="changeSort('time')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                  <path fill="currentColor"
+                    d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z" />
+                </svg>
                 시간순
               </button>
             </li>
@@ -169,8 +155,9 @@
             </div>
 
             <div v-if="hospital.dept_name" class="mb-2">
-              <span v-for="(dept, index) in (hospital.dept_name ? hospital.dept_name.split(',').map(d => d.trim()) : [])" :key="index"
-                class="badge rounded-pill me-1 mb-1"
+              <span
+                v-for="(dept, index) in (hospital.dept_name ? hospital.dept_name.split(',').map(d => d.trim()) : [])"
+                :key="index" class="badge rounded-pill me-1 mb-1"
                 :class="[getDepartmentColor(dept).bg, getDepartmentColor(dept).text]"
                 :style="getDepartmentColor(dept).style || ''">
                 {{ dept }}
@@ -188,8 +175,9 @@
                 style="pointer-events: auto; z-index: 10;">
                 <i class="bi bi-telephone-fill"></i> 전화
               </button>
-              <button class="btn btn-primary w-100" v-if="hospital.lat && hospital.lon && hospital.addr && hospital.name" 
-                      @click.stop="requestNavi(hospital.lon, hospital.lat, hospital.name, hospital.addr, hospital.id)">
+              <button class="btn btn-primary w-100"
+                v-if="hospital.lat && hospital.lon && hospital.addr && hospital.name"
+                @click.stop="requestNavi(hospital.lon, hospital.lat, hospital.name, hospital.addr, hospital.id)">
                 <i class="bi bi-sign-turn-right-fill"></i> 길찾기
               </button>
             </div>
@@ -249,90 +237,6 @@
               <path fill="currentColor"
                 d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5l-1.5 1.5l-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16A6.5 6.5 0 0 1 3 9.5A6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14S14 12 14 9.5S12 5 9.5 5" />
             </svg> 검색
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="modal fade" id="routeModal" tabindex="-1" aria-labelledby="routeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title" id="routeModalLabel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-              style="display: inline-block; vertical-align: middle; margin-right: 8px;">
-              <path fill="currentColor"
-                d="M17.5 4C15 4 13 6 13 8.5c0 2.89 4.5 9.5 4.5 9.5S22 11.39 22 8.5C22 6 20 4 17.5 4m0 7c-1.1 0-2-.9-2-2s.9-2 2-2s2 .9 2 2s-.9 2-2 2M3 9c-1.11 0-2 .89-2 2v7c0 1.11.89 2 2 2h1v1a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-1h5v-2H3zm7 3H3v-2h7z" />
-            </svg>경로 안내
-          </h5>
-          <button type="button" class="btn-close btn-close-white" @click="closeRouteModal" aria-label="닫기"></button>
-        </div>
-
-        <div class="modal-body">
-          <div v-if="selectedHospital" class="alert alert-light border mb-3">
-            <div class="fw-bold text-dark mb-1">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                <path fill="currentColor"
-                  d="M2 22V11h7V6h6v11h7v5H2M8 8V6h2v2H8m0 2v2h2v-2H8m6-4v2h2V6h-2m0 4v2h2v-2h-2m0 4v2h2v-2h-2" />
-              </svg>{{ selectedHospital.properties.hospital_name }}
-            </div>
-            <small class="text-muted">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                <path fill="currentColor"
-                  d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
-              </svg>{{ selectedHospital.distanceKm }}km
-            </small>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-bold">이동 수단 선택</label>
-            <div class="btn-group w-100" role="group">
-              <input type="radio" class="btn-check" name="transportType" id="transport-car" value="car"
-                v-model="transportType" checked>
-              <label class="btn btn-outline-primary" for="transport-car">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                  style="display: block; margin: 0 auto 4px;">
-                  <path fill="currentColor"
-                    d="M5 11l1.5-4.5h11L19 11m-1.5 5a1.5 1.5 0 0 1-1.5-1.5a1.5 1.5 0 0 1 1.5-1.5a1.5 1.5 0 0 1 1.5 1.5a1.5 1.5 0 0 1-1.5 1.5m-11 0A1.5 1.5 0 0 1 5 14.5A1.5 1.5 0 0 1 6.5 13A1.5 1.5 0 0 1 8 14.5A1.5 1.5 0 0 1 6.5 16M18.92 6c-.2-.58-.76-1-1.42-1h-11c-.66 0-1.21.42-1.42 1L3 12v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8z" />
-                </svg>
-                <small>자동차</small>
-              </label>
-
-              <input type="radio" class="btn-check" name="transportType" id="transport-walk" value="walk"
-                v-model="transportType">
-              <label class="btn btn-outline-primary" for="transport-walk">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                  style="display: block; margin: 0 auto 4px;">
-                  <path fill="currentColor"
-                    d="M14.12 10H19V8.2h-3.62l-2.94-3.12C12.08 4.71 11.63 4.5 11.15 4.5c-.22 0-.42.03-.62.09l-3.94 1.88c-.46.22-.79.66-.79 1.17v4.18c0 .53.71 1.04 1.27 1.04c.55 0 1-.45 1-1V8.91l1.83-.88l-1.62 7.88l-2.98-.83c-.41-.11-.82-.07-1.18.11L2 16.25c-.48.23-.78.72-.78 1.25c0 .75.61 1.36 1.36 1.36c.21 0 .41-.05.59-.13L5.1 17.5l3.08.86c.5.14 1 .04 1.42-.25l2.12-1.51l.69 3.4c.1.5.55.86 1.05.86c.07 0 .13-.01.19-.02c.57-.12.94-.67.82-1.24l-.89-4.38zM13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2s-2 .9-2 2s.9 2 2 2" />
-                </svg>
-                <small>도보</small>
-              </label>
-
-              <input type="radio" class="btn-check" name="transportType" id="transport-transit" value="transit"
-                v-model="transportType">
-              <label class="btn btn-outline-primary" for="transport-transit">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                  style="display: block; margin: 0 auto 4px;">
-                  <path fill="currentColor"
-                    d="M18 11H6V6h12m-1.5 11a1.5 1.5 0 0 1-1.5-1.5a1.5 1.5 0 0 1 1.5-1.5a1.5 1.5 0 0 1 1.5 1.5a1.5 1.5 0 0 1-1.5 1.5m-9 0A1.5 1.5 0 0 1 6 15.5A1.5 1.5 0 0 1 7.5 14A1.5 1.5 0 0 1 9 15.5A1.5 1.5 0 0 1 7.5 17M12 2c-4 0-8 .5-8 4v10c0 1.5 1.5 3 3 3l-1 1v1h2l2-2h4l2 2h2v-1l-1-1c1.5 0 3-1.5 3-3V6c0-3.5-4-4-8-4" />
-                </svg>
-                <small>대중교통</small>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" @click="closeRouteModal">취소</button>
-          <button type="button" class="btn btn-primary" @click="findRoute">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-              style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-              <path fill="currentColor"
-                d="M14.19 14.19c-1.14.59-3.11.51-4.24-.62c-1.14-1.13-1.21-3.1-.62-4.24l-2.86-2.86a10 10 0 0 0-2.81 6.98c0 6.2 6.19 10.18 6.19 10.18s6.19-3.98 6.19-10.18c0-1.2-.23-2.34-.66-3.41zM12 12a2 2 0 0 1-2-2a2 2 0 0 1 2-2a2 2 0 0 1 2 2a2 2 0 0 1-2 2m-3.41-7.83l1.42 1.41L8.59 7L7.17 5.59zM12 4V1l-4 4l4 4V6a4 4 0 0 1 4 4c0 .85-.25 1.64-.68 2.3l1.46 1.46A6 6 0 0 0 18 10a6 6 0 0 0-6-6" />
-            </svg>경로 탐색
           </button>
         </div>
       </div>
@@ -445,6 +349,18 @@ const sheetStyle = computed(() => ({
   bottom: `0px`,
   top: 'auto'
 }))
+
+let searchTimer = null;
+const debounceSearch = () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    // searchAttempted.value는 초기화 후 첫 검색(showMoonlight()) 시 true로 설정되어야 합니다.
+    // 현재 코드에서는 showLayerInView 호출 시 searchAttempted가 true로 변경된다고 가정합니다.
+    if (vmap && searchAttempted.value) {
+      reSearchCurrentLayer();
+    }
+  }, 500); // 0.5초 대기 후 실행
+};
 
 const currentSort = ref("time");
 
@@ -560,6 +476,7 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
     alert("지도가 아직 준비되지 않았습니다.")
     return
   }
+  searchAttempted.value = true
 
   try {
     currentListType.value = listType
@@ -581,14 +498,14 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
 
     const filtered = selectedDepartments.value.length
       ? geojson.features.filter(f => {
-          const depts = (f.properties?.dgid_id_name || '').split(',').map(d => d.trim())
-          return selectedDepartments.value.some(sel =>
-            depts.some(dept => dept.includes(sel))
-          )
-        })
+        const depts = (f.properties?.dgid_id_name || '').split(',').map(d => d.trim())
+        return selectedDepartments.value.some(sel =>
+          depts.some(dept => dept.includes(sel))
+        )
+      })
       : geojson.features
 
-   // OPEN 병원 먼저 정렬
+    // OPEN 병원 먼저 정렬
     filtered.sort((a, b) => {
       const openA = isHospitalOpen(a.properties) ? 1 : 0
       const openB = isHospitalOpen(b.properties) ? 1 : 0
@@ -672,6 +589,35 @@ async function showAED() {
     listType: "AED"
   })
 }
+
+function reSearchCurrentLayer() {
+  switch (currentListType.value) {
+    case '달빛어린이병원':
+      showMoonlight();
+      break;
+    case '소아청소년과':
+      showPediatric();
+      break;
+    case '약국':
+      showPharmacy();
+      break;
+    case 'AED':
+      showAED();
+      break;
+    // 초기 상태나 다른 검색 유형이 있다면 여기에 추가
+    default:
+      console.log(`현재 검색 유형(${currentListType.value})에 대한 재조회 로직이 없습니다.`);
+      break;
+  }
+}
+
+watch(selectedDepartments, (newVal, oldVal) => {
+  // 배열 내용이 변경되었을 때만 재조회
+  if (newVal.length !== oldVal.length || newVal.some((v, i) => v !== oldVal[i])) {
+    // 진료과목 선택/해제 후 자동으로 현재 활성화된 레이어를 다시 검색
+    reSearchCurrentLayer();
+  }
+}, { deep: true }); // 배열의 내부 변화를 감지하기 위해 deep: true 설정
 
 // API 응답을 hospitals 배열로 통일시켜주는 함수
 function addToHospitalList(list, type) {
@@ -981,6 +927,37 @@ const toggleSheet = () => {
 }
 
 // onMounted - 초기실행
+// onMounted(async () => {
+//   await new Promise((resolve) => {
+//     const checkVworld = setInterval(() => {
+//       if (window.vw && window.vw.ol3 && window.ol) {
+//         clearInterval(checkVworld)
+//         resolve()
+//       }
+//     }, 100)
+//   })
+
+//   try {
+//     // 1️⃣ 지도 초기화
+//     const defaultCenter = window.ol.proj.transform([126.978, 37.5665], 'EPSG:4326', 'EPSG:3857')
+//     vmap = initVworldMap({
+//       containerId: 'map_div',
+//       defaultCenter,
+//       defaultZoom: 15,
+//       autoFetch: false
+//     })
+//     clearMarkers()
+//     if (!vmap) throw new Error('vmap 초기화 실패')
+
+//     showMoonlight()
+
+//     // 2️⃣ 현재 위치 표시
+//     await updateUserLocation(16)
+//   } catch (err) {
+//     console.error('초기화 실패:', err)
+//   }
+
+// })
 onMounted(async () => {
   await new Promise((resolve) => {
     const checkVworld = setInterval(() => {
@@ -1003,14 +980,25 @@ onMounted(async () => {
     clearMarkers()
     if (!vmap) throw new Error('vmap 초기화 실패')
 
+    // 🔔 초기 검색: 지도 초기화 후 바로 실행
+    // 이 시점에서 searchAttempted.value = true로 변경되어야 합니다.
     showMoonlight()
 
-    // 2️⃣ 현재 위치 표시
+    // 2️⃣ 현재 위치 표시 및 지도 중앙 이동
     await updateUserLocation(16)
+
+    // 3️⃣ 지도 이벤트 리스너 추가 (vmap 초기화 및 중앙 이동 완료 후)
+    if (vmap) {
+      const view = vmap.getView();
+      // 지도 이동 및 줌 변경 이벤트 감지
+      view.on('change:center', debounceSearch);
+      view.on('change:resolution', debounceSearch);
+      console.log("✅ 지도 이동/줌 이벤트 리스너 추가 완료");
+    }
+
   } catch (err) {
     console.error('초기화 실패:', err)
   }
-  
 })
 
 onBeforeUnmount(() => {
@@ -1098,5 +1086,4 @@ onBeforeUnmount(() => {
 .dropdown-toggle::after {
   margin-left: 8px !important;
 }
-
 </style>
