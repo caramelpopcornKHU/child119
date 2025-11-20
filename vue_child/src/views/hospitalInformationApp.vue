@@ -266,6 +266,7 @@ const KATEC = 'KATEC';
 let vmap = null;
 let labelOverlays = []
 const currentListType = ref("병원")
+let moonlightZoomSet = false;
 
 /* 진료과 필터 상태 */
 const departmentOptions = [
@@ -513,8 +514,6 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
       return openB - openA  // open=true 먼저
     })
 
-    vmap.getView().setZoom(15)
-
     // 병원별 마커 & 라벨 추가
     filtered.forEach(f => {
       const [lon, lat] = f.geometry.coordinates
@@ -590,7 +589,10 @@ async function showLayerInMoonView({ url, iconUrl, nameKey, addrKey, listType })
       return openB - openA  // open=true 먼저
     })
     
-    vmap.getView().setZoom(14)
+    if (!moonlightZoomSet) {
+      vmap.getView().setZoom(14)
+      moonlightZoomSet = true
+    }
 
     // 병원별 마커 & 라벨 추가
     filtered.forEach(f => {
