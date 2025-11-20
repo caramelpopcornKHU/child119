@@ -1,11 +1,11 @@
 <template>
-  <div class="bg-body-tertiary">
+  <div>
     <!-- 본문 래퍼: 헤더/푸터 높이만큼 패딩 확보 -->
-    <main class="mx-auto px-3" style="max-width:100vw; padding-top:30px; ">
+    <main class="container-fluid py-4 px-0">
       <!-- 스크롤 영역: 헤더/푸터 제외 높이 계산 -->
       <div class="overflow-auto" :style="scrollBoxStyle" style="padding-bottom:84px;">
         <!-- 타이틀 -->
-        <h5 class="text-bold mb-3">내 아이</h5>
+        <h5 class="text-bold mb-3" style="padding-left: 0; padding-right: 0;">내 아이</h5>
 
         <!-- 로딩 중 -->
         <div v-if="loading" class="text-center py-5">
@@ -23,7 +23,7 @@
         </div>
 
         <!-- 아이 카드(아코디언 형태) -->
-        <div v-else class="card shadow-sm mb-3" v-for="(kid, i) in kids" :key="kid.id">
+        <div v-else class="card shadow-sm mb-3" style="margin-left: 0; margin-right: 0; border-radius: 0;" v-for="(kid, i) in kids" :key="kid.id">
           <div class="card-body p-3">
             <!-- 상단 요약행 -->
             <div class="d-flex align-items-center">

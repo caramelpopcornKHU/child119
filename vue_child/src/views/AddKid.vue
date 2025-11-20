@@ -1,6 +1,6 @@
 <template>
-  <main class="bg-body-tertiary min-vh-100">
-    <div class="container-fluid py-4 px-3">
+  <main class="min-vh-100">
+    <div class="container-fluid py-4 px-0">
       <!-- 상단 헤더 -->
       <div class="d-flex align-items-center mb-3">
         <button class="btn btn-link p-0 me-2 text-dark" @click="goBack">
@@ -12,7 +12,7 @@
       </div>
 
       <!-- 본문 래퍼 -->
-      <div class="card border-0 shadow-sm">
+      <div class="card border-0">
         <div class="card-body">
           <form class="needs-validation" novalidate @submit.prevent="onSubmit" :class="{ 'was-validated': tried }">
             <!-- 이름 -->
@@ -116,7 +116,6 @@
     </div>
   </main>
 </template>
-
 <script setup>
 import { reactive, ref, computed } from "vue"
 import { useRouter } from 'vue-router'
