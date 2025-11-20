@@ -2,18 +2,14 @@
   <main class="bg-body-tertiary min-vh-100">
     <div class="container-fluid py-4 px-3">
       <!-- 상단 헤더 -->
-       <div class="d-flex align-items-center mb-3">
+      <div class="d-flex align-items-center mb-3">
         <button class="btn btn-link p-0 me-2 text-dark" @click="goBack">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-            <path fill="#000" d="M20 11v2H8l5.5 5.5l-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5L8 11z"/>
+            <path fill="#000" d="M20 11v2H8l5.5 5.5l-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5L8 11z" />
           </svg>
         </button>
-        <img
-          :src="getKidImage(form.gender)"
-          alt="avatar"
-          class="rounded-circle me-2"
-          style="width:36px;height:36px;object-fit:cover;"
-        />
+        <img :src="getKidImage(form.gender)" alt="avatar" class="rounded-circle me-2"
+          style="width:36px;height:36px;object-fit:cover;" />
         <h5 class="mb-0 text-bold">아이 정보 수정</h5>
       </div>
 
@@ -26,12 +22,31 @@
               <label class="form-label text-medium">이름</label>
               <input v-model.trim="form.name" type="text" class="form-control text-plight" placeholder="김서아" />
             </div>
-
-            <!-- 출생년도 -->
+            <!-- 생년월일 -->
             <div class="mb-3">
-              <label class="form-label text-medium">출생년도</label>
-              <input v-model.number="form.birthYear" type="number" class="form-control  text-plight" placeholder="2022" />
+              <label class="form-label text-medium">생년월일</label>
+              <div class="row g-2">
+                <div class="col-4">
+                  <select v-model.number="form.birthYear" class="form-select text-plight" required>
+                    <option value="">년도</option>
+                    <option v-for="year in years" :key="year" :value="year">{{ year }}년</option>
+                  </select>
+                </div>
+                <div class="col-4">
+                  <select v-model.number="form.birthMonth" class="form-select text-plight" required>
+                    <option value="">월</option>
+                    <option v-for="month in 12" :key="month" :value="month">{{ month }}월</option>
+                  </select>
+                </div>
+                <div class="col-4">
+                  <select v-model.number="form.birthDay" class="form-select text-plight" required>
+                    <option value="">일</option>
+                    <option v-for="day in 31" :key="day" :value="day">{{ day }}일</option>
+                  </select>
+                </div>
+              </div>
             </div>
+
 
             <!-- 혈액형 -->
             <div class="mb-3">
@@ -42,7 +57,8 @@
             <!-- 복용 중인 약 (멀티라인) -->
             <div class="mb-3">
               <label class="form-label text-medium">복용 중인 약</label>
-              <textarea v-model.trim="form.meds" class="form-control text-plight" rows="2" placeholder="OOO 알러지약 아침마다 복용"></textarea>
+              <textarea v-model.trim="form.meds" class="form-control text-plight" rows="2"
+                placeholder="OOO 알러지약 아침마다 복용"></textarea>
             </div>
 
             <!-- 키(cm) -->
@@ -60,13 +76,15 @@
             <!-- 기저질환 및 병력 -->
             <div class="mb-3">
               <label class="form-label text-medium">기저질환 및 병력</label>
-              <textarea v-model.trim="form.history" class="form-control  text-plight" rows="2" placeholder="12개월 때 열성 경련 경험 있음"></textarea>
+              <textarea v-model.trim="form.history" class="form-control  text-plight" rows="2"
+                placeholder="12개월 때 열성 경련 경험 있음"></textarea>
             </div>
 
             <!-- 알레르기 -->
             <div class="mb-3">
               <label class="form-label text-medium">알레르기</label>
-              <input v-model.trim="form.allergy" type="text" class="form-control  text-plight" placeholder="땅콩, 감귤류 알레르기" />
+              <input v-model.trim="form.allergy" type="text" class="form-control  text-plight"
+                placeholder="땅콩, 감귤류 알레르기" />
             </div>
 
             <!-- 성별 -->
@@ -94,7 +112,8 @@
             </button>
 
             <!-- 삭제 버튼 (빨간색) -->
-            <button v-if="!loading" class="btn btn-outline-danger w-100 text-medium mb-5" type="button" @click="deleteKid">
+            <button v-if="!loading" class="btn btn-outline-danger w-100 text-medium mb-5" type="button"
+              @click="deleteKid">
               <i class="bi bi-trash me-1"></i> 삭제하기
             </button>
           </form>
@@ -119,6 +138,8 @@ const kidId = route.params.id
 const form = reactive({
   name: '',
   birthYear: '',
+  birthMonth: '',  // 추가
+  birthDay: '',    // 추가
   blood: '',
   meds: '',
   height: '',
@@ -130,12 +151,16 @@ const form = reactive({
 
 const loading = ref(true)
 const saving = ref(false)
+const currentYear = new Date().getFullYear()
+const years = Array.from({ length: 100 }, (_, i) => currentYear - i)
 
 onMounted(async () => {
   try {
     const kidData = await getKid(kidId)
     form.name = kidData.kid || ''  // kid 필드 사용
     form.birthYear = kidData.birthYear || ''
+    form.birthMonth = kidData.birthMonth || ''  // 추가
+    form.birthDay = kidData.birthDay || ''      // 추가
     form.blood = kidData.bloodType || ''  // bloodType 필드 사용
     form.meds = kidData.medication || ''  // medication 필드 사용
     form.height = kidData.heightCm || ''  // heightCm 필드 사용
@@ -157,7 +182,7 @@ const getKidImage = (gender) => {
   return kidDefaultImg
 }
 async function save() {
-  if (!form.name || !form.birthYear || !form.blood || !form.gender) {
+  if (!form.name || !form.birthYear || !form.birthMonth || !form.birthDay || !form.blood || !form.gender) {
     alert('필수 항목을 입력해주세요.')
     return
   }

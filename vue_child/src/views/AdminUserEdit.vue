@@ -19,22 +19,12 @@
 
             <div class="mb-3">
               <label class="form-label">이메일 (읽기 전용)</label>
-              <input
-                type="email"
-                class="form-control"
-                v-model="user.email"
-                disabled
-              />
+              <input type="email" class="form-control" v-model="user.email" disabled />
             </div>
 
             <div class="mb-3">
               <label class="form-label">이름</label>
-              <input
-                type="text"
-                class="form-control"
-                v-model="user.username"
-                placeholder="사용자 이름"
-              />
+              <input type="text" class="form-control" v-model="user.username" placeholder="사용자 이름" />
             </div>
           </div>
         </div>
@@ -44,11 +34,7 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h5 class="fw-semibold mb-0">자녀 정보</h5>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-secondary rounded-pill"
-                @click="addKid"
-              >
+              <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" @click="addKid">
                 + 자녀 추가
               </button>
             </div>
@@ -57,48 +43,44 @@
               등록된 자녀 정보가 없습니다.
             </div>
 
-            <div
-              v-for="(k, idx) in kids"
-              :key="k.id || idx"
-              class="border rounded-3 p-2 mb-2"
-            >
+            <div v-for="(k, idx) in kids" :key="k.id || idx" class="border rounded-3 p-2 mb-2">
               <div class="mb-2">
                 <label class="form-label small mb-1">이름</label>
-                <input
-                  type="text"
-                  class="form-control form-control-sm"
-                  v-model="k.name"
-                  placeholder="자녀 이름"
-                />
+                <input type="text" class="form-control form-control-sm" v-model="k.name" placeholder="자녀 이름" />
               </div>
 
               <div class="row g-2">
-                <div class="col-6">
-                  <label class="form-label small mb-1">출생년도</label>
-                  <input
-                    type="number"
-                    class="form-control form-control-sm"
-                    v-model.number="k.birthYear"
-                    placeholder="예: 2019"
-                    min="1900"
-                    max="2100"
-                  />
+                <div class="col-12">
+                  <label class="form-label small mb-1">생년월일</label>
+                  <div class="row g-2">
+                    <div class="col-4">
+                      <select class="form-select form-select-sm" v-model.number="k.birthYear" required>
+                        <option value="">년도</option>
+                        <option v-for="year in years" :key="year" :value="year">{{ year }}년</option>
+                      </select>
+                    </div>
+                    <div class="col-4">
+                      <select class="form-select form-select-sm" v-model.number="k.birthMonth" required>
+                        <option value="">월</option>
+                        <option v-for="month in 12" :key="month" :value="month">{{ month }}월</option>
+                      </select>
+                    </div>
+                    <div class="col-4">
+                      <select class="form-select form-select-sm" v-model.number="k.birthDay" required>
+                        <option value="">일</option>
+                        <option v-for="day in 31" :key="day" :value="day">{{ day }}일</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                <div class="col-6">
+                <div class="col-12 mt-2">
                   <label class="form-label small mb-1">나이 (자동)</label>
-                  <input
-                    type="text"
-                    class="form-control form-control-sm"
-                    :value="formatAge(k.birthYear)"
-                    disabled
-                  />
+                  <input type="text" class="form-control form-control-sm"
+                    :value="formatAge(k.birthYear, k.birthMonth, k.birthDay)" disabled />
                 </div>
                 <div class="col-6">
                   <label class="form-label small mb-1">성별</label>
-                  <select
-                    class="form-select form-select-sm"
-                    v-model="k.gender"
-                  >
+                  <select class="form-select form-select-sm" v-model="k.gender">
                     <option value="">선택</option>
                     <option value="남">남</option>
                     <option value="여">여</option>
@@ -107,11 +89,7 @@
               </div>
 
               <div class="mt-2 text-end">
-                <button
-                  type="button"
-                  class="btn btn-outline-danger btn-sm rounded-pill"
-                  @click="removeKid(idx, k)"
-                >
+                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" @click="removeKid(idx, k)">
                   삭제
                 </button>
               </div>
@@ -121,19 +99,10 @@
 
         <!-- 하단 버튼 -->
         <div class="d-flex gap-2 mt-3">
-          <button
-            type="button"
-            class="btn btn-outline-secondary flex-fill rounded-pill"
-            @click="goBack"
-          >
+          <button type="button" class="btn btn-outline-secondary flex-fill rounded-pill" @click="goBack">
             취소
           </button>
-          <button
-            type="button"
-            class="btn btn-primary flex-fill rounded-pill"
-            :disabled="saving"
-            @click="saveAll"
-          >
+          <button type="button" class="btn btn-primary flex-fill rounded-pill" :disabled="saving" @click="saveAll">
             {{ saving ? '저장 중...' : '저장하기' }}
           </button>
         </div>
@@ -166,6 +135,9 @@ const uid = route.params.uid
 const user = ref(null)
 const kids = ref([])
 const saving = ref(false)
+// 추가
+const currentYear = new Date().getFullYear()
+const years = Array.from({ length: 100 }, (_, i) => currentYear - i)
 
 const goBack = () => {
   router.back()
@@ -204,6 +176,8 @@ async function loadKids() {
       id: d.id,
       name: data.kid || '',
       birthYear: data.birthYear ?? null,
+      birthMonth: data.birthMonth ?? null,  // 추가
+      birthDay: data.birthDay ?? null,      // 추가
       gender: data.gender || '',
       heightCm: data.heightCm ?? null,
       weightKg: data.weightKg ?? null,
@@ -230,6 +204,8 @@ function addKid() {
     id: null,
     name: '',
     birthYear: null,
+    birthMonth: null,  // 추가
+    birthDay: null,    // 추가
     gender: '',
     heightCm: null,
     weightKg: null,
@@ -267,6 +243,8 @@ async function saveAll() {
         parentUid: uid,
         kid: k.name,
         birthYear: k.birthYear,
+        birthMonth: k.birthMonth,  // 추가
+        birthDay: k.birthDay,      // 추가
         gender: k.gender,
         heightCm: k.heightCm,
         weightKg: k.weightKg,
@@ -308,7 +286,8 @@ async function saveAll() {
 <style scoped>
 /* 다른 관리자 페이지와 폭/위치 맞추는 메인 영역 */
 .admin-main {
-  margin-left: 240px;   /* 사이드바 너비와 동일 */
+  margin-left: 240px;
+  /* 사이드바 너비와 동일 */
   padding-top: 1.5rem;
   padding-bottom: 2.5rem;
   padding-left: 0;

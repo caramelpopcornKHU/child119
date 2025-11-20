@@ -22,20 +22,40 @@
                 required />
               <div class="invalid-feedback text-medium">이름을 입력해주세요.</div>
             </div>
-
-            <!-- 출생년도 -->
+            <!-- 생년월일 -->
             <div class="mb-3">
-              <label class="form-label text-medium">출생년도</label>
-              <input v-model.number="form.birthYear" type="number" class="form-control text-plight" placeholder="아이의 출생년도를 입력해주세요"
-                min="2000" max="2099" required />
-              <div class="invalid-feedback text-medium">출생년도를 올바르게 입력해주세요.</div>
+              <label class="form-label text-medium">생년월일</label>
+              <div class="row g-2">
+                <div class="col-4">
+                  <select v-model.number="form.birthYear" class="form-select text-plight" required>
+                    <option value="">년도</option>
+                    <option v-for="year in years" :key="year" :value="year">{{ year }}년</option>
+                  </select>
+                </div>
+                <div class="col-4">
+                  <select v-model.number="form.birthMonth" class="form-select text-plight" required>
+                    <option value="">월</option>
+                    <option v-for="month in 12" :key="month" :value="month">{{ month }}월</option>
+                  </select>
+                </div>
+                <div class="col-4">
+                  <select v-model.number="form.birthDay" class="form-select text-plight" required>
+                    <option value="">일</option>
+                    <option v-for="day in 31" :key="day" :value="day">{{ day }}일</option>
+                  </select>
+                </div>
+              </div>
+              <div class="invalid-feedback text-medium"
+                v-if="tried && (!form.birthYear || !form.birthMonth || !form.birthDay)">생년월일을 모두 선택해주세요.</div>
             </div>
+
+
 
             <!-- 혈액형 -->
             <div class="mb-3">
               <label class="form-label text-medium">혈액형</label>
-              <input v-model.trim="form.blood" type="text" class="form-control text-plight" placeholder="아이의 혈액형을 입력해주세요"
-                required />
+              <input v-model.trim="form.blood" type="text" class="form-control text-plight"
+                placeholder="아이의 혈액형을 입력해주세요" required />
               <div class="invalid-feedback text-medium">혈액형을 입력해주세요.</div>
             </div>
 
@@ -49,13 +69,13 @@
             <!-- 키/몸무게 -->
             <div class="mb-3">
               <label class="form-label text-medium">키(cm)</label>
-              <input v-model.number="form.height" type="number" class="form-control text-plight" placeholder="아이의 키를 입력해주세요"
-                min="0" />
+              <input v-model.number="form.height" type="number" class="form-control text-plight"
+                placeholder="아이의 키를 입력해주세요" min="0" />
             </div>
             <div class="mb-3">
               <label class="form-label text-medium">몸무게(kg)</label>
-              <input v-model.number="form.weight" type="number" class="form-control text-plight" placeholder="아이의 몸무게를 입력해주세요"
-                min="0" />
+              <input v-model.number="form.weight" type="number" class="form-control text-plight"
+                placeholder="아이의 몸무게를 입력해주세요" min="0" />
             </div>
 
             <!-- 기저질환 및 병력 -->
@@ -110,6 +130,8 @@ const router = useRouter()
 const form = reactive({
   name: "",
   birthYear: null,
+  birthMonth: null,  // 추가 파이어베이스에 알맞은 필드
+  birthDay: null,    // 추가 파이어베이스에 알맞은 필드 
   blood: "",
   meds: "",
   height: null,
@@ -121,7 +143,8 @@ const form = reactive({
 
 const tried = ref(false)
 const isLoading = ref(false)
-
+const currentYear = new Date().getFullYear() //추가
+const years = Array.from({ length: 100 }, (_, i) => currentYear - i)
 
 const getKidImage = (gender) => {
   if (gender === 'M') return kidboyImg
@@ -136,6 +159,8 @@ const scrollBoxStyle = computed(() => ({
 const canSubmit = computed(() =>
   form.name &&
   form.birthYear &&
+  form.birthMonth &&  // 추가 파이어베이스 월 필드 추가
+  form.birthDay &&    // 추가 파이어베이스 일 필드 추가
   form.blood &&
   !!form.gender
 )
