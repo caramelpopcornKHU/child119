@@ -360,7 +360,7 @@ export default {
 
 .btn {
   font-family: 'Pretendard' !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
 }
 .btn-primary {
   background-color: #0D6EFD;

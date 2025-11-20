@@ -132,12 +132,17 @@
               </span>
             </div>
 
-            <!-- ✅ 병원 데이터의 message 필드를 이용해 소아가능 / 불가능 자동 표시 -->
-            <div class="mb-2" v-if="h.message">
-              <span class="badge me-1" :class="h.message.includes('가능')
-                ? 'bg-success-subtle text-success-emphasis'
-                : 'bg-secondary-subtle text-secondary-emphasis'">
-                {{ h.message }}
+          <!-- 소아 가능/불가능 메시지 표시 (콤마 기준으로 여러 개 뱃지) -->
+            <div class="mb-2" v-if="h.messageLines?.length">
+              <span
+                v-for="(msg, idx) in h.messageLines"
+                :key="idx"
+                class="badge me-1 hospital-message-chip"
+                :class="msg.includes('가능')
+                  ? 'bg-success-subtle text-success-emphasis'
+                  : 'bg-secondary-subtle text-secondary-emphasis'"
+              >
+                {{ msg }}
               </span>
             </div>
 
@@ -175,7 +180,9 @@
               </button>
               <button class="btn btn-primary w-100" v-if="h.lat && h.lon && h.addr && h.name && h.id"
                 @click.stop="requestNavi(h.lon, h.lat, h.name, h.addr, h.id)">
-                <i class="bi bi-sign-turn-right-fill"></i> 길찾기
+               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                <path fill="#fff" d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7"/>
+              </svg> 길찾기
               </button>
             </div>
           </div>
@@ -196,54 +203,14 @@
   </div>
 
   <!-- 증상 선택 모달 -->
-  <div class="modal fade" id="symptomModal" tabindex="-1" aria-labelledby="symptomModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header">
-          <h5 class="modal-title" id="symptomModalLabel">
-            <i class="bi bi-clipboard2-pulse me-1"></i> 증상 확인
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
-        </div>
 
-        <div class="modal-body">
-          <div class="alert alert-light border py-2 px-3 mb-3">
-            <div class="small text-muted mb-1">
-              기본 키워드 <strong>"소아응급실"</strong>에 선택한 증상이 붙어 검색됩니다.
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-search"></i>
-
-            </div>
-          </div>
-
-          <div class="d-flex flex-wrap gap-2">
-            <template v-for="opt in symptomOptions" :key="opt">
-              <input class="btn-check" type="checkbox" :id="`sym-${opt}`" :value="opt" v-model="selectedSymptoms" />
-              <label class="btn btn-outline-secondary rounded-pill py-1 px-3" :for="`sym-${opt}`">{{ opt }}</label>
-            </template>
-          </div>
-
-          <div v-if="selectedSymptoms.length" class="mt-3 text-muted small">
-            <i class="bi bi-check2-circle"></i> {{ selectedSymptoms.length }}개 증상 선택됨
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onConfirmSymptoms">
-            <i class="bi bi-search"></i> 3km 재검색
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script setup>
 // import
 import { ref, computed, onMounted, onBeforeUnmount, onActivated, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
+import kidLogo from '@/assets/kid_logo.png'
 
 
 import {
@@ -386,6 +353,7 @@ const listHospitals = computed(() => {
     hpid: h.hpid,               // ← 추가
     name: h.name,
     message: h.message,
+     messageLines: h.messageLines || [],
     state: h.state,
     bedAvail: h.bedAvail,   // ✅ 추가
     bedTotal: h.bedTotal,
@@ -438,7 +406,16 @@ const loadWFSMarkers = async () => {
         return Number.isFinite(n) ? n : null;
       }
 
-      const message = p.message
+      const rawMessage = p.message || '';
+
+    const messageLines = rawMessage
+    .split(',')                 // 콤마 기준으로 자르기
+    .map(s => s.trim())         // 양옆 공백 제거
+    .filter(Boolean);           // 빈 문자열 제거
+
+
+
+      
       const state = p.state
       const name = p.nickname
       const bedAvail = toInt(p.bed_avail)
@@ -458,7 +435,8 @@ const loadWFSMarkers = async () => {
         lon,
         distance,
         name,
-        message,
+        message:rawMessage,
+        messageLines,
         state,
         bedAvail,
         bedTotal,
@@ -721,26 +699,31 @@ async function refreshLocation() {
     const center = window.ol.proj.fromLonLat([lon, lat])
     const view = vmap.getView()
 
-    // 부드럽게 중앙으로 이동
+    // 부드럽게 중앙 이동
     if (!view.animate) {
       const start = view.getCenter()
       const steps = 20
       let i = 0
       const timer = setInterval(() => {
         const t = ++i / steps
-        const lon = start[0] + (center[0] - start[0]) * t
-        const lat = start[1] + (center[1] - start[1]) * t
-        view.setCenter([lon, lat])
+        const x = start[0] + (center[0] - start[0]) * t
+        const y = start[1] + (center[1] - start[1]) * t
+        view.setCenter([x, y])
         if (i >= steps) clearInterval(timer)
       }, 10)
     }
 
-    // 현재 위치 마커 갱신
-    addMarkerHospital(lon, lat, {
-      name: '현재 위치',
-      iconUrl: 'icons/currentLocation.svg',
-      anchor: [0.5, 0.5]
-    })
+    // 🔹 여기서 kidLogo를 이용해서 SVG 아이콘 생성
+    const logoDataUrl = await toDataUrl(kidLogo)
+const iconUrl = createUserPinIcon(logoDataUrl)
+
+addMarkerHospital(lon, lat, {
+  name: '현재 위치',
+  iconUrl,
+  anchor: [0.5, 1],
+  isUserLocation: true,
+})
+
 
     console.log(`화면 중심만 내 위치로 이동: ${lat}, ${lon}`)
   } catch (err) {
@@ -749,8 +732,12 @@ async function refreshLocation() {
   }
 }
 
+
+console.log('kidLogo url =>', kidLogo)
+
 onMounted(async () => {
   await initMapAndCoords()
+  await refreshLocation()
 })
 
 // zoom / moveend 됐을 때
@@ -839,6 +826,57 @@ function bedBadgeClass(h) {
   if (ratio > 0) return 'bg-warning-subtle text-warning-emphasis'    // 부족
   return 'bg-danger-subtle text-danger-emphasis'                        // 없음
 }
+
+
+function createUserPinIcon(logoDataUrl, size = 70) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         width="${size}" height="${size}" viewBox="0 0 80 80">
+
+      <!-- 바깥 핀 -->
+      <path 
+        d="M40 0C23 0 10 13 10 30c0 18 20 40 30 50c10-10 30-32 30-50C70 13 57 0 40 0z"
+        fill="#464654"
+      />
+
+      <!-- 안쪽 흰 원 -->
+      <circle cx="40" cy="30" r="22" fill="#ffffff" />
+
+      <!-- 내부 로고 이미지 -->
+      <clipPath id="clipLogo">
+        <circle cx="40" cy="30" r="18" />
+      </clipPath>
+
+      <image 
+        href="${logoDataUrl}"
+        xlink:href="${logoDataUrl}"
+        x="22"
+        y="12"
+        width="36"
+        height="36"
+        clip-path="url(#clipLogo)"
+        preserveAspectRatio="xMidYMid slice"
+      />
+    </svg>
+  `
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+}
+
+
+
+async function toDataUrl(url) {
+  const res = await fetch(url)
+  const blob = await res.blob()
+
+  return await new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result) // result: data:image/png;base64,....
+    reader.readAsDataURL(blob)
+  })
+}
+
 
 
 
