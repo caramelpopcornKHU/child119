@@ -715,7 +715,7 @@ async function refreshLocation() {
 
     // 🔹 여기서 kidLogo를 이용해서 SVG 아이콘 생성
     const logoDataUrl = await toDataUrl(kidLogo)
-const iconUrl = createUserPinIcon(logoDataUrl)
+    const iconUrl = createUserPinIcon(logoDataUrl)
 
 addMarkerHospital(lon, lat, {
   name: '현재 위치',

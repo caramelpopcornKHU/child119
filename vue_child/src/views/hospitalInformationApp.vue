@@ -252,6 +252,7 @@ import { useRouter } from 'vue-router';
 import { initVworldMap, clearMarkers, addMarkerHospital, getCurrentBBox4326 } from '@/utils/vworldfunction';
 import { getEmergencyFromWFSByBBox, calculateDistance } from '@/utils/api';
 import proj4 from 'proj4';
+import kidLogo from '@/assets/kid_logo.png'
 
 // KATEC 정의 (가장 일반적인 비공식 KATEC: Bessel 타원체, 중앙 경선 128도)
 const KATEC_PROJ4_STRING = '+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +units=m +no_defs +towgs84=-115.80,474.99,674.11,1.16,-2.31,-1.63,6.43';
@@ -512,6 +513,85 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
       return openB - openA  // open=true 먼저
     })
 
+    vmap.getView().setZoom(15)
+
+    // 병원별 마커 & 라벨 추가
+    filtered.forEach(f => {
+      const [lon, lat] = f.geometry.coordinates
+      const props = f.properties
+      const open = isHospitalOpen(props)
+      const hpid = f.id?.split(".")[1] || props.hpid
+      const name = props?.[nameKey] || listType
+
+      const finalIconUrl = open ? iconUrl : "/icons/grayLocation.svg"
+
+      if (!isNaN(lon) && !isNaN(lat)) {
+        // 마커 표시
+        addMarkerHospital(lon, lat, {
+          iconUrl: finalIconUrl,
+          name,
+          addr: props?.[addrKey] || '',
+          onClick: () => goToHospitalDetail(hpid)
+        })
+
+        // 라벨 표시 (Pretendard 서체 적용됨)
+        if (open) {
+          addLabelToMarker(lat, lon, name, () => goToHospitalDetail(hpid))
+        }
+      }
+    })
+
+    addToHospitalList(filtered, listType)
+    console.log(`✅ ${listType} ${filtered.length}개 표시 완료`)
+  } catch (err) {
+    console.error(`${listType} 조회 실패:`, err)
+    alert(`${listType} 데이터를 불러오는 중 오류가 발생했습니다.`)
+  }
+}
+
+async function showLayerInMoonView({ url, iconUrl, nameKey, addrKey, listType }) {
+  if (!vmap) {
+    alert("지도가 아직 준비되지 않았습니다.")
+    return
+  }
+  searchAttempted.value = true
+
+  try {
+    currentListType.value = listType
+
+    clearMarkers()
+    clearLabels()
+    refreshUserMarker()
+
+    // 현재 bbox 계산
+    const extent = vmap.getView().calculateExtent(vmap.getSize())
+    const [minX, minY, maxX, maxY] = window.ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326')
+    const bbox = [minX, minY, maxX, maxY].join(',')
+
+    // GeoServer 호출
+    const fullUrl = `${url}&bbox=${bbox},EPSG:4326`
+    console.log(`조회 URL: ${fullUrl}`)
+    const res = await fetch(fullUrl)
+    const geojson = await res.json()
+
+    const filtered = selectedDepartments.value.length
+      ? geojson.features.filter(f => {
+        const depts = (f.properties?.dgid_id_name || '').split(',').map(d => d.trim())
+        return selectedDepartments.value.some(sel =>
+          depts.some(dept => dept.includes(sel))
+        )
+      })
+      : geojson.features
+
+    // OPEN 병원 먼저 정렬
+    filtered.sort((a, b) => {
+      const openA = isHospitalOpen(a.properties) ? 1 : 0
+      const openB = isHospitalOpen(b.properties) ? 1 : 0
+      return openB - openA  // open=true 먼저
+    })
+    
+    vmap.getView().setZoom(14)
+
     // 병원별 마커 & 라벨 추가
     filtered.forEach(f => {
       const [lon, lat] = f.geometry.coordinates
@@ -548,7 +628,7 @@ async function showLayerInView({ url, iconUrl, nameKey, addrKey, listType }) {
 
 // 달빛어린이병원 조회 (GeoServer)
 function showMoonlight() {
-  showLayerInView({
+  showLayerInMoonView({
     url: "https://api.child119.com/geoserver/hospital/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=hospital:moonlight_hospital&outputFormat=application/json",
     iconUrl: "/icons/moonlight.svg",
     nameKey: "duty_name",
@@ -843,10 +923,13 @@ async function refreshUserMarker() {
     const { lat, lon } = position
     userLocation.value = { lat, lon }
 
+    const logoDataUrl = await toDataUrl(kidLogo)
+    const iconUrl = createUserPinIcon(logoDataUrl)
+
     // 기존 마커만 교체
     addMarkerHospital(lon, lat, {
       name: '현재 위치',
-      iconUrl: 'icons/currentLocation.svg',
+      iconUrl,
       anchor: [0.5, 0.5]
     })
     console.log(`현재 위치 마커만 갱신됨: ${lat},${lon}`)
@@ -879,10 +962,13 @@ async function refreshLocation() {
       }, 10)
     }
 
+    const logoDataUrl = await toDataUrl(kidLogo)
+    const iconUrl = createUserPinIcon(logoDataUrl)
+
     // 현재 위치 마커 갱신
     addMarkerHospital(lon, lat, {
       name: '현재 위치',
-      iconUrl: 'icons/currentLocation.svg',
+      iconUrl,
       anchor: [0.5, 0.5]
     })
 
@@ -891,6 +977,55 @@ async function refreshLocation() {
     console.error('moveToUserLocation 실패:', err)
     alert('현재 위치를 가져올 수 없습니다.')
   }
+}
+
+function createUserPinIcon(logoDataUrl, size = 70) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         width="${size}" height="${size}" viewBox="0 0 80 80">
+
+      <!-- 바깥 핀 -->
+      <path 
+        d="M40 0C23 0 10 13 10 30c0 18 20 40 30 50c10-10 30-32 30-50C70 13 57 0 40 0z"
+        fill="#464654"
+      />
+
+      <!-- 안쪽 흰 원 -->
+      <circle cx="40" cy="30" r="22" fill="#ffffff" />
+
+      <!-- 내부 로고 이미지 -->
+      <clipPath id="clipLogo">
+        <circle cx="40" cy="30" r="18" />
+      </clipPath>
+
+      <image 
+        href="${logoDataUrl}"
+        xlink:href="${logoDataUrl}"
+        x="22"
+        y="12"
+        width="36"
+        height="36"
+        clip-path="url(#clipLogo)"
+        preserveAspectRatio="xMidYMid slice"
+      />
+    </svg>
+  `
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+}
+
+
+
+async function toDataUrl(url) {
+  const res = await fetch(url)
+  const blob = await res.blob()
+
+  return await new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result) // result: data:image/png;base64,....
+    reader.readAsDataURL(blob)
+  })
 }
 
 /* 바텀시트 제스처 */
