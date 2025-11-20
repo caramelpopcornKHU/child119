@@ -42,7 +42,7 @@
             <!-- 복용 중인 약 (멀티라인) -->
             <div class="mb-3">
               <label class="form-label text-medium">복용 중인 약</label>
-              <textarea v-model.trim="form.meds" class="form-control  text-plight" rows="2" placeholder="OOO 알러지약 아침마다 복용"></textarea>
+              <textarea v-model.trim="form.meds" class="form-control text-plight" rows="2" placeholder="OOO 알러지약 아침마다 복용"></textarea>
             </div>
 
             <!-- 키(cm) -->
