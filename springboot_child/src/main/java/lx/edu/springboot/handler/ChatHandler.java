@@ -23,12 +23,10 @@ public class ChatHandler extends TextWebSocketHandler {
     // WebSocketSession ID별로 멀티턴 히스토리를 저장
     private final Map<String, List<String>> sessionHistories = new ConcurrentHashMap<>();
 
-
     public ChatHandler(ChatService chatService, FirebaseService firebaseService) {
         this.chatService = chatService;
         this.firebaseService = firebaseService;
     }
-
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -45,25 +43,31 @@ public class ChatHandler extends TextWebSocketHandler {
         Double lat = request.get("lat") != null ? ((Number) request.get("lat")).doubleValue() : null;
         Double lon = request.get("lon") != null ? ((Number) request.get("lon")).doubleValue() : null;
 
-        Map<String, Object> detailResult = null;
+        // ✅ Firebase에서 완전한 아이 정보 가져오기
+        Map<String, Object> completeKidInfo = null;
         if (kidInfo != null) {
             String parentUid = (String) kidInfo.get("parentUid");
             String kidName = (String) kidInfo.get("kid");
 
-            // ✅ FirebaseService 인스턴스로 호출
-            detailResult = firebaseService.getKidDetail(parentUid, kidName);
+            try {
+                // Firebase에서 birthMonth, birthDay 포함된 완전한 정보 가져오기
+                completeKidInfo = firebaseService.getKidDetail(parentUid, kidName);
+            } catch (Exception e) {
+                System.err.println("Firebase에서 아이 정보 조회 실패: " + e.getMessage());
+                // 실패 시 원본 kidInfo 사용
+                completeKidInfo = kidInfo;
+            }
         }
 
-        String aiText = chatService.getAiResponse(session.getId(), userMessage, lat, lon, kidInfo);
+        // ✅ 완전한 kidInfo를 chatService에 전달
+        String aiText = chatService.getAiResponse(session.getId(), userMessage, lat, lon, completeKidInfo);
 
         Map<String, Object> response = new HashMap<>();
         response.put("aiText", aiText);
-        response.put("kidDetail", detailResult != null ? detailResult : Collections.emptyMap());
+        response.put("kidDetail", completeKidInfo != null ? completeKidInfo : Collections.emptyMap());
 
         session.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));
     }
-
-
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {

@@ -62,7 +62,7 @@
       <div
         class="card-body overflow-auto"
         ref="messagesContainer"
-        style="height: calc(100vh - 300px); padding-bottom: 20px;"
+        style="height: calc(100vh - 300px); padding-bottom: 50px;"
       >
         <div v-for="(msg, i) in messages" :key="i" class="mb-3">
           <!-- 사용자 메시지 -->
@@ -174,7 +174,7 @@ const loadKidDetail = async (kid) => {
   const res = await axios.get("https://child119-251868777139.asia-northeast3.run.app/api/kids/detail", {
     params: { parentUid: user.uid, kidName: kid.kid },
   });
-  selectedKid.value = res.data;
+   selectedKid.value = res.data.kidInfo;
 };
 
 // ✅ WebSocket 연결
@@ -204,10 +204,18 @@ const sendMessage = async () => {
   input.value = "";
 
   if (socket && socket.readyState === WebSocket.OPEN) {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
     const payload = {
       message: text,
-      kid: selectedKid.value ? selectedKid.value.kid : null,
-      birthYear: selectedKid.value ? selectedKid.value.birthYear : null,
+      kidInfo: selectedKid.value ? {
+        parentUid: user ? user.uid : null,
+        kid: selectedKid.value.kid,
+        birthYear: selectedKid.value.birthYear,
+        birthMonth: selectedKid.value.birthMonth,
+        birthDay: selectedKid.value.birthDay
+      } : null,
       lat: userLocation.value.lat,
       lon: userLocation.value.lon,
     };

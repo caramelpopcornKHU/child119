@@ -45,9 +45,10 @@ public class KidController {
         // 1️⃣ 아이 정보 조회
         Map<String, Object> kid = firebaseService.getKidDetail(parentUid, kidName);
         
-        int birthYear = (int) kid.get("birthYear");
-        int birthMonth = (int) kid.get("birthMonth");
-        int birthDay = (int) kid.get("birthDay");
+        // ✅ Long을 int로 안전하게 변환
+        int birthYear = ((Number) kid.get("birthYear")).intValue();
+        int birthMonth = ((Number) kid.get("birthMonth")).intValue();
+        int birthDay = ((Number) kid.get("birthDay")).intValue();
         
         LocalDate birthDate = LocalDate.of(birthYear, birthMonth, birthDay);
         LocalDate today = LocalDate.now();
@@ -65,11 +66,11 @@ public class KidController {
                 5.0
         );
 
-        // 4️⃣ 나이 필터링 (이전에 만든 isAllowed와 동일)
+        // 4️⃣ 나이 필터링
         int ageMonthsTotal = ageYears * 12 + ageMonths;
 
         List<Map<String, Object>> filtered = nearby.stream()
-                .filter(e -> isAllowed(e, ageYears, ageMonthsTotal)) // 🔥 변경됨
+                .filter(e -> isAllowed(e, ageYears, ageMonthsTotal))
                 .map(e -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("name", e.getName());

@@ -1,6 +1,7 @@
 package lx.edu.springboot.service;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -63,15 +64,19 @@ public class ChatService {
             prompt.append(history.get(i)).append("\n");
         }
 
-        if (isEmergencyRoomQuery(userMessage) && kidInfo != null) {
-            String ageNotice = generateAgeNotice(kidInfo, baseLat, baseLon);
-            if (ageNotice != null) {
-                prompt.append("\n\n연령 제한 분석: ").append(ageNotice).append("\n");
+        // ✅ 아이 정보가 있으면 나이 계산 후 프롬프트에 추가
+        if (kidInfo != null) {
+            String ageInfo = calculateAgeInfo(kidInfo);
+            if (ageInfo != null) {
+                prompt.append(ageInfo).append("\n");
             }
         }
 
-        if (kidInfo != null) {
-            prompt.append("아이 정보: ").append(kidInfo).append("\n");
+        if (isEmergencyRoomQuery(userMessage) && kidInfo != null) {
+            String ageNotice = generateAgeNotice(kidInfo, baseLat, baseLon);
+            if (ageNotice != null) {
+                prompt.append("\n연령 제한 분석: ").append(ageNotice).append("\n");
+            }
         }
 
         prompt.append("사용자: ").append(userMessage);
@@ -85,8 +90,35 @@ public class ChatService {
         return aiResponse;
     }
 
+    // ✅ 나이 계산 메서드 추가
+    private String calculateAgeInfo(Map<String, Object> kidInfo) {
+        try {
+            // Long을 int로 안전하게 변환
+            int birthYear = ((Number) kidInfo.get("birthYear")).intValue();
+            int birthMonth = ((Number) kidInfo.get("birthMonth")).intValue();
+            int birthDay = ((Number) kidInfo.get("birthDay")).intValue();
+            String kidName = (String) kidInfo.get("kid");
 
+            LocalDate birthDate = LocalDate.of(birthYear, birthMonth, birthDay);
+            LocalDate today = LocalDate.now();
+            Period period = Period.between(birthDate, today);
 
+            int ageYears = period.getYears();
+            int ageMonths = period.getMonths();
+
+            if (ageYears >= 1) {
+                return String.format("현재 선택된 아이(%s)는 만 %d세 %d개월입니다. 이 나이를 기준으로 응답해주세요.", 
+                                    kidName, ageYears, ageMonths);
+            } else {
+                int totalMonths = ageYears * 12 + ageMonths;
+                return String.format("현재 선택된 아이(%s)는 생후 %d개월입니다. 이 나이를 기준으로 응답해주세요.", 
+                                    kidName, totalMonths);
+            }
+        } catch (Exception e) {
+            System.err.println("나이 계산 실패: " + e.getMessage());
+            return null; // 나이 계산 실패 시 null 반환
+        }
+    }
 
     private String getNearbyEmergencyInfo(String userMessage, double lat, double lon) {
         List<Emergency> nearby = emergencyRepository.findNearbyAvailableHospitals(lat, lon, 5.0);
@@ -203,29 +235,33 @@ public class ChatService {
     }
 
     private String generateAgeNotice(Map<String, Object> kidInfo, double lat, double lon) {
+        try {
+            // ✅ Long을 int로 안전하게 변환
+            int birthYear = ((Number) kidInfo.get("birthYear")).intValue();
+            int ageYears = LocalDate.now().getYear() - birthYear;
 
-        int birthYear = (int) kidInfo.get("birthYear");
-        int ageYears = LocalDate.now().getYear() - birthYear;
+            List<Emergency> nearby = emergencyRepository.findNearbyAvailableHospitals(lat, lon, 5.0);
 
-        List<Emergency> nearby = emergencyRepository.findNearbyAvailableHospitals(lat, lon, 5.0);
+            int allowed = 0;
+            int denied = 0;
 
-        int allowed = 0;
-        int denied = 0;
+            for (Emergency e : nearby) {
+                if (isAllowedAge(e.getMessage(), ageYears)) allowed++;
+                else denied++;
+            }
 
-        for (Emergency e : nearby) {
-            if (isAllowedAge(e.getMessage(), ageYears)) allowed++;
-            else denied++;
-        }
-
-        if (denied == 0) {
-            return "현재 선택한 아이 기준으로 주변 응급실 연령 제한 메시지는 없지만, 방문 전 전화 확인을 추천드립니다.";
-        } else if (allowed > 0 && denied > 0) {
-            return "일부 응급실에서 연령 제한이 있어 선택 시 주의가 필요합니다. 방문 전 전화 확인을 권장합니다.";
-        } else {
-            return "현재 선택한 아이 기준으로 소아 진료가 제한된 응급실이 많습니다. 방문 가능 여부를 반드시 전화로 확인하세요.";
+            if (denied == 0) {
+                return "현재 선택한 아이 기준으로 주변 응급실 연령 제한 메시지는 없지만, 방문 전 전화 확인을 추천드립니다.";
+            } else if (allowed > 0 && denied > 0) {
+                return "일부 응급실에서 연령 제한이 있어 선택 시 주의가 필요합니다. 방문 전 전화 확인을 권장합니다.";
+            } else {
+                return "현재 선택한 아이 기준으로 소아 진료가 제한된 응급실이 많습니다. 방문 가능 여부를 반드시 전화로 확인하세요.";
+            }
+        } catch (Exception e) {
+            System.err.println("나이 통지 생성 실패: " + e.getMessage());
+            return null;
         }
     }
-
     private boolean isAllowedAge(String msg, int ageYears) {
         if (msg == null || msg.isEmpty()) return true;
 
@@ -241,6 +277,4 @@ public class ChatService {
         }
         return true;
     }
-
-
 }
