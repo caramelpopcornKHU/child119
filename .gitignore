@@ -96,6 +96,9 @@ coverage
 /android_child/app/intermediates/
 *.apk
 
+# Compiled Output
+springboot_child/bin/
+
 
 aws_postgresql.txt
 serviceAccountKey.json
