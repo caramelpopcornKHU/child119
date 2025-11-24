@@ -29,15 +29,17 @@ public class ChatService {
     private String apiUrl;
 
     private static final String SYSTEM_PROMPT =
-    		"너는 의료 전문가야. 의사처럼 친절하고 정확하게 설명해줘."+
-    		"너는 의료 전문가니깐 점메추, 저메추 이런 거 대답하지 마."+
-    		"근처 응급실 추천 시 구로구청 기준으로 안내해줘."+
-    		"응급처치 방법을 질문받으면, 답변의 시작과 끝에 불필요한 인사말이나 감정 표현, 서론/결론 문구를 일절 넣지 마."+
-    		"각 단계를 번호 매김 목록(1., 2., 3., ...) 형태로만 제공하고 각 항목 끝에 줄바꿈(엔터)을 포함해줘."+
-    		"응급처치 방법은 반드시 영등포구 보건소 응급처치 가이드(https://www.ydp.go.kr/health/contents.do?key=3594&)의 기준에 따라 설명해줘."+
-    		"응급실 추천 등 다른 질문일 때는 친절하고 정확한 의사 말투를 유지해."+
-    		"불필요한 말은 절대 하지 마."+
-    		"정말 간략하게 말해줘.";
+            "너는 의료 전문가야. 의사처럼 친절하고 정확하게 설명해줘." +
+            "너는 의료 전문가니깐 점메추, 저메추 이런 거 대답하지 마." +
+            "근처 응급실 추천 시 구로구청 기준으로 안내해줘." +
+            "응급실 정보를 제공받은 경우 반드시 전체 병상 수, 병상 여유량, 응급실 공지 메시지를 그대로 참고해서 답변해줘." +
+            "응급실 정보가 주어졌으면 그것을 기반으로 가장 적절한 응급실을 선택해 설명해야 해." +
+            "응급처치 방법을 질문받으면, 답변의 시작과 끝에 불필요한 인사말이나 감정 표현, 서론/결론 문구를 일절 넣지 마." +
+            "각 단계를 번호 매김 목록(1., 2., 3., ...) 형태로만 제공하고 각 항목 끝에 줄바꿈(엔터)을 포함해줘." +
+            "응급처치 방법은 반드시 영등포구 보건소 응급처치 가이드(https://www.ydp.go.kr/health/contents.do?key=3594&)의 기준에 따라 설명해줘." +
+            "응급실 추천 등 다른 질문일 때는 친절하고 정확한 의사 말투를 유지해." +
+            "불필요한 말은 절대 하지 마." +
+            "정말 간략하게 말해줘.";
 
 
     private final ConcurrentHashMap<String, List<String>> sessionHistories = new ConcurrentHashMap<>();
@@ -72,6 +74,7 @@ public class ChatService {
             }
         }
 
+        // ✅ 응급실 질문 + 아이 정보 → 연령 메시지 추가
         if (isEmergencyRoomQuery(userMessage) && kidInfo != null) {
             String ageNotice = generateAgeNotice(kidInfo, baseLat, baseLon);
             if (ageNotice != null) {
@@ -79,10 +82,26 @@ public class ChatService {
             }
         }
 
+        // 🛠️ 🔥🔥 여기 추가 → 응급실 정보 프롬프트 삽입
+        if (isEmergencyRoomQuery(userMessage)) {
+            String emergencyInfo = getNearbyEmergencyInfo(userMessage, baseLat, baseLon);
+            prompt.append("\n\n[근처 응급실 정보]\n").append(emergencyInfo).append("\n");
+        }
+
+
         prompt.append("사용자: ").append(userMessage);
 
         String aiResponse = callGeminiApi(prompt.toString());
-
+        if (kidInfo != null) {
+            String ageInfo = calculateAgeInfo(kidInfo);
+            if (ageInfo != null) {
+                aiResponse = ageInfo + "\n\n" + aiResponse;
+            }
+        }
+        if (isEmergencyRoomQuery(userMessage)) {
+            String emergencyInfo = getNearbyEmergencyInfo(userMessage, baseLat, baseLon);
+            aiResponse = "[근처 응급실 정보]\n" + emergencyInfo + "\n" + aiResponse;
+        }
         history.add("사용자: " + userMessage);
         history.add("AI: " + aiResponse);
         if (history.size() > 5) history.subList(0, history.size() - 5).clear();
@@ -107,11 +126,11 @@ public class ChatService {
             int ageMonths = period.getMonths();
 
             if (ageYears >= 1) {
-                return String.format("현재 선택된 아이(%s)는 만 %d세 %d개월입니다. 이 나이를 기준으로 응답해주세요.", 
+                return String.format("현재 선택된 아이(%s)는 만 %d세 %d개월입니다. 이 나이를 기준으로 응답합니다.", 
                                     kidName, ageYears, ageMonths);
             } else {
                 int totalMonths = ageYears * 12 + ageMonths;
-                return String.format("현재 선택된 아이(%s)는 생후 %d개월입니다. 이 나이를 기준으로 응답해주세요.", 
+                return String.format("현재 선택된 아이(%s)는 생후 %d개월입니다. 이 나이를 기준으로 응답합니다.", 
                                     kidName, totalMonths);
             }
         } catch (Exception e) {
