@@ -9,7 +9,7 @@
         <div>
           <h3 class="text-bold mb-1">관리자 대시보드</h3>
           <p class="text-medium mb-0 small">
-            아이119 앱의 크롤링 설정, 사용자/콘텐츠 데이터, 자동화 로그, 건의사항을 한 곳에서 관리합니다.
+            아이119 앱의 데이터 연동 주기 설정, 사용자/콘텐츠 데이터, 자동화 로그, 건의사항을 한 곳에서 관리합니다.
           </p>
         </div>
       </div>
@@ -20,9 +20,9 @@
           class="card-header bg-white border-0 d-flex justify-content-between align-items-center pb-1"
         >
           <div>
-            <h5 class="text-bold mb-1">크롤링 주기 설정</h5>
+            <h5 class="text-bold mb-1">데이터 연동 주기 설정</h5>
             <p class="small text-plight mb-0">
-              응급실 정보를 가져오는 크롤러의 실행 주기를 설정합니다.
+              응급실 정보를 가져오는 데이터 연동 주기를 설정합니다.
             </p>
           </div>
           <div class="text-end text-plight">
@@ -101,9 +101,9 @@
           class="card-header bg-white border-0 d-flex justify-content-between align-items-start pb-1"
         >
           <div>
-            <h5 class="text-bold mb-1">데이터 크롤링 자동화</h5>
+            <h5 class="text-bold mb-1">데이터 연동 주기 </h5>
             <p class="small text-plight mb-0">
-              Python(FastAPI) 자동화 서버에 크롤링 작업을 요청하고, 작업 중 발생하는 로그를 실시간으로
+              Python(FastAPI) 자동화 서버에 데이터 연동 작업을 요청하고, 작업 중 발생하는 로그를 실시간으로
               확인합니다.
             </p>
           </div>
@@ -131,7 +131,7 @@
               >
                 <template v-if="automationStatus !== 'running'">
                   <i class="bi bi-play-fill"></i>
-                  <span>크롤링 즉시 실행</span>
+                  <span>데이터 연동 즉시 실행</span>
                 </template>
                 <template v-else>
                   <span
@@ -167,7 +167,7 @@
               class="log-empty-state fs-5 text-medium"
             >
               아직 실행된 로그가 없습니다.<br />
-              상단의 <strong>“크롤링 즉시 실행”</strong> 버튼을 눌러 자동화를 시작하세요.
+              상단의 <strong>“데이터 연동 즉시 실행”</strong> 버튼을 눌러 자동화를 시작하세요.
             </div>
 
             <!-- ✅ 로그가 있을 때 -->

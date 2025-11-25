@@ -95,7 +95,7 @@
                   class="badge rounded-pill px-4 py-2"
                   :class="suggestion.status === '처리완료' ? 'bg-success' : 'bg-warning text-dark'"
                 >{{ suggestion.status }}</span>
-                <div class="small text-muted">대상: {{ suggestion.targetRole }}</div>
+                <div class="small text-muted"></div>
               </div>
             </div>
           </div>
