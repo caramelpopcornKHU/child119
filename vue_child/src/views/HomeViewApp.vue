@@ -19,7 +19,7 @@
   <!-- 바텀시트 -->
   <div class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg "  :style="sheetStyle"
     ref="bottomSheet" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd"
-    style="z-index: 2; padding-bottom: 300px;">
+    style="z-index: 2; padding-bottom: 150px;">
 
     <!-- 그립 -->
     <div class="pt-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
@@ -115,7 +115,7 @@
 
 
         <!-- 응급실 목록 -->
-        <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id"
+        <div class="card shadow-sm mb-3 pb-10" v-for="h in listHospitals" :key="h.hpid || h.id"
           :ref="el => hospitalRefs[h.id] = el" :class="{ 'card-selected-highlight': h.id === selectedMarkerId }">
           <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
