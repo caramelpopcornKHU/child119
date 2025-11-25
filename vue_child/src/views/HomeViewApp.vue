@@ -17,9 +17,9 @@
     </div>
   </div>
   <!-- 바텀시트 -->
-  <div class="position-fixed start-0 end-0 bg-white padding-bottom  rounded-top-4 shadow-lg " :style="sheetStyle"
+  <div class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg "  :style="sheetStyle"
     ref="bottomSheet" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd"
-    style="z-index: 2; padding-bottom: 150px;">
+    style="z-index: 2; padding-bottom: 300px;">
 
     <!-- 그립 -->
     <div class="pt-3 d-flex justify-content-center" @click="toggleSheet" style="cursor: grab;">
