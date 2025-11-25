@@ -262,11 +262,19 @@ proj4.defs('KATEC', KATEC_PROJ4_STRING);
 const WGS84 = 'EPSG:4326';
 const KATEC = 'KATEC';
 
+const LIST_COLORS = {
+  '달빛어린이병원': { open: '#ffb600', closed: '#999999' },
+  '소아청소년과': { open: '#0988ff', closed: '#999999' },
+  '약국': { open: '#00bd32', closed: '#999999' },
+  'AED': { open: '#f4583c', closed: '#999999' }
+};
+
 // -----------------------------------------------------------
 // 2. 상태 변수 (State)
 // -----------------------------------------------------------
 const router = useRouter();
 const vmap = shallowRef(null); // ✨ 성능 최적화를 위해 shallowRef 사용
+const currentListColor = ref('#5bd200');
 
 // 데이터 관련
 const hospitals = ref([]);
@@ -341,7 +349,6 @@ function getDepartmentColor(deptName) {
 
 // 스타일 생성 함수 (라벨과 아이콘을 모두 여기서 처리)
 const getClusterStyle = (feature, type) => {
-  // vmap.value 체크 필수
   if (!vmap.value) return;
 
   const size = feature.get('features').length;
@@ -349,15 +356,17 @@ const getClusterStyle = (feature, type) => {
   
   // 🟢 [클러스터링 모드] (줌 < 16 이고 데이터 2개 이상)
   if (zoom < 16 && size > 1) {
-    const styleKey = `cluster-${type}-${size}`;
+    const styleKey = `cluster-${type}-${size}-${currentListColor.value}`; // ✨ 색상도 캐시 키에 포함
     if (styleCache[styleKey]) return styleCache[styleKey];
 
-    const color = type === 'open' ? '#198754' : '#999999';
+    // ✨ type이 'open'일 때만 LIST_COLORS의 색상을 사용, 'closed'는 항상 회색
+    const color = type === 'open' ? currentListColor.value : LIST_COLORS[currentListType.value]?.closed || '#999999';
+
     const style = new window.ol.style.Style({
       image: new window.ol.style.Circle({
         radius: 14,
         stroke: new window.ol.style.Stroke({ color: '#fff', width: 2 }),
-        fill: new window.ol.style.Fill({ color: color })
+        fill: new window.ol.style.Fill({ color: color }) // ✨ 동적 색상 적용
       }),
       text: new window.ol.style.Text({
         text: size.toString(),
@@ -370,26 +379,28 @@ const getClusterStyle = (feature, type) => {
     return style;
   } 
   
-  // 📍 [개별 마커 + 라벨 모드] (줌 >= 16 또는 데이터 1개)
+  // 📍 [개별 마커 + 라벨 모드] (나머지 로직은 기존과 동일)
   else {
-    const originalFeature = feature.get('features')[0];
-    const name = originalFeature.get('name'); // 병원 이름 가져오기
+    // ... (기존 개별 마커 로직 유지)
+    // 개별 마커 아이콘은 이미 currentIconUrl.value를 통해 동적으로 변경됨
+    // ... 
     
     // 아이콘 스타일 캐싱 (아이콘 URL 기반으로 캐싱)
+    const originalFeature = feature.get('features')[0];
+    const name = originalFeature.get('name');
     const iconStyleKey = `pin-${type}-${currentIconUrl.value}`;
     if (!styleCache[iconStyleKey]) {
-       let iconSrc = '/icons/grayLocation.svg'; // 기본 닫힘 아이콘
-       
-       if (type === 'open') {
-         // currentIconUrl.value에 따라 아이콘 결정
-         iconSrc = currentIconUrl.value; 
-       }
+        let iconSrc = '/icons/grayLocation.svg'; // 기본 닫힘 아이콘
+        
+        if (type === 'open') {
+          iconSrc = currentIconUrl.value; 
+        }
 
-       styleCache[iconStyleKey] = new window.ol.style.Icon({
-        src: iconSrc,
-        scale: 1.0,
-        anchor: [0.5, 1]
-      });
+        styleCache[iconStyleKey] = new window.ol.style.Icon({
+          src: iconSrc,
+          scale: 1.0,
+          anchor: [0.5, 1]
+        });
     }
 
     return new window.ol.style.Style({
@@ -549,6 +560,7 @@ async function showLayerInView({ url, listType }) {
 function showMoonlight() {
   currentListType.value = "달빛어린이병원";
   currentIconUrl.value = "/icons/moonlight.svg";
+  currentListColor.value = LIST_COLORS['달빛어린이병원'].open;
   
   // 스타일 캐시를 비워야 아이콘이 변경됨
   for (const key in styleCache) delete styleCache[key]; 
@@ -566,6 +578,8 @@ function showMoonlight() {
 function showPediatric() {
   currentListType.value = "소아청소년과";
   currentIconUrl.value = "/icons/children.svg";
+  currentListColor.value = LIST_COLORS['소아청소년과'].open;
+
   // 스타일 캐시를 비워야 아이콘이 변경됨
   for (const key in styleCache) delete styleCache[key]; 
   
@@ -578,6 +592,8 @@ function showPediatric() {
 function showPharmacy() {
   currentListType.value = "약국";
   currentIconUrl.value = "/icons/pharmacy.svg";
+  currentListColor.value = LIST_COLORS['약국'].open;
+
   // 스타일 캐시를 비워야 아이콘이 변경됨
   for (const key in styleCache) delete styleCache[key]; 
   
@@ -590,6 +606,8 @@ function showPharmacy() {
 function showAED() {
   currentListType.value = "AED";
   currentIconUrl.value = "/icons/aed.svg";
+  currentListColor.value = LIST_COLORS['AED'].open;
+
   // 스타일 캐시를 비워야 아이콘이 변경됨
   for (const key in styleCache) delete styleCache[key]; 
 
