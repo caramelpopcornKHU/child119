@@ -47,40 +47,80 @@
           </div>
         </div>
 
-        <div class="d-flex flex-column justify-content-start">
-          <div class="d-felx text-bold fs-7 mb-2">진료 시간</div>
-          <table class="table table-striped table-bordered text-plight mb-0">
-            <tbody>
-              <tr>
-                <th>월</th>
-                <td>{{ formatTime(hospitalData.duty_time1s) }} - {{ formatTime(hospitalData.duty_time1c) }}</td>
-              </tr>
-              <tr>
-                <th>화</th>
-                <td>{{ formatTime(hospitalData.duty_time2s) }} - {{ formatTime(hospitalData.duty_time2c) }}</td>
-              </tr>
-              <tr>
-                <th>수</th>
-                <td>{{ formatTime(hospitalData.duty_time3s) }} - {{ formatTime(hospitalData.duty_time3c) }}</td>
-              </tr>
-              <tr>
-                <th>목</th>
-                <td>{{ formatTime(hospitalData.duty_time4s) }} - {{ formatTime(hospitalData.duty_time4c) }}</td>
-              </tr>
-              <tr>
-                <th>금</th>
-                <td>{{ formatTime(hospitalData.duty_time5s) }} - {{ formatTime(hospitalData.duty_time5c) }}</td>
-              </tr>
-              <tr>
-                <th>토</th>
-                <td>{{ formatTime(hospitalData.duty_time6s) }} - {{ formatTime(hospitalData.duty_time6c) }}</td>
-              </tr>
-              <tr>
-                <th>일</th>
-                <td>{{ formatTime(hospitalData.duty_time7s) }} - {{ formatTime(hospitalData.duty_time7c) }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-if="hospitalType === 'pharmacy' || hospitalType === 'aed'">
+          <div class="d-flex flex-column justify-content-start">
+            <div class="d-felx text-bold fs-7 mb-2">운영 시간</div>
+            <table class="table table-striped table-bordered text-plight mb-0">
+              <tbody>
+                <tr>
+                  <th>월</th>
+                  <td>{{ formatTime(hospitalData.duty_time1s) }} - {{ formatTime(hospitalData.duty_time1c) }}</td>
+                </tr>
+                <tr>
+                  <th>화</th>
+                  <td>{{ formatTime(hospitalData.duty_time2s) }} - {{ formatTime(hospitalData.duty_time2c) }}</td>
+                </tr>
+                <tr>
+                  <th>수</th>
+                  <td>{{ formatTime(hospitalData.duty_time3s) }} - {{ formatTime(hospitalData.duty_time3c) }}</td>
+                </tr>
+                <tr>
+                  <th>목</th>
+                  <td>{{ formatTime(hospitalData.duty_time4s) }} - {{ formatTime(hospitalData.duty_time4c) }}</td>
+                </tr>
+                <tr>
+                  <th>금</th>
+                  <td>{{ formatTime(hospitalData.duty_time5s) }} - {{ formatTime(hospitalData.duty_time5c) }}</td>
+                </tr>
+                <tr>
+                  <th>토</th>
+                  <td>{{ formatTime(hospitalData.duty_time6s) }} - {{ formatTime(hospitalData.duty_time6c) }}</td>
+                </tr>
+                <tr>
+                  <th>일</th>
+                  <td>{{ formatTime(hospitalData.duty_time7s) }} - {{ formatTime(hospitalData.duty_time7c) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div v-if="hospitalType !== 'pharmacy' && hospitalType !== 'aed'">
+          <div class="d-flex flex-column justify-content-start">
+            <div class="d-felx text-bold fs-7 mb-2">진료 시간</div>
+            <table class="table table-striped table-bordered text-plight mb-0">
+              <tbody>
+                <tr>
+                  <th>월</th>
+                  <td>{{ formatTime(hospitalData.duty_time1s) }} - {{ formatTime(hospitalData.duty_time1c) }}</td>
+                </tr>
+                <tr>
+                  <th>화</th>
+                  <td>{{ formatTime(hospitalData.duty_time2s) }} - {{ formatTime(hospitalData.duty_time2c) }}</td>
+                </tr>
+                <tr>
+                  <th>수</th>
+                  <td>{{ formatTime(hospitalData.duty_time3s) }} - {{ formatTime(hospitalData.duty_time3c) }}</td>
+                </tr>
+                <tr>
+                  <th>목</th>
+                  <td>{{ formatTime(hospitalData.duty_time4s) }} - {{ formatTime(hospitalData.duty_time4c) }}</td>
+                </tr>
+                <tr>
+                  <th>금</th>
+                  <td>{{ formatTime(hospitalData.duty_time5s) }} - {{ formatTime(hospitalData.duty_time5c) }}</td>
+                </tr>
+                <tr>
+                  <th>토</th>
+                  <td>{{ formatTime(hospitalData.duty_time6s) }} - {{ formatTime(hospitalData.duty_time6c) }}</td>
+                </tr>
+                <tr>
+                  <th>일</th>
+                  <td>{{ formatTime(hospitalData.duty_time7s) }} - {{ formatTime(hospitalData.duty_time7c) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div v-if="hospitalData.duty_inf" class="py-2">
