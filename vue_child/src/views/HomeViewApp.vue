@@ -64,7 +64,7 @@
               style="height: 42px; font-size: 15px; padding-right: 18px !important;"
             >
 
-            <div class="d-flex align-items-center gap-2 ">
+            <div class="d-flex align-items-center gap-2">
               <!-- 현재 선택된 항목 표시 -->
               <template v-if="currentSort === 'time'">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z"/></svg>
@@ -85,6 +85,7 @@
             <li v-if="currentSort !== 'distance'">
               <button 
                 class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold"
+                style="font-size: 15px;"
                 @click="changeSort('distance')"
               >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 8.11c-.89 0-1.61-.72-1.61-1.61A1.61 1.61 0 0 1 6.5 4.89c.89 0 1.61.72 1.61 1.61A1.61 1.61 0 0 1 6.5 8.11M6.5 2C4 2 2 4 2 6.5c0 3.37 4.5 8.36 4.5 8.36S11 9.87 11 6.5C11 4 9 2 6.5 2m11 6.11a1.61 1.61 0 0 1-1.61-1.61a1.609 1.609 0 1 1 3.22 0a1.61 1.61 0 0 1-1.61 1.61m0-6.11C15 2 13 4 13 6.5c0 3.37 4.5 8.36 4.5 8.36S22 9.87 22 6.5C22 4 20 2 17.5 2m0 14c-1.27 0-2.4.8-2.82 2H9.32a3 3 0 0 0-3.82-1.83A3.003 3.003 0 0 0 3.66 20a3.017 3.017 0 0 0 3.84 1.83c.85-.3 1.5-.98 1.82-1.83h5.37c.55 1.56 2.27 2.38 3.81 1.83A3 3 0 0 0 20.35 18c-.43-1.2-1.57-2-2.85-2m0 4.5A1.5 1.5 0 0 1 16 19a1.5 1.5 0 0 1 1.5-1.5A1.5 1.5 0 0 1 19 19a1.5 1.5 0 0 1-1.5 1.5"/></svg>
@@ -96,6 +97,7 @@
             <li v-if="currentSort !== 'time'">
               <button 
                 class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold"
+                style="font-size: 15px;"
                 @click="changeSort('time')"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z"/></svg>
@@ -113,19 +115,14 @@
 
 
         <!-- 응급실 목록 -->
-        <div
-          class="card shadow-sm mb-3"
-          v-for="h in visibleHospitals"
-          :key="h.hpid || h.id"
-          :ref="el => hospitalRefs[h.id] = el"
-          :class="{ 'card-selected-highlight': h.id === selectedMarkerId }"
-        >
+        <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id"
+          :ref="el => hospitalRefs[h.id] = el" :class="{ 'card-selected-highlight': h.id === selectedMarkerId }">
           <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
-              <h6 class="card-title text-bold fs-5 mb-1">{{ h.name }}</h6>
+              <h6 class="card-title text-bold mb-1">{{ h.name }}</h6>
 
               <!-- ✅ 병상 현황: 'avail/total' -->
-              <span v-if="h.bedAvail !== null || h.bedTotal !== null" class="badge rounded-pill d-flex align-items-center fs-13"
+              <span v-if="h.bedAvail !== null || h.bedTotal !== null" class="badge rounded-pill"
                 :class="bedBadgeClass(h)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="15" viewBox="0 0 24 24" class="me-1">
                   <path fill="currentColor"
@@ -140,7 +137,7 @@
               <span
                 v-for="(msg, idx) in h.messageLines"
                 :key="idx"
-                class="badge me-1 hospital-message-chip fs-13 "
+                class="badge me-1 hospital-message-chip"
                 :class="msg.includes('가능')
                   ? 'bg-success-subtle text-success-emphasis'
                   : 'bg-secondary-subtle text-secondary-emphasis'"
@@ -152,7 +149,7 @@
 
             <!-- ✅ state 상태 표시 -->
             <div class="mb-2" v-if="h.state !== undefined && h.state !== null">
-              <span class="badge me-1 fs-13":class="{
+              <span class="badge me-1" :class="{
                 'bg-danger-subtle text-danger-emphasis': h.state === 0,
                 'bg-warning-subtle text-warning-emphasis': h.state === 1,
                 'bg-success-subtle text-success-emphasis': h.state === 2
@@ -171,7 +168,7 @@
 
 
 
-            <div class="text-muted small d-flex align-items-center fs-6 mb-3">
+            <div class="text-muted small d-flex align-items-center mb-3">
               <span><i class="bi bi-clock me-1"></i> {{ h.etaMin }}분</span>
               <span class="mx-2">|</span>
               <span><i class="bi bi-geo-alt me-1"></i> {{ h.distanceKm.toFixed(1) }}km</span>
@@ -267,8 +264,11 @@ const hospitalRefs = ref({})
 // marker click시 실행 함수
 const onMarkerClick = (id) => {
   selectedMarkerId.value = id;
-  sheetHeightRatio.value = 1;
-  //scrollCard(id)
+  // 1) 리스트에서 해당 카드가 맨 위 근처로 오도록 스크롤
+  scrollCard(id)
+
+  // 2) 그 카드 하나 보일 만큼만 바텀시트 올리기
+  openSheetJustForCard(id)
 }
 
 
@@ -287,6 +287,36 @@ const scrollCard = (id) => {
     }
   })
 }
+
+// 선택된 카드 하나 보일 만큼만 바텀시트를 올려주는 함수
+const openSheetJustForCard = (id) => {
+  nextTick(() => {
+    const el = hospitalRefs.value[id]
+    if (!el) return
+
+    // 실제 카드 높이
+    const cardHeight = el.offsetHeight || 200
+
+    // 헤더(그립 + 증상뱃지 + 타이틀/정렬 드롭다운) 대략 높이 추정
+    const ESTIMATED_HEADER_HEIGHT = 170 // px 정도로 감으로 잡기
+
+    // 카드 + 헤더 + 여유 패딩
+    const neededVisible = ESTIMATED_HEADER_HEIGHT + cardHeight + 30
+
+    // 보이는 높이 = MIN_SHEET_HEIGHT ~ MAX_SHEET_HEIGHT 사이로 클램프
+    const clampedVisible = Math.max(
+      MIN_SHEET_HEIGHT,
+      Math.min(MAX_SHEET_HEIGHT, neededVisible)
+    )
+
+    // visibleHeight = MIN + (MAX - MIN) * ratio
+    const ratio =
+      (clampedVisible - MIN_SHEET_HEIGHT) / (MAX_SHEET_HEIGHT - MIN_SHEET_HEIGHT)
+
+    sheetHeightRatio.value = ratio
+  })
+}
+
 
 /* 바텀시트 상태 start */
 const bottomSheet = ref(null)
@@ -353,28 +383,19 @@ const listHospitals = computed(() => {
 
   return hospitals.value.map(h => ({
     id: h.id,
-    hpid: h.hpid,
+    hpid: h.hpid,               // ← 추가
     name: h.name,
     message: h.message,
-    messageLines: h.messageLines || [],
+     messageLines: h.messageLines || [],
     state: h.state,
-    bedAvail: h.bedAvail,
+    bedAvail: h.bedAvail,   // ✅ 추가
     bedTotal: h.bedTotal,
     distanceKm: (h.distance ?? 0) / 1000,
     etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
-    lat: h.lat,
-    lon: h.lon,
+    lat: h.lat, lon: h.lon,     // (선택) 모달/길찾기 즉시 사용
     tel: h.tel || '',
     addr: h.addr
   }))
-})
-
-// ✅ 선택된 마커가 있으면 그 병원만, 아니면 전체 리스트
-const visibleHospitals = computed(() => {
-  if (!selectedMarkerId.value) return listHospitals.value
-
-  const target = listHospitals.value.find(h => h.id === selectedMarkerId.value)
-  return target ? [target] : listHospitals.value
 })
 
 // 🔹 WFS 마커 로드 함수
@@ -911,10 +932,6 @@ async function toDataUrl(url) {
     background-color 0.25s ease,
     border-color 0.18s ease;
   background-color: #fff;
-}
-
-.fs-13{
-  font-size: 13px;
 }
 
 /* 호버: 아래쪽으로만 커짐 */
