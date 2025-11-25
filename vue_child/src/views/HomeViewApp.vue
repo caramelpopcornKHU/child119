@@ -113,8 +113,13 @@
 
 
         <!-- 응급실 목록 -->
-        <div class="card shadow-sm mb-3" v-for="h in listHospitals" :key="h.hpid || h.id"
-          :ref="el => hospitalRefs[h.id] = el" :class="{ 'card-selected-highlight': h.id === selectedMarkerId }">
+        <div
+          class="card shadow-sm mb-3"
+          v-for="h in visibleHospitals"
+          :key="h.hpid || h.id"
+          :ref="el => hospitalRefs[h.id] = el"
+          :class="{ 'card-selected-highlight': h.id === selectedMarkerId }"
+        >
           <div class="card-body" @click="goToemergencyDetail(h.id)">
             <div class="d-flex justify-content-between align-items-start">
               <h6 class="card-title text-bold fs-5 mb-1">{{ h.name }}</h6>
@@ -263,7 +268,7 @@ const hospitalRefs = ref({})
 const onMarkerClick = (id) => {
   selectedMarkerId.value = id;
   sheetHeightRatio.value = 1;
-  scrollCard(id)
+  //scrollCard(id)
 }
 
 
@@ -348,19 +353,28 @@ const listHospitals = computed(() => {
 
   return hospitals.value.map(h => ({
     id: h.id,
-    hpid: h.hpid,               // ← 추가
+    hpid: h.hpid,
     name: h.name,
     message: h.message,
-     messageLines: h.messageLines || [],
+    messageLines: h.messageLines || [],
     state: h.state,
-    bedAvail: h.bedAvail,   // ✅ 추가
+    bedAvail: h.bedAvail,
     bedTotal: h.bedTotal,
     distanceKm: (h.distance ?? 0) / 1000,
     etaMin: Math.max(1, Math.round(((h.distance ?? 0) / 1000) / 0.4)),
-    lat: h.lat, lon: h.lon,     // (선택) 모달/길찾기 즉시 사용
+    lat: h.lat,
+    lon: h.lon,
     tel: h.tel || '',
     addr: h.addr
   }))
+})
+
+// ✅ 선택된 마커가 있으면 그 병원만, 아니면 전체 리스트
+const visibleHospitals = computed(() => {
+  if (!selectedMarkerId.value) return listHospitals.value
+
+  const target = listHospitals.value.find(h => h.id === selectedMarkerId.value)
+  return target ? [target] : listHospitals.value
 })
 
 // 🔹 WFS 마커 로드 함수
