@@ -16,7 +16,7 @@
         <div class="card shadow-sm border-0 rounded-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="text-bold mb-0">응급 교육 콘텐츠 (emergencyData)</h5>
+              <h5 class="text-bold mb-0">응급 교육 콘텐츠</h5>
               <button
                 type="button"
                 class="btn btn-outline-primary btn-sm rounded-pill text-plight"

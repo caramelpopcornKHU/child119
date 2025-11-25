@@ -16,7 +16,7 @@
         <div class="card shadow-sm border-0 rounded-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="text-bold mb-0">사용자 정보 (users + kidinformation)</h5>
+              <h5 class="text-bold mb-0">사용자 정보</h5>
               <span class="badge bg-secondary-subtle text-dark text-plight small">
                 총 {{ usersWithKids.length }}명
               </span>

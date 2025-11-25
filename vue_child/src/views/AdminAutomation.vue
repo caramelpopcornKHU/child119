@@ -101,7 +101,7 @@
           class="card-header bg-white border-0 d-flex justify-content-between align-items-start pb-1"
         >
           <div>
-            <h5 class="text-bold mb-1">데이터 연동 주기 </h5>
+            <h5 class="text-bold mb-1">데이터 연동 즉시 실행 </h5>
             <p class="small text-plight mb-0">
               Python(FastAPI) 자동화 서버에 데이터 연동 작업을 요청하고, 작업 중 발생하는 로그를 실시간으로
               확인합니다.
