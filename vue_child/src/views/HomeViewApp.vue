@@ -15,17 +15,11 @@
             <div class="rounded-circle" style="width: 16px; height: 16px; background-color: #16a085; flex-shrink: 0;">
             </div>
             <span class="text-medium" style="font-size: 12px;">여유</span>
-          </div>
-
-          <!-- 부족 -->
-          <div class="d-flex align-items-center gap-2">
+            <!-- 부족 -->
             <div class="rounded-circle" style="width: 16px; height: 16px; background-color: #f3a35cff; flex-shrink: 0;">
             </div>
             <span class="text-medium" style="font-size: 12px;">부족</span>
-          </div>
-
-          <!-- 정보없음 -->
-          <div class="d-flex align-items-center gap-2">
+            <!-- 정보없음 -->
             <div class="rounded-circle" style="width: 16px; height: 16px; background-color: #95a5a6; flex-shrink: 0;">
             </div>
             <span class="text-medium" style="font-size: 12px;">정보없음</span>
