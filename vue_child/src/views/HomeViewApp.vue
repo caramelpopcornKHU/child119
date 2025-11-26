@@ -6,6 +6,33 @@
     <div id="vmap" class="position-fixed top-0 start-0 w-100" style="height:100dvh; z-index:0; pointer-events:auto;">
     </div>
     <!-- 내 위치 새로고침 버튼 -->
+    <!-- 범례 (왼쪽 상단) -->
+    <div class="position-fixed start-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
+      <div class="bg-white border rounded-3 shadow-sm p-3" style="min-width: 140px;">
+        <div class="d-flex flex-column gap-2">
+          <!-- 여유 -->
+          <div class="d-flex align-items-center gap-2">
+            <div class="rounded-circle" style="width: 16px; height: 16px; background-color: #16a085; flex-shrink: 0;">
+            </div>
+            <span class="text-medium" style="font-size: 12px;">여유</span>
+          </div>
+
+          <!-- 부족 -->
+          <div class="d-flex align-items-center gap-2">
+            <div class="rounded-circle" style="width: 16px; height: 16px; background-color: #f3a35cff; flex-shrink: 0;">
+            </div>
+            <span class="text-medium" style="font-size: 12px;">부족</span>
+          </div>
+
+          <!-- 정보없음 -->
+          <div class="d-flex align-items-center gap-2">
+            <div class="rounded-circle" style="width: 16px; height: 16px; background-color: #95a5a6; flex-shrink: 0;">
+            </div>
+            <span class="text-medium" style="font-size: 12px;">정보없음</span>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="position-fixed end-0 p-3" style="top: calc(var(--header-h) + 8px); z-index: 2;">
       <button type="button" class="btn btn-primary border rounded-circle shadow-sm" @click="refreshLocation()"
         style="width: 48px; height: 48px; padding: 0;">
@@ -17,8 +44,8 @@
     </div>
   </div>
   <!-- 바텀시트 -->
-  <div class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg "  :style="sheetStyle"
-    ref="bottomSheet" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd"
+  <div class="position-fixed start-0 end-0 bg-white  rounded-top-4 shadow-lg " :style="sheetStyle" ref="bottomSheet"
+    @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd"
     style="z-index: 2; padding-bottom: 150px;">
 
     <!-- 그립 -->
@@ -55,24 +82,25 @@
 
         <!-- 오른쪽: 버튼 그룹 -->
         <div class="dropdown">
-          <button
-              class="btn dropdown-toggle w-100 d-flex align-items-center justify-content-between 
-                    bg-white border rounded-pill px-4 fw-bold"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-              style="height: 42px; font-size: 15px; padding-right: 18px !important;"
-            >
+          <button class="btn dropdown-toggle w-100 d-flex align-items-center justify-content-between 
+                    bg-white border rounded-pill px-4 fw-bold" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false" style="height: 42px; font-size: 15px; padding-right: 18px !important;">
 
             <div class="d-flex align-items-center gap-2">
               <!-- 현재 선택된 항목 표시 -->
               <template v-if="currentSort === 'time'">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                  <path fill="currentColor"
+                    d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z" />
+                </svg>
                 시간순
               </template>
 
               <template v-else>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 8.11c-.89 0-1.61-.72-1.61-1.61A1.61 1.61 0 0 1 6.5 4.89c.89 0 1.61.72 1.61 1.61A1.61 1.61 0 0 1 6.5 8.11M6.5 2C4 2 2 4 2 6.5c0 3.37 4.5 8.36 4.5 8.36S11 9.87 11 6.5C11 4 9 2 6.5 2m11 6.11a1.61 1.61 0 0 1-1.61-1.61a1.609 1.609 0 1 1 3.22 0a1.61 1.61 0 0 1-1.61 1.61m0-6.11C15 2 13 4 13 6.5c0 3.37 4.5 8.36 4.5 8.36S22 9.87 22 6.5C22 4 20 2 17.5 2m0 14c-1.27 0-2.4.8-2.82 2H9.32a3 3 0 0 0-3.82-1.83A3.003 3.003 0 0 0 3.66 20a3.017 3.017 0 0 0 3.84 1.83c.85-.3 1.5-.98 1.82-1.83h5.37c.55 1.56 2.27 2.38 3.81 1.83A3 3 0 0 0 20.35 18c-.43-1.2-1.57-2-2.85-2m0 4.5A1.5 1.5 0 0 1 16 19a1.5 1.5 0 0 1 1.5-1.5A1.5 1.5 0 0 1 19 19a1.5 1.5 0 0 1-1.5 1.5"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                  <path fill="currentColor"
+                    d="M6.5 8.11c-.89 0-1.61-.72-1.61-1.61A1.61 1.61 0 0 1 6.5 4.89c.89 0 1.61.72 1.61 1.61A1.61 1.61 0 0 1 6.5 8.11M6.5 2C4 2 2 4 2 6.5c0 3.37 4.5 8.36 4.5 8.36S11 9.87 11 6.5C11 4 9 2 6.5 2m11 6.11a1.61 1.61 0 0 1-1.61-1.61a1.609 1.609 0 1 1 3.22 0a1.61 1.61 0 0 1-1.61 1.61m0-6.11C15 2 13 4 13 6.5c0 3.37 4.5 8.36 4.5 8.36S22 9.87 22 6.5C22 4 20 2 17.5 2m0 14c-1.27 0-2.4.8-2.82 2H9.32a3 3 0 0 0-3.82-1.83A3.003 3.003 0 0 0 3.66 20a3.017 3.017 0 0 0 3.84 1.83c.85-.3 1.5-.98 1.82-1.83h5.37c.55 1.56 2.27 2.38 3.81 1.83A3 3 0 0 0 20.35 18c-.43-1.2-1.57-2-2.85-2m0 4.5A1.5 1.5 0 0 1 16 19a1.5 1.5 0 0 1 1.5-1.5A1.5 1.5 0 0 1 19 19a1.5 1.5 0 0 1-1.5 1.5" />
+                </svg>
                 거리순
               </template>
             </div>
@@ -80,27 +108,27 @@
 
           <!-- dropdown menu -->
           <ul class="dropdown-menu w-100 rounded-4 shadow-sm p-0 overflow-hidden" style="min-width: auto;">
-            
+
             <!-- 거리순이 아닐 때만 거리순 표시 -->
             <li v-if="currentSort !== 'distance'">
-              <button 
-                class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold"
-                style="font-size: 15px;"
-                @click="changeSort('distance')"
-              >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 8.11c-.89 0-1.61-.72-1.61-1.61A1.61 1.61 0 0 1 6.5 4.89c.89 0 1.61.72 1.61 1.61A1.61 1.61 0 0 1 6.5 8.11M6.5 2C4 2 2 4 2 6.5c0 3.37 4.5 8.36 4.5 8.36S11 9.87 11 6.5C11 4 9 2 6.5 2m11 6.11a1.61 1.61 0 0 1-1.61-1.61a1.609 1.609 0 1 1 3.22 0a1.61 1.61 0 0 1-1.61 1.61m0-6.11C15 2 13 4 13 6.5c0 3.37 4.5 8.36 4.5 8.36S22 9.87 22 6.5C22 4 20 2 17.5 2m0 14c-1.27 0-2.4.8-2.82 2H9.32a3 3 0 0 0-3.82-1.83A3.003 3.003 0 0 0 3.66 20a3.017 3.017 0 0 0 3.84 1.83c.85-.3 1.5-.98 1.82-1.83h5.37c.55 1.56 2.27 2.38 3.81 1.83A3 3 0 0 0 20.35 18c-.43-1.2-1.57-2-2.85-2m0 4.5A1.5 1.5 0 0 1 16 19a1.5 1.5 0 0 1 1.5-1.5A1.5 1.5 0 0 1 19 19a1.5 1.5 0 0 1-1.5 1.5"/></svg>
+              <button class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold" style="font-size: 15px;"
+                @click="changeSort('distance')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                  <path fill="currentColor"
+                    d="M6.5 8.11c-.89 0-1.61-.72-1.61-1.61A1.61 1.61 0 0 1 6.5 4.89c.89 0 1.61.72 1.61 1.61A1.61 1.61 0 0 1 6.5 8.11M6.5 2C4 2 2 4 2 6.5c0 3.37 4.5 8.36 4.5 8.36S11 9.87 11 6.5C11 4 9 2 6.5 2m11 6.11a1.61 1.61 0 0 1-1.61-1.61a1.609 1.609 0 1 1 3.22 0a1.61 1.61 0 0 1-1.61 1.61m0-6.11C15 2 13 4 13 6.5c0 3.37 4.5 8.36 4.5 8.36S22 9.87 22 6.5C22 4 20 2 17.5 2m0 14c-1.27 0-2.4.8-2.82 2H9.32a3 3 0 0 0-3.82-1.83A3.003 3.003 0 0 0 3.66 20a3.017 3.017 0 0 0 3.84 1.83c.85-.3 1.5-.98 1.82-1.83h5.37c.55 1.56 2.27 2.38 3.81 1.83A3 3 0 0 0 20.35 18c-.43-1.2-1.57-2-2.85-2m0 4.5A1.5 1.5 0 0 1 16 19a1.5 1.5 0 0 1 1.5-1.5A1.5 1.5 0 0 1 19 19a1.5 1.5 0 0 1-1.5 1.5" />
+                </svg>
                 거리순
               </button>
             </li>
 
             <!-- 시간순이 아닐 때만 시간순 표시 -->
             <li v-if="currentSort !== 'time'">
-              <button 
-                class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold"
-                style="font-size: 15px;"
-                @click="changeSort('time')"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z"/></svg>
+              <button class="dropdown-item d-flex align-items-center gap-3 py-2 fw-bold" style="font-size: 15px;"
+                @click="changeSort('time')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                  <path fill="currentColor"
+                    d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m4.3 13.2L11 12.3V7h1.5v4.4l4.5 2.5z" />
+                </svg>
                 시간순
               </button>
             </li>
@@ -132,16 +160,11 @@
               </span>
             </div>
 
-          <!-- 소아 가능/불가능 메시지 표시 (콤마 기준으로 여러 개 뱃지) -->
+            <!-- 소아 가능/불가능 메시지 표시 (콤마 기준으로 여러 개 뱃지) -->
             <div class="mb-2" v-if="h.messageLines?.length">
-              <span
-                v-for="(msg, idx) in h.messageLines"
-                :key="idx"
-                class="badge me-1 hospital-message-chip"
-                :class="msg.includes('가능')
-                  ? 'bg-success-subtle text-success-emphasis'
-                  : 'bg-secondary-subtle text-secondary-emphasis'"
-              >
+              <span v-for="(msg, idx) in h.messageLines" :key="idx" class="badge me-1 hospital-message-chip" :class="msg.includes('가능')
+                ? 'bg-success-subtle text-success-emphasis'
+                : 'bg-secondary-subtle text-secondary-emphasis'">
                 {{ msg }}
               </span>
             </div>
@@ -180,9 +203,10 @@
               </button>
               <button class="btn btn-primary w-100" v-if="h.lat && h.lon && h.addr && h.name && h.id"
                 @click.stop="requestNavi(h.lon, h.lat, h.name, h.addr, h.id)">
-               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                <path fill="#fff" d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7"/>
-              </svg> 길찾기
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                  <path fill="#fff"
+                    d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7" />
+                </svg> 길찾기
               </button>
             </div>
           </div>
@@ -386,7 +410,7 @@ const listHospitals = computed(() => {
     hpid: h.hpid,               // ← 추가
     name: h.name,
     message: h.message,
-     messageLines: h.messageLines || [],
+    messageLines: h.messageLines || [],
     state: h.state,
     bedAvail: h.bedAvail,   // ✅ 추가
     bedTotal: h.bedTotal,
@@ -441,14 +465,14 @@ const loadWFSMarkers = async () => {
 
       const rawMessage = p.message || '';
 
-    const messageLines = rawMessage
-    .split(',')                 // 콤마 기준으로 자르기
-    .map(s => s.trim())         // 양옆 공백 제거
-    .filter(Boolean);           // 빈 문자열 제거
+      const messageLines = rawMessage
+        .split(',')                 // 콤마 기준으로 자르기
+        .map(s => s.trim())         // 양옆 공백 제거
+        .filter(Boolean);           // 빈 문자열 제거
 
 
 
-      
+
       const state = p.state
       const name = p.nickname
       const bedAvail = toInt(p.bed_avail)
@@ -468,7 +492,7 @@ const loadWFSMarkers = async () => {
         lon,
         distance,
         name,
-        message:rawMessage,
+        message: rawMessage,
         messageLines,
         state,
         bedAvail,
@@ -516,13 +540,13 @@ const initMapAndCoords = async () => {
       }
     }, 100)
   })
-  
+
   try {
     // 2. 현재 위치 가져오기
     let centerCoords
-    
+
     let location = { lon: 126.978, lat: 37.5665 };
-    
+
     try {
       const userLocation = await getCurrentLocation()
       location = userLocation; // 위치 획득 성공 시 값 업데이트
@@ -535,111 +559,111 @@ const initMapAndCoords = async () => {
       // 실패 시, 위에서 설정한 기본 location 값(126.978, 37.5665)이 사용됨
       centerCoords = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857')
     }
-    
+
     // 3. 지도 초기화
     vmap = initVworldMap({
       containerId: 'vmap',
       defaultCenter: centerCoords,
       autoFetch: false
     })
-    
+
     if (!vmap) throw new Error('vmap 초기화 실패')
-    
-    
+
+
     // 4. 리스너 함수 정의 
     moveEndListener = () => {
       console.log(`지도 이동/줌 감지`)
       if (debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {
-    loadWFSMarkers()
-  }, 300)
-}
+        loadWFSMarkers()
+      }, 300)
+    }
 
-vmap.on('moveend', moveEndListener)
+    vmap.on('moveend', moveEndListener)
 
-// 5. 초기 마커 로드
-setTimeout(() => loadWFSMarkers(), 500)
+    // 5. 초기 마커 로드
+    setTimeout(() => loadWFSMarkers(), 500)
 
-// 6-1. 현재 위치에서 가장 가까운 응급실 가져오기
-const emergencyRes = await getEmergencyFromWFSSortByDistance(location.lon, location.lat)
-const top3Emergency = emergencyRes.slice(0, 3)
+    // 6-1. 현재 위치에서 가장 가까운 응급실 가져오기
+    const emergencyRes = await getEmergencyFromWFSSortByDistance(location.lon, location.lat)
+    const top3Emergency = emergencyRes.slice(0, 3)
 
-const routeResArray = []
+    const routeResArray = []
 
-for (const [index, feature] of top3Emergency.entries()) {
-  const [endX, endY] = feature.geometry.coordinates
-  
-  try {
-    // 6.2 경로 데이터 불러오기
-    const routeData = await getTmapRoute(location.lon, location.lat, endX, endY)
-    routeResArray.push(routeData)
-  } catch (err) {
-    console.error(`${index + 1}번째 경로 요청 오류`)
-    routeResArray.push(null)
-  }
-  
-  
-  // // api 요청 차레로 보내기
-  // if (index < top3Emergency.length - 1) {
-    //   await delay(800)
-    // }
-    
-  }
-  
-// 6-3. 기존 경로 레이어 삭제
-await removeRouteLayer(vmap);
+    for (const [index, feature] of top3Emergency.entries()) {
+      const [endX, endY] = feature.geometry.coordinates
 
-// ⭐ 6-4-1. 줌 맞추기를 위한 Extent (영역) 계산 (출발지 + Top 3 병원) ⭐
-let totalExtent = ol.extent.createEmpty();
-
-// 1) 현재 위치 (출발지) Extent 포함
-const startPoint3857 = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857');
-ol.extent.extend(totalExtent, startPoint3857);
-
-// 2) Top 3 병원의 Extent 포함
-top3Emergency.forEach(feature => {
-    const [endX, endY] = feature.geometry.coordinates; // 병원 좌표 (4326)
-    const endPoint3857 = ol.proj.transform([endX, endY], 'EPSG:4326', 'EPSG:3857');
-    ol.extent.extend(totalExtent, endPoint3857);
-});
+      try {
+        // 6.2 경로 데이터 불러오기
+        const routeData = await getTmapRoute(location.lon, location.lat, endX, endY)
+        routeResArray.push(routeData)
+      } catch (err) {
+        console.error(`${index + 1}번째 경로 요청 오류`)
+        routeResArray.push(null)
+      }
 
 
-// ⭐ 6-4-2. 지도 뷰를 전체 영역에 맞춥니다. (fit 완료 보장) ⭐
-if (!ol.extent.isEmpty(totalExtent)) {
-    // moveend 완료를 await로 대기하여 bbox 감지 성공률을 높입니다.
-    await new Promise(resolve => {
+      // // api 요청 차레로 보내기
+      // if (index < top3Emergency.length - 1) {
+      //   await delay(800)
+      // }
+
+    }
+
+    // 6-3. 기존 경로 레이어 삭제
+    await removeRouteLayer(vmap);
+
+    // ⭐ 6-4-1. 줌 맞추기를 위한 Extent (영역) 계산 (출발지 + Top 3 병원) ⭐
+    let totalExtent = ol.extent.createEmpty();
+
+    // 1) 현재 위치 (출발지) Extent 포함
+    const startPoint3857 = ol.proj.transform([location.lon, location.lat], 'EPSG:4326', 'EPSG:3857');
+    ol.extent.extend(totalExtent, startPoint3857);
+
+    // 2) Top 3 병원의 Extent 포함
+    top3Emergency.forEach(feature => {
+      const [endX, endY] = feature.geometry.coordinates; // 병원 좌표 (4326)
+      const endPoint3857 = ol.proj.transform([endX, endY], 'EPSG:4326', 'EPSG:3857');
+      ol.extent.extend(totalExtent, endPoint3857);
+    });
+
+
+    // ⭐ 6-4-2. 지도 뷰를 전체 영역에 맞춥니다. (fit 완료 보장) ⭐
+    if (!ol.extent.isEmpty(totalExtent)) {
+      // moveend 완료를 await로 대기하여 bbox 감지 성공률을 높입니다.
+      await new Promise(resolve => {
         const view = vmap.getView();
-        
+
         const listener = view.on('moveend', () => {
-            ol.Observable.unByKey(listener);
-            console.log("✅ [initMapAndCoords] Top 3 Extent fit 애니메이션 종료 확인.");
-            resolve();
+          ol.Observable.unByKey(listener);
+          console.log("✅ [initMapAndCoords] Top 3 Extent fit 애니메이션 종료 확인.");
+          resolve();
         });
 
         // 뷰를 계산된 현재 위치 + Top 3 병원 영역에 맞춥니다.
         view.fit(totalExtent, {
-            size: vmap.getSize(),
-            padding: [150, 150, 150, 150], // 여백 설정
-            duration: 1000 
+          size: vmap.getSize(),
+          padding: [150, 150, 150, 150], // 여백 설정
+          duration: 1000
         });
-    });
-}
-
-
-// ⭐ 6-4-3. 경로 그리기 (하나의 경로만 유지) ⭐
-if (routeResArray.length > 0 && vmap) {
-    console.log(`경로 그리기 함수 실행`)
-    
-    // Top 1 병원의 경로 데이터만 drawRoute에 전달하여 하나만 표시합니다.
-    if (routeResArray[0]) {
-        drawRoute(vmap, routeResArray[0], 1) 
+      });
     }
-}
+
+
+    // ⭐ 6-4-3. 경로 그리기 (하나의 경로만 유지) ⭐
+    if (routeResArray.length > 0 && vmap) {
+      console.log(`경로 그리기 함수 실행`)
+
+      // Top 1 병원의 경로 데이터만 drawRoute에 전달하여 하나만 표시합니다.
+      if (routeResArray[0]) {
+        drawRoute(vmap, routeResArray[0], 1)
+      }
+    }
     // marker click 함수
     if (vmap) { setupMarkerClick(onMarkerClick) }
 
-    await delay(400); 
-loadWFSMarkers(); // bbox 감지 시도
+    await delay(400);
+    loadWFSMarkers(); // bbox 감지 시도
 
   } catch (error) {
     console.error('초기화 실패:', error)
@@ -750,12 +774,12 @@ async function refreshLocation() {
     const logoDataUrl = await toDataUrl(kidLogo)
     const iconUrl = createUserPinIcon(logoDataUrl)
 
-addMarkerHospital(lon, lat, {
-  name: '현재 위치',
-  iconUrl,
-  anchor: [0.5, 1],
-  isUserLocation: true,
-})
+    addMarkerHospital(lon, lat, {
+      name: '현재 위치',
+      iconUrl,
+      anchor: [0.5, 1],
+      isUserLocation: true,
+    })
 
 
     console.log(`화면 중심만 내 위치로 이동: ${lat}, ${lon}`)
