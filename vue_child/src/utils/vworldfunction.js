@@ -210,21 +210,38 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
 
   // === 메시지 줄바꿈 ===
   const wrapMessage = (text, maxCharsPerLine) => {
-    if (!text) return [];
-    const words = text.split(' ');
-    let lines = [];
+  if (!text) return [];
+
+  // 1) 콤마 기준 대분할 (콤마는 줄바꿈 역할)
+  const commaParts = text.split(',');
+
+  let finalLines = [];
+
+  for (const part of commaParts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+
+    // 2) 공백 기준 단어 분리
+    const words = trimmed.split(' ');
+
     let currentLine = '';
+
+    // 3) 한 줄 최대 글자 수 넘어가면 줄바꿈
     for (let word of words) {
       if ((currentLine + word).length > maxCharsPerLine) {
-        lines.push(currentLine.trim());
+        finalLines.push(currentLine.trim());
         currentLine = word + ' ';
       } else {
         currentLine += word + ' ';
       }
     }
-    if (currentLine.trim()) lines.push(currentLine.trim());
-    return lines;
-  };
+
+    if (currentLine.trim()) finalLines.push(currentLine.trim());
+  }
+
+  return finalLines;
+};
+
   const wrappedMessageLines = wrapMessage(message, 15); // 한 줄 최대 문자수 조금 늘림
 
   // === 좌표 계산 ===
