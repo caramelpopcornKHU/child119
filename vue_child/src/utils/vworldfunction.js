@@ -194,7 +194,7 @@ const createMarkerIcon = (bedAvail, bedTotal, hospitalName, emergencyMessage, is
   } else {
     const ratio = bedAvail / bedTotal;
     bedText = `${bedAvail}/${bedTotal}`;
-    badgeBgColor = ratio <= 0.5 ? '#e74c3c' : '#16a085';
+    badgeBgColor = ratio <= 0.5 ? '#f3a35cff' : '#16a085';
   }
 
   // === 병원이름 줄바꿈 ===
