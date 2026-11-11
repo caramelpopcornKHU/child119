@@ -1,11 +1,8 @@
-<!--
-  child119 README 초안 v2 (2026-11-12). 아직 레포에 반영하지 않음.
-  이 폴더(readme-draft-P06/)가 그대로 레포 루트가 된다고 보면 된다 (docs/images/ 경로 포함).
-  근거: _work/readme-facts-P06.md, _work/tistory-P06.md, 티스토리 글의 아키텍처 이미지, 사용자 답변(팀 역할)
-  <!-- 확인 --> 주석이 달린 곳은 사용자 확인 후 확정.
--->
+<p align="center">
+  <img src="docs/images/logo.png" width="140" alt="아이119 로고">
+</p>
 
-# 아이119 (child119)
+<h1 align="center">아이119 (child119)</h1>
 
 > 소아 응급 상황에서 **"함정 없는 진짜 응급실"** 을 찾아주는 위치 기반 앱
 
@@ -92,7 +89,7 @@ LX 공간정보아카데미 최종 프로젝트 · 6인 팀 · 2025.10 ~ 2025.11
 | 지도·경로 | TMAP, VWorld, Kakao Navi SDK |
 | 모바일 | Kotlin, WebView |
 | AI | Gemini 2.0 Flash |
-| 배포 | Docker, Cloud Run <!-- 확인: 추정 -->, Firebase Hosting |
+| 배포 | Docker, Cloud Run, Firebase Hosting |
 
 ## 저장소 구조
 
@@ -104,8 +101,6 @@ LX 공간정보아카데미 최종 프로젝트 · 6인 팀 · 2025.10 ~ 2025.11
 | `emergency_python/` | 데이터 수집·가공, DB 적재, 5분 주기 병상 갱신, 갱신 자동화 서비스 |
 | `data/` | 달빛어린이병원·심야약국 CSV, 크롤러 |
 
-<!-- 정리 후 구조로 확정. 노트북 분류 후 emergency_python은 최종 파이프라인 중심으로 재구성 -->
-
 ## 데이터 출처
 
 - 국립중앙의료원 응급실 병상 현황 (mediboard)
@@ -113,8 +108,7 @@ LX 공간정보아카데미 최종 프로젝트 · 6인 팀 · 2025.10 ~ 2025.11
 - e-gen 달빛어린이병원 정보
 - 보건복지부·공공데이터포털 응급의료 정보
 - VWorld 주소 지오코딩
-- <!-- 확인필요: 병원 원본 엑셀의 공공데이터 정식 명칭 -->
-
+-
 병상은 5분마다, 병원 기본 정보는 수집 후 적재하는 방식으로 갱신합니다.
 
 ## 팀 구성
@@ -160,13 +154,7 @@ npm run build   # 배포 빌드
 
 `emergency_python/automation/update_bed.py` (환경변수 `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`)
 
-<!-- application.example.properties, .env.example은 정리 단계에서 새로 만들 파일 -->
-
 ## 한계와 앞으로
 
 - 챗봇은 프롬프트 엔지니어링 기반입니다. 상용화한다면 의료 정보로 **파인튜닝**해 아이 중증도에 따른 응급실·병원 기준을 제시할 계획입니다.
 - 자차로 방문한 경우의 진료 거부는 통계가 비어 있습니다. 아이119로 모이는 **사용자 경로 로그를 관할 기관에 제공**해 소아 응급 의료 개선에 기여하는 방안을 구상했습니다.
-
-## 배운 점
-
-<!-- 사용자 인터뷰(Phase 1, P06) 후 작성 -->
