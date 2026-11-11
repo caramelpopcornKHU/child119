@@ -1,8 +1,0 @@
-DB_HOST = "34.50.41.93"
-DB_NAME = "hospital"
-DB_USER = "postgres"
-DB_PASS = "Child119@"
-
-# 5분마다 update_bed.py 스크립트를 실행하고,
-# 실행 결과(print)와 오류(Error)를 모두 ~/logs/update.log 파일에 기록합니다.
-*/5 * * * * /usr/bin/python3 /home/hyungmin3739/update_bed.py >> /home/hyungmin3739/logs/update.log 2>&1
