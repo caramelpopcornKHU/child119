@@ -1,104 +1,42 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-.DS_Store
-dist
-dist-ssr
-coverage
-*.local
-
-/cypress/videos/
-/cypress/screenshots/
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-*.tsbuildinfo
+# 비밀·환경 (예시 파일 *.example 만 커밋)
 .env
-
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.env.*
+!.env.example
+**/application.properties
+!**/application.example.properties
+**/serviceAccountKey.json
+*.pem
+*.key
 local.properties
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+*_postgresql.txt
 
-node_modules
-.DS_Store
-dist
-dist-ssr
-coverage
-*.local
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
 
-/cypress/videos/
-/cypress/screenshots/
+# Node / Vue
+node_modules/
+dist/
+.firebase/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Java / Spring
+target/
+.mvn/wrapper/*.jar
+*.class
 
-*.tsbuildinfo
-
-# Eclipse
-.metadata/
-.recommenders/
-.classpath
-.project
-.settings/
-
-# Build output
-/bin/
-/target/
-/build/
-
-# 안드로이드 빌드 파일 무시
-/android_child
-/android_child/build/
-/android_child/app/build/
-/android_child/app/generated/
-/android_child/app/intermediates/
+# Android
+build/
+.gradle/
 *.apk
+local.properties
 
-# Compiled Output
-springboot_child/bin/
-
-
-aws_postgresql.txt
-serviceAccountKey.json
+# IDE / OS
+.idea/
+.vscode/
+.claude/
+.metadata/
+.DS_Store
+Thumbs.db
