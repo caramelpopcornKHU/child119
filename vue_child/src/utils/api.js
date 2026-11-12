@@ -41,7 +41,7 @@ export async function getEmergencyHospitalByHPID(HPID, pageNo = 1, numOfRows = 1
   try {
     const res = await publicApi.get("/getEgytBassInfoInqire", {
       params: {
-        serviceKey: "98986084fc2db23e3d5b8ef8512cef9b239bd3610a28a75a801674004cd35828",
+        serviceKey: import.meta.env.VITE_DATA_GO_KR_SERVICE_KEY,
         HPID,
         pageNo,
         numOfRows,
