@@ -272,7 +272,7 @@ class MainActivity : AppCompatActivity() {
         // 웹뷰가 메인이므로, 인증은 백그라운드에서만 수행합니다.
         KNApplication.knsdk.apply {
             initializeWithAppKey(
-                aAppKey = "81f5286c3ed43f391809939c991b77a0",
+                aAppKey = BuildConfig.KAKAO_NAVI_KEY,
                 aClientVersion = "1.0.0",
                 aUserKey = "testUser",
                 aLangType = KNLanguageType.KNLanguageType_KOREAN,

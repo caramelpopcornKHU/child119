@@ -101,6 +101,15 @@ LX 공간정보아카데미 최종 프로젝트 · 6인 팀 · 2025.10 ~ 2025.11
 | `emergency_python/` | 데이터 수집·가공, DB 적재, 5분 주기 병상 갱신, 갱신 자동화 서비스 |
 | `data/` | 달빛어린이병원·심야약국 CSV, 크롤러 |
 
+## API 키 설정
+
+키는 저장소에 넣지 않습니다. 각자 발급받아 아래 위치에 설정하세요.
+
+| 위치 | 항목 |
+|---|---|
+| `vue_child/.env` (`.env.example` 참고) | `VITE_YT_API_KEY`, `VITE_DATA_GO_KR_SERVICE_KEY` |
+| `kakao_navi/local.properties` | `KAKAO_NAVI_KEY=<카카오 내비 앱 키>` (`BuildConfig.KAKAO_NAVI_KEY`로 읽음) |
+
 ## 데이터 출처
 
 - 국립중앙의료원 응급실 병상 현황 (mediboard)
